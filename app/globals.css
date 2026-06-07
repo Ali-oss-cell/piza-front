@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-zinc-200/60 dark:border-white/10;
+  }
+
+  html,
+  body {
+    @apply antialiased font-sans;
+  }
+}
+
+@layer utilities {
+  .text-accent {
+    color: #d81b60;
+  }
+
+  .bg-accent {
+    background-color: #d81b60;
+  }
+
+  .border-accent {
+    border-color: #d81b60;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .cart-overlay {
+    backdrop-filter: blur(12px);
+  }
+
+  .animate-cart-bump {
+    animation: cart-bump 0.2s ease-out;
+  }
+}
+
+@keyframes cart-bump {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+::selection {
+  background: #d81b60;
+  color: #fff;
+}
