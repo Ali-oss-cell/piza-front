@@ -9,6 +9,7 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { MenuView } from "@/components/admin/views/menu-view";
 import { CategoriesView } from "@/components/admin/views/categories-view";
 import { CrustsView } from "@/components/admin/views/crusts-view";
+import { DealsView } from "@/components/admin/views/deals-view";
 import { IngredientsView } from "@/components/admin/views/ingredients-view";
 import { MenuCategoriesView } from "@/components/admin/views/menu-categories-view";
 import { ToppingsView } from "@/components/admin/views/toppings-view";

@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+.git
+.env*
+!.env.production.example
+npm-debug.log*
+README.md
+main.md
+stitch_leovorno_pizza_web_app

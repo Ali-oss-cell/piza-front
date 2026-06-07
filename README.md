@@ -14,29 +14,62 @@ npm run dev
 
 Open http://localhost:3000 — API default: `http://localhost:3001/api`
 
-## Production deploy (DigitalOcean App Platform)
+## Production deploy (DigitalOcean Droplet)
 
-1. GitHub repo: **`Ali-oss-cell/piza-front`** (this folder only, not the monorepo root).
-2. In App Platform → **Create App** → connect repo.
-3. Set **Source directory** to `/` (repo root).
-4. App Platform detects Next.js, or use `.do/app.yaml`.
-5. **Environment variables** (build + run):
+The frontend runs on the **same Droplet as the API**, behind **Traefik**. Deploy is orchestrated from the `piza-api` repo — clone both repos as siblings:
 
-   | Key | Value |
-   |-----|--------|
-   | `NEXT_PUBLIC_API_URL` | `https://api.marinapizzas.com.au/api` |
+```bash
+mkdir -p ~/piza && cd ~/piza
+git clone git@github.com:Ali-oss-cell/piza-api.git
+git clone git@github.com:Ali-oss-cell/piza-front.git
 
-6. **Custom domains**: `marinapizzas.com.au`, `www.marinapizzas.com.au`
-7. Update DNS (DigitalOcean Networking):
+cd piza-api
+cp .env.production.example .env
+# Edit .env — ACME_EMAIL, DATABASE_URL, JWT_SECRET, admin password, etc.
+# First deploy only: RUN_SEED=true, then set RUN_SEED=false
 
-   | Record | Target |
-   |--------|--------|
-   | `CNAME` `www` | Your new `*.ondigitalocean.app` hostname |
-   | `@` apex | App Platform apex instructions |
+docker compose -f docker-compose.prod.yml up -d --build
+```
 
-8. Delete or stop the old App Platform app (`happypizza-l2yks…`) after the new site works.
+Traefik terminates HTTPS and routes:
 
-See `.env.production.example` and `.do/app.yaml`.
+| Host | Container |
+|------|-----------|
+| `marinapizzas.com.au`, `www.marinapizzas.com.au` | `piza-front` (this repo) |
+| `api.marinapizzas.com.au` | `piza-api` |
+
+### DNS (DigitalOcean Networking)
+
+Point all records to the **same Droplet IP**:
+
+| Record | Type | Value |
+|--------|------|--------|
+| `@` | A | Droplet IP |
+| `www` | A or CNAME | Droplet IP / apex |
+| `api` | A | Droplet IP |
+
+Let's Encrypt certificates are issued automatically on first request (ports 80 and 443 must be open).
+
+### Rebuild frontend only
+
+After pushing frontend changes:
+
+```bash
+cd ~/piza/piza-api
+docker compose -f docker-compose.prod.yml up -d --build web
+```
+
+### Docker build (this repo)
+
+`NEXT_PUBLIC_API_URL` is baked in at **build time**:
+
+```bash
+docker build \
+  --build-arg NEXT_PUBLIC_API_URL=https://api.marinapizzas.com.au/api \
+  -t piza-front .
+```
+
+See `.env.production.example`.
 
 ## Repo layout
 
