@@ -16,6 +16,7 @@ export interface AddToCartPayload {
   size?: PizzaSize;
   crust?: string;
   toppings?: string[];
+  removedIngredients?: string[];
   quantity?: number;
 }
 
@@ -48,6 +49,7 @@ export interface CartItem {
   size?: PizzaSize;
   crust?: string;
   toppings?: string[];
+  removedIngredients?: string[];
 }
 
 export type DeliveryMode = "delivery" | "pickup";

@@ -8,6 +8,7 @@ import { buildSizeOptions, calculatePriceBreakdown, formatCurrency } from "@/lib
 import { CustomizationPanel } from "@/components/features/product-detail/customization-panel";
 import { CrustSelector } from "@/components/features/product-detail/crust-selector";
 import { DetailCta } from "@/components/features/product-detail/detail-cta";
+import { IngredientsSelector } from "@/components/features/product-detail/ingredients-selector";
 import { ProductDetailHero } from "@/components/features/product-detail/product-detail-hero";
 import { QuantitySelector } from "@/components/features/product-detail/quantity-selector";
 import { SizeSelector } from "@/components/features/product-detail/size-selector";
@@ -21,21 +22,35 @@ interface ProductDetailPageProps {
   toppingCategories: ToppingCategory[];
 }
 
+function resolveDefaultIngredients(item: MenuItem): string[] {
+  if (item.ingredients && item.ingredients.length > 0) {
+    return item.ingredients;
+  }
+
+  return item.description
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 export function ProductDetailPage({
   item,
   crustOptions,
   toppingCategories,
 }: ProductDetailPageProps): React.ReactElement {
   const { addToCart } = useCart();
+  const hasSizeOptions = Boolean(item.sizePricing);
   const sizeOptions = useMemo(
     () => (item.sizePricing ? buildSizeOptions(item.sizePricing) : []),
     [item.sizePricing]
   );
+  const ingredients = useMemo(() => resolveDefaultIngredients(item), [item]);
 
   const [configuration, setConfiguration] = useState<ProductConfiguration>({
     size: "S",
     crustId: crustOptions[0]?.id ?? "",
     toppingIds: [],
+    removedIngredients: [],
     quantity: 1,
   });
 
@@ -48,12 +63,10 @@ export function ProductDetailPage({
     [item, configuration, crustOptions, toppingCategories]
   );
 
-  const ingredients =
-    item.ingredients && item.ingredients.length > 0
-      ? item.ingredients
-      : item.description.split(",").map((part) => part.trim()).filter(Boolean);
-
   const selectedCrust = crustOptions.find((option) => option.id === configuration.crustId);
+  const keptIngredients = ingredients.filter(
+    (ingredient) => !configuration.removedIngredients.includes(ingredient)
+  );
 
   const updateSize = (size: PizzaSize): void => {
     setConfiguration((current) => ({ ...current, size }));
@@ -72,6 +85,15 @@ export function ProductDetailPage({
     }));
   };
 
+  const toggleIngredient = (ingredient: string): void => {
+    setConfiguration((current) => ({
+      ...current,
+      removedIngredients: current.removedIngredients.includes(ingredient)
+        ? current.removedIngredients.filter((entry) => entry !== ingredient)
+        : [...current.removedIngredients, ingredient],
+    }));
+  };
+
   const handleAddToOrder = (): void => {
     const selectedToppingLabels = toppingCategories
       .flatMap((category) => category.toppings)
@@ -81,9 +103,13 @@ export function ProductDetailPage({
     addToCart({
       item,
       price: priceBreakdown.unitPrice,
-      size: configuration.size,
+      size: hasSizeOptions ? configuration.size : undefined,
       crust: selectedCrust?.label,
-      toppings: selectedToppingLabels,
+      toppings: selectedToppingLabels.length > 0 ? selectedToppingLabels : undefined,
+      removedIngredients:
+        configuration.removedIngredients.length > 0
+          ? configuration.removedIngredients
+          : undefined,
       quantity: configuration.quantity,
     });
   };
@@ -105,7 +131,7 @@ export function ProductDetailPage({
           <div className="space-y-8">
             <header className="space-y-4">
               <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#d81b60]">
-                Pizza Detail
+                Customize your order
               </p>
               <h1 className="font-display text-4xl font-bold tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white md:text-5xl">
                 {item.name}
@@ -118,19 +144,51 @@ export function ProductDetailPage({
                 <p className="mt-2 text-3xl font-bold text-zinc-950 transition-colors duration-150 ease-out dark:text-white">
                   {formatCurrency(priceBreakdown.unitPrice)}
                   <span className="ml-2 text-base font-medium text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400">
-                    per pizza
+                    each
                   </span>
                 </p>
               </div>
             </header>
 
-            <CustomizationPanel subtitle="Choose your perfect base size" title="Size">
-              <SizeSelector
-                onSelect={updateSize}
-                options={sizeOptions}
-                selectedSize={configuration.size}
-              />
-            </CustomizationPanel>
+            {ingredients.length > 0 ? (
+              <CustomizationPanel
+                subtitle="Tap any ingredient to remove it from your order"
+                title="Ingredients"
+              >
+                <IngredientsSelector
+                  ingredients={ingredients}
+                  onToggle={toggleIngredient}
+                  removedIngredients={configuration.removedIngredients}
+                />
+                {configuration.removedIngredients.length > 0 ? (
+                  <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+                    Your order:{" "}
+                    <span className="font-medium text-zinc-950 dark:text-white">
+                      {keptIngredients.length > 0 ? keptIngredients.join(", ") : "Base only"}
+                    </span>
+                    {configuration.removedIngredients.length > 0 ? (
+                      <>
+                        {" "}
+                        · No{" "}
+                        <span className="font-medium text-zinc-950 dark:text-white">
+                          {configuration.removedIngredients.join(", ")}
+                        </span>
+                      </>
+                    ) : null}
+                  </p>
+                ) : null}
+              </CustomizationPanel>
+            ) : null}
+
+            {hasSizeOptions && sizeOptions.length > 0 ? (
+              <CustomizationPanel subtitle="Choose your perfect base size" title="Size">
+                <SizeSelector
+                  onSelect={updateSize}
+                  options={sizeOptions}
+                  selectedSize={configuration.size}
+                />
+              </CustomizationPanel>
+            ) : null}
 
             {crustOptions.length > 0 ? (
               <CustomizationPanel subtitle="Select your preferred bake style" title="Crust">
@@ -170,36 +228,24 @@ export function ProductDetailPage({
               />
             </CustomizationPanel>
 
-            <section className="rounded-xl border border-zinc-200/60 bg-white/70 p-6 backdrop-blur-md transition-colors duration-150 ease-out dark:border-white/10 dark:bg-zinc-900/40">
-              <h2 className="mb-4 font-display text-xl font-semibold text-zinc-950 transition-colors duration-150 ease-out dark:text-white">
-                Ingredients
-              </h2>
-              <ul className="grid gap-2 sm:grid-cols-2">
-                {ingredients.map((ingredient) => (
-                  <li
-                    className="rounded-lg border border-zinc-200/60 bg-zinc-50/80 px-4 py-3 text-sm text-zinc-700 transition-colors duration-150 ease-out dark:border-white/5 dark:bg-zinc-950/80 dark:text-zinc-300"
-                    key={ingredient}
-                  >
-                    {ingredient}
-                  </li>
-                ))}
-              </ul>
-            </section>
-
             <div className="hidden rounded-xl border border-zinc-200/60 bg-white/70 p-6 backdrop-blur-md transition-colors duration-150 ease-out dark:border-white/10 dark:bg-zinc-900/40 md:block">
               <div className="mb-4 space-y-2 text-sm text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400">
                 <div className="flex justify-between">
-                  <span>Base ({configuration.size})</span>
+                  <span>Base{hasSizeOptions ? ` (${configuration.size})` : ""}</span>
                   <span>{formatCurrency(priceBreakdown.basePrice)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Crust</span>
-                  <span>+{formatCurrency(priceBreakdown.crustDelta)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Extras</span>
-                  <span>+{formatCurrency(priceBreakdown.toppingsTotal)}</span>
-                </div>
+                {crustOptions.length > 0 ? (
+                  <div className="flex justify-between">
+                    <span>Crust</span>
+                    <span>+{formatCurrency(priceBreakdown.crustDelta)}</span>
+                  </div>
+                ) : null}
+                {toppingCategories.length > 0 ? (
+                  <div className="flex justify-between">
+                    <span>Extras</span>
+                    <span>+{formatCurrency(priceBreakdown.toppingsTotal)}</span>
+                  </div>
+                ) : null}
                 <div className="flex justify-between border-t border-zinc-200/60 pt-2 text-zinc-950 transition-colors duration-150 ease-out dark:border-white/10 dark:text-white">
                   <span>Total x{configuration.quantity}</span>
                   <span className="font-semibold">{formatCurrency(priceBreakdown.totalPrice)}</span>

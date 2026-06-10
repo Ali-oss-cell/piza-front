@@ -33,7 +33,12 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 function buildCartLineId(payload: AddToCartPayload): string {
   const toppingKey = payload.toppings?.length ? payload.toppings.slice().sort().join("+") : "";
-  const parts = [payload.item.id, payload.size, payload.crust, toppingKey].filter(Boolean);
+  const removedKey = payload.removedIngredients?.length
+    ? payload.removedIngredients.slice().sort().join("+")
+    : "";
+  const parts = [payload.item.id, payload.size, payload.crust, toppingKey, removedKey].filter(
+    Boolean
+  );
   return parts.join("-");
 }
 
@@ -46,6 +51,10 @@ function buildCartDescription(payload: AddToCartPayload): string {
 
   if (payload.toppings?.length) {
     details.push(`Extras: ${payload.toppings.join(", ")}`);
+  }
+
+  if (payload.removedIngredients?.length) {
+    details.push(`No: ${payload.removedIngredients.join(", ")}`);
   }
 
   return details.join(" · ");
@@ -140,6 +149,7 @@ export function CartProvider({
             size: payload.size,
             crust: payload.crust,
             toppings: payload.toppings,
+            removedIngredients: payload.removedIngredients,
           },
         ];
       });

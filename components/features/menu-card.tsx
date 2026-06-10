@@ -99,6 +99,7 @@ function ImagePanel({
 }
 
 function ActionFooter({
+  customizeHref,
   hasSizePricing,
   justAdded,
   selectedSize,
@@ -107,6 +108,7 @@ function ActionFooter({
   onSelectSize,
   onAddToCart,
 }: {
+  customizeHref?: string;
   hasSizePricing: boolean;
   justAdded: boolean;
   selectedSize: PizzaSize;
@@ -141,19 +143,28 @@ function ActionFooter({
           {formatPrice(hasSizePricing ? selectedPrice : itemPrice)}
         </span>
       </div>
-      <Button
-        className={cn(
-          "h-11 w-11 shrink-0 rounded-xl p-0 transition-all duration-300",
-          justAdded
-            ? "bg-emerald-600 hover:bg-emerald-600"
-            : "bg-[#d81b60] hover:scale-105 hover:bg-[#c2185b] active:scale-95"
-        )}
-        onClick={onAddToCart}
-        size="icon"
-        type="button"
-      >
-        {justAdded ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-      </Button>
+      {customizeHref ? (
+        <Button
+          asChild
+          className="h-11 shrink-0 rounded-xl bg-[#d81b60] px-4 hover:scale-105 hover:bg-[#c2185b] active:scale-95"
+        >
+          <Link href={customizeHref}>Customize</Link>
+        </Button>
+      ) : (
+        <Button
+          className={cn(
+            "h-11 w-11 shrink-0 rounded-xl p-0 transition-all duration-300",
+            justAdded
+              ? "bg-emerald-600 hover:bg-emerald-600"
+              : "bg-[#d81b60] hover:scale-105 hover:bg-[#c2185b] active:scale-95"
+          )}
+          onClick={onAddToCart}
+          size="icon"
+          type="button"
+        >
+          {justAdded ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+        </Button>
+      )}
     </div>
   );
 }
@@ -163,6 +174,9 @@ export function MenuCard({ item, onAddToCart }: MenuCardProps): React.ReactEleme
   const [justAdded, setJustAdded] = useState(false);
   const addResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasSizePricing = Boolean(item.sizePricing);
+  const hasIngredients =
+    (item.ingredients?.length ?? 0) > 0 ||
+    item.description.split(",").map((part) => part.trim()).filter(Boolean).length > 0;
   const selectedPrice = hasSizePricing ? getPriceForSize(item, selectedSize) : item.price;
   const detailHref = `/menu/${item.id}`;
 
@@ -215,23 +229,20 @@ export function MenuCard({ item, onAddToCart }: MenuCardProps): React.ReactEleme
 
   return (
     <article className={cardShellClassName}>
-      {hasSizePricing ? <CardHoverAccent /> : null}
+      <CardHoverAccent />
 
-      <ImagePanel detailHref={detailHref} isInteractive={hasSizePricing} item={item} />
+      <ImagePanel detailHref={detailHref} isInteractive item={item} />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {hasSizePricing ? (
-          <Link
-            className="flex flex-1 flex-col px-6 pb-4 pt-6 transition-colors md:px-7 md:pt-7"
-            href={detailHref}
-          >
-            {contentHeader}
-          </Link>
-        ) : (
-          <div className="flex flex-1 flex-col px-6 pb-4 pt-6 md:px-7 md:pt-7">{contentHeader}</div>
-        )}
+        <Link
+          className="flex flex-1 flex-col px-6 pb-4 pt-6 transition-colors md:px-7 md:pt-7"
+          href={detailHref}
+        >
+          {contentHeader}
+        </Link>
 
         <ActionFooter
+          customizeHref={hasIngredients ? detailHref : undefined}
           hasSizePricing={hasSizePricing}
           itemPrice={item.price}
           justAdded={justAdded}

@@ -27,16 +27,12 @@ export default async function ProductPage({
     ]);
 
     const item = mapApiMenuItem(apiItem);
+    const hasSizeOptions = Boolean(item.sizePricing);
 
-    if (!item.sizePricing) {
-      notFound();
-    }
-
-    const toppingCategories = filterToppingsForItem(
-      toppingGroups,
-      apiItem.allowedToppingIds ?? []
-    );
-    const crustOptions = mapApiCrusts(apiCrusts);
+    const toppingCategories = hasSizeOptions
+      ? filterToppingsForItem(toppingGroups, apiItem.allowedToppingIds ?? [])
+      : [];
+    const crustOptions = hasSizeOptions ? mapApiCrusts(apiCrusts) : [];
 
     return (
       <ProductDetailPage

@@ -29,6 +29,7 @@ export interface ProductConfiguration {
   size: PizzaSize;
   crustId: string;
   toppingIds: string[];
+  removedIngredients: string[];
   quantity: number;
 }
 
