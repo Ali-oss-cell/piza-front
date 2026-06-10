@@ -20,6 +20,7 @@ interface ProductDetailPageProps {
   item: MenuItem;
   crustOptions: CrustOption[];
   toppingCategories: ToppingCategory[];
+  extrasLabel?: string;
 }
 
 function resolveDefaultIngredients(item: MenuItem): string[] {
@@ -37,6 +38,7 @@ export function ProductDetailPage({
   item,
   crustOptions,
   toppingCategories,
+  extrasLabel = "Add Extras",
 }: ProductDetailPageProps): React.ReactElement {
   const { addToCart } = useCart();
   const hasSizeOptions = Boolean(item.sizePricing);
@@ -201,7 +203,14 @@ export function ProductDetailPage({
             ) : null}
 
             {toppingCategories.length > 0 ? (
-              <CustomizationPanel subtitle="Build your flavor profile" title="Extra Toppings">
+              <CustomizationPanel
+                subtitle={
+                  hasSizeOptions
+                    ? "Build your flavor profile"
+                    : "Add paid extras to your order"
+                }
+                title={extrasLabel}
+              >
                 <ToppingsGrid
                   categories={toppingCategories}
                   onToggle={toggleTopping}

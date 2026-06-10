@@ -9,6 +9,7 @@ export interface ApiMenuCategory {
   label: string;
   sortOrder: number;
   supportsSizeOptions: boolean;
+  supportsExtras: boolean;
   isActive: boolean;
 }
 

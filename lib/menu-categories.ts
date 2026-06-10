@@ -9,6 +9,19 @@ export function hasSizePricing(
   );
 }
 
+export function hasExtras(
+  categorySlug: string,
+  categories: AdminMenuCategoryRecord[]
+): boolean {
+  const category = categories.find((entry) => entry.slug === categorySlug);
+
+  if (!category) {
+    return false;
+  }
+
+  return category.supportsExtras ?? category.supportsSizeOptions ?? false;
+}
+
 export function slugifyMenuName(value: string): string {
   return value
     .toLowerCase()

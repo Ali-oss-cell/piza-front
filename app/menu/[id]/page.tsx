@@ -1,11 +1,16 @@
 import { notFound } from "next/navigation";
 import { ProductDetailPage } from "@/components/features/product-detail/product-detail-page";
-import { fetchCrusts, fetchMenuItemBySlug, fetchToppings } from "@/lib/menu-api";
+import {
+  fetchCrusts,
+  fetchMenuCategories,
+  fetchMenuItemBySlug,
+  fetchToppings,
+} from "@/lib/menu-api";
+import { hasExtras, hasSizePricing } from "@/lib/menu-categories";
 import {
   filterToppingsForItem,
   mapApiCrusts,
   mapApiMenuItem,
-  mapApiToppings,
 } from "@/lib/menu-mappers";
 
 interface ProductPageProps {
@@ -20,23 +25,26 @@ export default async function ProductPage({
   const { id: slug } = await params;
 
   try {
-    const [apiItem, toppingGroups, apiCrusts] = await Promise.all([
+    const [apiItem, toppingGroups, apiCrusts, categories] = await Promise.all([
       fetchMenuItemBySlug(slug),
       fetchToppings(),
       fetchCrusts(),
+      fetchMenuCategories(),
     ]);
 
     const item = mapApiMenuItem(apiItem);
-    const hasSizeOptions = Boolean(item.sizePricing);
+    const showSizeOptions = hasSizePricing(item.category, categories);
+    const showExtras = hasExtras(item.category, categories);
 
-    const toppingCategories = hasSizeOptions
+    const toppingCategories = showExtras
       ? filterToppingsForItem(toppingGroups, apiItem.allowedToppingIds ?? [])
       : [];
-    const crustOptions = hasSizeOptions ? mapApiCrusts(apiCrusts) : [];
+    const crustOptions = showSizeOptions ? mapApiCrusts(apiCrusts) : [];
 
     return (
       <ProductDetailPage
         crustOptions={crustOptions}
+        extrasLabel={showSizeOptions ? "Extra Toppings" : "Add Extras"}
         item={item}
         toppingCategories={toppingCategories}
       />

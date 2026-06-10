@@ -32,6 +32,7 @@ interface CategoryFormState {
   slug: string;
   sortOrder: string;
   supportsSizeOptions: boolean;
+  supportsExtras: boolean;
   isActive: boolean;
 }
 
@@ -41,6 +42,7 @@ function emptyForm(categories: AdminMenuCategoryRecord[]): CategoryFormState {
     slug: "",
     sortOrder: String(categories.length),
     supportsSizeOptions: false,
+    supportsExtras: false,
     isActive: true,
   };
 }
@@ -51,6 +53,7 @@ function formFromCategory(category: AdminMenuCategoryRecord): CategoryFormState 
     slug: category.slug,
     sortOrder: String(category.sortOrder),
     supportsSizeOptions: category.supportsSizeOptions,
+    supportsExtras: category.supportsExtras,
     isActive: category.isActive,
   };
 }
@@ -103,6 +106,7 @@ export function MenuCategoriesView({
       label: form.label.trim(),
       sortOrder: Number(form.sortOrder) || 0,
       supportsSizeOptions: form.supportsSizeOptions,
+      supportsExtras: form.supportsExtras,
       isActive: form.isActive,
     };
 
@@ -183,6 +187,11 @@ export function MenuCategoriesView({
                         S/L/F sizes
                       </span>
                     ) : null}
+                    {category.supportsExtras ? (
+                      <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs text-emerald-600 dark:text-emerald-400">
+                        Extras
+                      </span>
+                    ) : null}
                     {!category.isActive ? (
                       <span className="rounded-full bg-zinc-500/15 px-2 py-1 text-xs text-zinc-500">
                         Hidden
@@ -248,6 +257,14 @@ export function MenuCategoriesView({
                   type="checkbox"
                 />
                 <span className={primaryText}>Supports S/L/F size pricing (pizzas)</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  checked={form.supportsExtras}
+                  onChange={(event) => setForm((c) => ({ ...c, supportsExtras: event.target.checked }))}
+                  type="checkbox"
+                />
+                <span className={primaryText}>Supports paid extras (pasta, sides, etc.)</span>
               </label>
               <label className="flex items-center gap-2 text-sm">
                 <input

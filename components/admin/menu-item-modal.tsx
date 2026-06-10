@@ -7,6 +7,7 @@ import { MenuItemCustomizationFields } from "@/components/admin/menu-item-custom
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  hasExtras,
   hasSizePricing,
   slugifyMenuName,
 } from "@/lib/menu-categories";
@@ -162,6 +163,7 @@ export function MenuItemModal({
   }, [open, mode, item, menuCategories, ingredientCatalog]);
 
   const showSizeOptions = hasSizePricing(form.categorySlug, menuCategories);
+  const showExtraToppings = hasExtras(form.categorySlug, menuCategories);
 
   const updateField = <K extends keyof MenuItemFormState>(
     key: K,
@@ -320,6 +322,7 @@ export function MenuItemModal({
               onAllowedToppingIdsChange={(ids) => updateField("allowedToppingIds", ids)}
               onIngredientsChange={(ingredients) => updateField("ingredients", ingredients)}
               onSizeOptionsChange={(sizeOptions) => updateField("sizeOptions", sizeOptions)}
+              showExtraToppings={showExtraToppings}
               showSizeOptions={showSizeOptions}
               sizeOptions={form.sizeOptions}
               toppingCatalog={toppingCatalog}

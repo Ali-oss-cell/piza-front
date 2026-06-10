@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 interface MenuItemCustomizationFieldsProps {
   showSizeOptions: boolean;
+  showExtraToppings: boolean;
   ingredients: string[];
   sizeOptions: SizeOptions;
   allowedToppingIds: string[];
@@ -31,6 +32,7 @@ function ingredientLabel(
 
 export function MenuItemCustomizationFields({
   showSizeOptions,
+  showExtraToppings,
   ingredients,
   sizeOptions,
   allowedToppingIds,
@@ -197,13 +199,15 @@ export function MenuItemCustomizationFields({
         </section>
       ) : null}
 
-      {showSizeOptions && toppingCatalog.length > 0 ? (
+      {showExtraToppings && toppingCatalog.length > 0 ? (
         <section className={cn("space-y-3 rounded-2xl border border-zinc-200/50 p-4 dark:border-white/10", dashboardGlass)}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className={cn("text-sm font-medium", primaryText)}>Extra toppings</p>
+              <p className={cn("text-sm font-medium", primaryText)}>
+                {showSizeOptions ? "Extra toppings" : "Paid extras"}
+              </p>
               <p className={cn("mt-1 text-xs", secondaryText)}>
-                Choose which add-ons customers can pick. Leave all selected to allow every topping.
+                Choose which add-ons customers can pick. Leave all selected to allow every extra.
               </p>
             </div>
             <button

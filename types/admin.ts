@@ -67,6 +67,7 @@ export interface AdminMenuCategoryRecord {
   label: string;
   sortOrder: number;
   supportsSizeOptions: boolean;
+  supportsExtras: boolean;
   isActive: boolean;
 }
 
@@ -194,6 +195,7 @@ export interface CreateMenuCategoryPayload {
   label: string;
   sortOrder?: number;
   supportsSizeOptions?: boolean;
+  supportsExtras?: boolean;
   isActive?: boolean;
 }
 
