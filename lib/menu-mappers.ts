@@ -49,6 +49,7 @@ export function mapApiMenuItem(item: AdminMenuItem): MenuItem {
 
   return {
     id: item.slug,
+    apiId: item.id,
     slug: item.slug,
     number: item.number,
     name: item.name,

@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight, Loader2, Mail, MapPin, Phone } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { formatScheduledAt } from "@/lib/opening-hours";
 import { getNextOrderStatus, getStatusBadgeClass, getStatusLabel } from "@/lib/order-status";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import type { AdminOrder } from "@/types/admin";
@@ -31,6 +32,16 @@ export function OrderCard({ order, onAdvance }: OrderCardProps): React.ReactElem
   const nextStatus = getNextOrderStatus(order.status);
   const customerName =
     order.user ? `${order.user.firstName} ${order.user.lastName}` : order.guestName ?? "Guest";
+  const customerEmail = order.user?.email ?? order.guestEmail;
+  const deliveryAddress = [
+    order.deliveryAddressLine1,
+    order.deliveryAddressLine2,
+    [order.deliverySuburb, order.deliveryState, order.deliveryPostcode]
+      .filter(Boolean)
+      .join(" "),
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   const handleAdvance = async (): Promise<void> => {
     if (!nextStatus) {
@@ -51,7 +62,12 @@ export function OrderCard({ order, onAdvance }: OrderCardProps): React.ReactElem
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className={cn("font-semibold", primaryText)}>{customerName}</p>
-          <p className={cn("text-sm", secondaryText)}>{formatOrderTime(order.createdAt)}</p>
+          <p className={cn("text-sm", secondaryText)}>
+            {order.deliveryMode === "DELIVERY" ? "Delivery" : "Pickup"}
+            {order.scheduledAt
+              ? ` · ${formatScheduledAt(order.scheduledAt)}`
+              : ` · ${formatOrderTime(order.createdAt)}`}
+          </p>
         </div>
         <span
           className={cn(
@@ -61,6 +77,30 @@ export function OrderCard({ order, onAdvance }: OrderCardProps): React.ReactElem
         >
           {getStatusLabel(order.status)}
         </span>
+      </div>
+
+      <div className="mb-4 space-y-1.5 text-sm">
+        {customerEmail ? (
+          <p className={cn("flex items-center gap-2", secondaryText)}>
+            <Mail className="h-3.5 w-3.5 shrink-0" />
+            {customerEmail}
+          </p>
+        ) : null}
+        {order.guestPhone ? (
+          <p className={cn("flex items-center gap-2", secondaryText)}>
+            <Phone className="h-3.5 w-3.5 shrink-0" />
+            {order.guestPhone}
+          </p>
+        ) : null}
+        {order.deliveryMode === "DELIVERY" && deliveryAddress ? (
+          <p className={cn("flex items-start gap-2", secondaryText)}>
+            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            {deliveryAddress}
+          </p>
+        ) : null}
+        {order.notes ? (
+          <p className={cn("text-xs italic", secondaryText)}>Note: {order.notes}</p>
+        ) : null}
       </div>
 
       <ul className="space-y-2">

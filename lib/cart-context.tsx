@@ -27,6 +27,7 @@ interface CartContextValue {
   incrementItem: (id: string) => void;
   decrementItem: (id: string) => void;
   removeItem: (id: string) => void;
+  clearCart: () => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -140,6 +141,7 @@ export function CartProvider({
           {
             id: `cart-${cartLineId}`,
             itemId: cartLineId,
+            menuItemId: payload.item.apiId,
             name: payload.item.name,
             description: buildCartDescription(payload),
             price: payload.price,
@@ -177,6 +179,10 @@ export function CartProvider({
     setItems((currentItems) => currentItems.filter((item) => item.id !== id));
   }, []);
 
+  const clearCart = useCallback(() => {
+    setItems([]);
+  }, []);
+
   const cartCount = useMemo(
     () => items.reduce((sum, item) => sum + item.quantity, 0),
     [items]
@@ -196,6 +202,7 @@ export function CartProvider({
       incrementItem,
       decrementItem,
       removeItem,
+      clearCart,
     }),
     [
       items,
@@ -208,6 +215,7 @@ export function CartProvider({
       incrementItem,
       decrementItem,
       removeItem,
+      clearCart,
     ]
   );
 

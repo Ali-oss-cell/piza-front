@@ -22,6 +22,7 @@ export interface AddToCartPayload {
 
 export interface MenuItem {
   id: string;
+  apiId?: string;
   slug?: string;
   number: number;
   name: string;
@@ -40,6 +41,7 @@ export interface MenuItem {
 export interface CartItem {
   id: string;
   itemId: string;
+  menuItemId?: string;
   name: string;
   description: string;
   price: number;

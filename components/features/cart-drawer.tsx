@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { CartItemRow } from "@/components/features/cart-item-row";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -117,7 +118,11 @@ export function CartDrawer({
               <span className={brandPink}>${total.toFixed(2)}</span>
             </div>
           </div>
-          <Button className="w-full py-5 uppercase tracking-widest">Proceed to Checkout</Button>
+          <Button asChild className="w-full py-5 uppercase tracking-widest">
+            <Link href="/checkout" onClick={() => onOpenChange(false)}>
+              Proceed to Checkout
+            </Link>
+          </Button>
         </div>
       </SheetContent>
     </Sheet>

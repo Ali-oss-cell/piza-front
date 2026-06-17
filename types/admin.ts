@@ -91,6 +91,14 @@ export interface AdminOrder {
   total: string | number;
   guestEmail?: string | null;
   guestName?: string | null;
+  guestPhone?: string | null;
+  deliveryAddressLine1?: string | null;
+  deliveryAddressLine2?: string | null;
+  deliverySuburb?: string | null;
+  deliveryState?: string | null;
+  deliveryPostcode?: string | null;
+  scheduledAt?: string | null;
+  notes?: string | null;
   createdAt: string;
   items: AdminOrderItem[];
   user?: {
