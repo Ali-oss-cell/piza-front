@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { ChevronRight, LogOut, Menu, UserCircle2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BrandSwitcher } from "@/components/admin/brand-picker";
 import { Button } from "@/components/ui/button";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import { useAuth } from "@/providers/auth-provider";
@@ -33,6 +34,7 @@ const VIEW_LABELS: Record<AdminView, string> = {
 
 interface AdminHeaderProps {
   activeView: AdminView;
+  brandName: string;
   collapsed: boolean;
   onToggleCollapsed: () => void;
   onOpenMobileNav: () => void;
@@ -40,6 +42,7 @@ interface AdminHeaderProps {
 
 export function AdminHeader({
   activeView,
+  brandName,
   collapsed,
   onToggleCollapsed,
   onOpenMobileNav,
@@ -97,6 +100,8 @@ export function AdminHeader({
           </Button>
           <div>
             <div className={cn("flex items-center gap-2 text-xs uppercase tracking-wide", secondaryText)}>
+              <span>{brandName}</span>
+              <ChevronRight className="h-3 w-3" />
               <span>Dashboard</span>
               <ChevronRight className="h-3 w-3" />
               <span className="text-[#d81b60]">{VIEW_LABELS[activeView]}</span>
@@ -107,7 +112,8 @@ export function AdminHeader({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <BrandSwitcher />
           <span className={cn("hidden text-sm md:inline", secondaryText)}>{clock}</span>
           <ThemeToggle />
           <div className="relative" ref={menuRef}>

@@ -1,4 +1,5 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+const BRAND_HEADER = "x-brand-slug";
 
 interface ApiErrorBody {
   message?: string | string[];
@@ -23,11 +24,20 @@ function resolveErrorMessage(body: ApiErrorBody, fallback: string): string {
   return body.message ?? fallback;
 }
 
+function appendBrandQuery(path: string, brandSlug?: string): string {
+  if (!brandSlug) {
+    return path;
+  }
+
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}brand=${encodeURIComponent(brandSlug)}`;
+}
+
 export async function apiRequest<T>(
   path: string,
-  options: RequestInit & { token?: string } = {}
+  options: RequestInit & { token?: string; brandSlug?: string } = {}
 ): Promise<T> {
-  const { token, headers: initHeaders, ...rest } = options;
+  const { token, brandSlug, headers: initHeaders, ...rest } = options;
   const headers = new Headers(initHeaders);
 
   if (!headers.has("Content-Type") && rest.body) {
@@ -38,7 +48,13 @@ export async function apiRequest<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  if (brandSlug) {
+    headers.set(BRAND_HEADER, brandSlug);
+  }
+
+  const requestPath = brandSlug ? appendBrandQuery(path, brandSlug) : path;
+
+  const response = await fetch(`${API_BASE}${requestPath}`, {
     ...rest,
     headers,
   });

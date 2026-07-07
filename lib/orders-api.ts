@@ -1,4 +1,5 @@
 import { apiRequest } from "@/lib/api-client";
+import { getSiteBrandSlug } from "@/lib/brand-storage";
 import type { DeliveryMode } from "@/types/menu";
 
 export interface CreateOrderPayload {
@@ -43,10 +44,12 @@ export function toApiDeliveryMode(mode: DeliveryMode): "DELIVERY" | "PICKUP" {
 export function createOrder(
   payload: CreateOrderPayload,
   token?: string,
+  brandSlug?: string,
 ): Promise<CreatedOrder> {
   return apiRequest<CreatedOrder>("/orders", {
     method: "POST",
     body: JSON.stringify(payload),
     token,
+    brandSlug: brandSlug ?? getSiteBrandSlug(),
   });
 }

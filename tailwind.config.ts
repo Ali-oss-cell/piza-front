@@ -63,8 +63,8 @@ const config: Config = {
         "margin-mobile": "20px",
       },
       fontFamily: {
-        sans: ["var(--font-body)", "system-ui", "sans-serif"],
-        display: ["var(--font-display)", "system-ui", "sans-serif"],
+        sans: ["var(--font-body)", "Montserrat", "system-ui", "sans-serif"],
+        display: ["TG Praktikal", "var(--font-display)", "system-ui", "sans-serif"],
       },
       fontSize: {
         "headline-xl": ["48px", { lineHeight: "1.1", fontWeight: "700" }],

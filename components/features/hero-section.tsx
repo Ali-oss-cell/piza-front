@@ -4,9 +4,18 @@ import { Button } from "@/components/ui/button";
 
 interface HeroSectionProps {
   onOpenCart: () => void;
+  brandName?: string;
+  tagline?: string;
 }
 
-export function HeroSection({ onOpenCart }: HeroSectionProps): React.ReactElement {
+export function HeroSection({
+  onOpenCart,
+  brandName,
+  tagline,
+}: HeroSectionProps): React.ReactElement {
+  const isBunnyBoys = brandName === "Bunny Boys";
+  const accentClass = isBunnyBoys ? "text-[#FF6B35]" : "text-[#d81b60]";
+
   return (
     <section className="relative flex min-h-[85vh] items-center overflow-hidden px-margin-mobile transition-colors duration-150 ease-out md:px-margin-desktop">
       <div className="absolute inset-0 z-0">
@@ -23,12 +32,21 @@ export function HeroSection({ onOpenCart }: HeroSectionProps): React.ReactElemen
       <div className="relative z-10 mx-auto w-full max-w-container-max">
         <div className="max-w-2xl space-y-8">
           <h1 className="font-display text-headline-xl leading-none tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white">
-            PIZZA & <br />
-            PASTA <span className="text-[#d81b60]">REFINED.</span>
+            {isBunnyBoys ? (
+              <>
+                BUNNY <br />
+                BOYS <span className={accentClass}>DELIVERED.</span>
+              </>
+            ) : (
+              <>
+                PIZZA & <br />
+                PASTA <span className={accentClass}>REFINED.</span>
+              </>
+            )}
           </h1>
           <p className="max-w-lg text-body-lg text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400">
-            Artisanal sourdough foundations, heritage recipes, and contemporary culinary
-            precision delivered to your urban doorstep.
+            {tagline ??
+              "Artisanal sourdough foundations, heritage recipes, and contemporary culinary precision delivered to your urban doorstep."}
           </p>
           <div className="flex flex-wrap gap-4 pt-4">
             <Button className="uppercase tracking-[0.15em]" onClick={onOpenCart}>

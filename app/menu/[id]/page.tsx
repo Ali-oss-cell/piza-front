@@ -3,7 +3,7 @@ import { ProductDetailPage } from "@/components/features/product-detail/product-
 import {
   fetchCrusts,
   fetchMenuCategories,
-  fetchMenuItemBySlug,
+  fetchMenuItemById,
   fetchToppings,
 } from "@/lib/menu-api";
 import { hasExtras, hasSizePricing } from "@/lib/menu-categories";
@@ -22,14 +22,16 @@ export const dynamic = "force-dynamic";
 export default async function ProductPage({
   params,
 }: ProductPageProps): Promise<React.ReactElement> {
-  const { id: slug } = await params;
+  const { id } = await params;
 
   try {
-    const [apiItem, toppingGroups, apiCrusts, categories] = await Promise.all([
-      fetchMenuItemBySlug(slug),
-      fetchToppings(),
-      fetchCrusts(),
-      fetchMenuCategories(),
+    const apiItem = await fetchMenuItemById(id);
+    const brandSlug = apiItem.brandSlug;
+
+    const [toppingGroups, apiCrusts, categories] = await Promise.all([
+      fetchToppings(brandSlug),
+      fetchCrusts(brandSlug),
+      fetchMenuCategories(brandSlug),
     ]);
 
     const item = mapApiMenuItem(apiItem);

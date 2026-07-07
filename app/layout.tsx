@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Hanken_Grotesk, Sora } from "next/font/google";
 import { AppShell } from "@/components/layout/app-shell";
 import { CartProvider } from "@/lib/cart-context";
+import { montserrat } from "@/lib/fonts";
 import { fetchStoreSettings } from "@/lib/menu-api";
 import { AuthProvider } from "@/providers/auth-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -19,16 +19,7 @@ async function getDeliveryFee(): Promise<number> {
   }
 }
 
-const bodyFont = Hanken_Grotesk({
-  variable: "--font-body",
-  subsets: ["latin"],
-});
-
-const displayFont = Sora({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
-});
+const bodyFont = montserrat;
 
 export const metadata: Metadata = {
   title: "Leovorno | Pizza & Pasta Refined",
@@ -45,7 +36,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bodyFont.variable} ${displayFont.variable}`}
+      className={bodyFont.variable}
       suppressHydrationWarning
     >
       <body

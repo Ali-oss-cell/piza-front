@@ -12,16 +12,28 @@ import type { MenuItem } from "@/types/menu";
 interface HomePageProps {
   menuItems: MenuItem[];
   categories: CategoryTab[];
+  brandName?: string;
+  brandSlug?: string;
+  tagline?: string;
 }
 
-export function HomePage({ menuItems, categories }: HomePageProps): React.ReactElement {
+export function HomePage({
+  menuItems,
+  categories,
+  brandName,
+  tagline,
+}: HomePageProps): React.ReactElement {
   const { addToCart, setCartOpen } = useCart();
   const [activeCategory, setActiveCategory] = useState(categories[0]?.value ?? "traditional-pizza");
 
   return (
     <>
       <main className="pt-20 transition-colors duration-150 ease-out">
-        <HeroSection onOpenCart={() => setCartOpen(true)} />
+        <HeroSection
+          brandName={brandName}
+          onOpenCart={() => setCartOpen(true)}
+          tagline={tagline}
+        />
         <CategoryTabs
           activeCategory={activeCategory}
           categories={categories}

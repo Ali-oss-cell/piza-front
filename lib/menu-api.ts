@@ -13,30 +13,34 @@ export interface ApiMenuCategory {
   isActive: boolean;
 }
 
-export function fetchMenuItems(): Promise<AdminMenuItem[]> {
-  return apiRequest<AdminMenuItem[]>("/menu");
+export function fetchMenuItems(brandSlug?: string): Promise<AdminMenuItem[]> {
+  return apiRequest<AdminMenuItem[]>("/menu", { brandSlug });
 }
 
-export function fetchMenuCategories(): Promise<ApiMenuCategory[]> {
-  return apiRequest<ApiMenuCategory[]>("/menu/categories");
+export function fetchMenuCategories(brandSlug?: string): Promise<ApiMenuCategory[]> {
+  return apiRequest<ApiMenuCategory[]>("/menu/categories", { brandSlug });
 }
 
-export function fetchMenuItemBySlug(slug: string): Promise<AdminMenuItem> {
-  return apiRequest<AdminMenuItem>(`/menu/slug/${slug}`);
+export function fetchMenuItemById(id: string): Promise<AdminMenuItem & { brandSlug?: string }> {
+  return apiRequest<AdminMenuItem & { brandSlug?: string }>(`/menu/${id}`);
 }
 
-export function fetchToppings(): Promise<ToppingCategoryGroup[]> {
-  return apiRequest<ToppingCategoryGroup[]>("/customizations/toppings");
+export function fetchMenuItemBySlug(slug: string, brandSlug?: string): Promise<AdminMenuItem> {
+  return apiRequest<AdminMenuItem>(`/menu/slug/${slug}`, { brandSlug });
 }
 
-export function fetchCrusts(): Promise<AdminCrustOption[]> {
-  return apiRequest<AdminCrustOption[]>("/customizations/crusts");
+export function fetchToppings(brandSlug?: string): Promise<ToppingCategoryGroup[]> {
+  return apiRequest<ToppingCategoryGroup[]>("/customizations/toppings", { brandSlug });
 }
 
-export function fetchStoreSettings(): Promise<StoreSettings> {
-  return apiRequest<StoreSettings>("/settings");
+export function fetchCrusts(brandSlug?: string): Promise<AdminCrustOption[]> {
+  return apiRequest<AdminCrustOption[]>("/customizations/crusts", { brandSlug });
 }
 
-export function fetchDeals(): Promise<Deal[]> {
-  return apiRequest<Deal[]>("/deals");
+export function fetchStoreSettings(brandSlug?: string): Promise<StoreSettings> {
+  return apiRequest<StoreSettings>("/settings", { brandSlug });
+}
+
+export function fetchDeals(brandSlug?: string): Promise<Deal[]> {
+  return apiRequest<Deal[]>("/deals", { brandSlug });
 }
