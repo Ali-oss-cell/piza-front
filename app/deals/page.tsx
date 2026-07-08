@@ -4,7 +4,10 @@ import { fetchDeals } from "@/lib/menu-api";
 export const dynamic = "force-dynamic";
 
 export default async function DealsPage(): Promise<React.ReactElement> {
-  const deals = await fetchDeals();
-
-  return <DealsPageContent deals={deals} />;
+  try {
+    const deals = await fetchDeals();
+    return <DealsPageContent deals={deals} />;
+  } catch {
+    return <DealsPageContent deals={[]} />;
+  }
 }
