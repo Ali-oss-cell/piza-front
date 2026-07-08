@@ -23,6 +23,10 @@ function DialogContent({
         )}
         {...props}
       >
+        <DialogPrimitive.Title className="sr-only">Dialog</DialogPrimitive.Title>
+        <DialogPrimitive.Description className="sr-only">
+          Dialog content
+        </DialogPrimitive.Description>
         {children}
         <DialogPrimitive.Close className="absolute right-4 top-4 rounded-full p-1 text-zinc-500 transition-colors hover:text-zinc-900 dark:hover:text-zinc-50">
           <X className="h-4 w-4" />
