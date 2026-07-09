@@ -4,6 +4,7 @@ import {
   fetchCrusts,
   fetchMenuCategories,
   fetchMenuItemById,
+  fetchMenuItemBySlug,
   fetchToppings,
 } from "@/lib/menu-api";
 import { hasExtras, hasSizePricing } from "@/lib/menu-categories";
@@ -25,7 +26,14 @@ export default async function ProductPage({
   const { id } = await params;
 
   try {
-    const apiItem = await fetchMenuItemById(id);
+    let apiItem;
+
+    try {
+      apiItem = await fetchMenuItemById(id);
+    } catch {
+      apiItem = await fetchMenuItemBySlug(id);
+    }
+
     const brandSlug = apiItem.brandSlug;
 
     const [toppingGroups, apiCrusts, categories] = await Promise.all([
