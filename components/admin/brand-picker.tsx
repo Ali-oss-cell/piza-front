@@ -1,13 +1,18 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Plus } from "lucide-react";
+import { CreateStoreWizard } from "@/components/admin/create-store-wizard";
 import { Button } from "@/components/ui/button";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import { useAdminBrand } from "@/providers/admin-brand-provider";
+import { useAuth } from "@/providers/auth-provider";
 import { cn } from "@/lib/utils";
 
 export function BrandPicker(): React.ReactElement {
-  const { brands, isLoading, selectBrand } = useAdminBrand();
+  const { token } = useAuth();
+  const { brands, isLoading, selectBrand, refreshBrands } = useAdminBrand();
+  const [showCreateWizard, setShowCreateWizard] = useState(false);
 
   if (isLoading) {
     return (
@@ -17,16 +22,49 @@ export function BrandPicker(): React.ReactElement {
     );
   }
 
+  if (showCreateWizard && token) {
+    return (
+      <CreateStoreWizard
+        onCancel={() => setShowCreateWizard(false)}
+        onCreated={async (store) => {
+          await refreshBrands();
+          setShowCreateWizard(false);
+          selectBrand(store.slug);
+        }}
+        token={token}
+      />
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center p-6">
-      <div className={cn("w-full max-w-2xl rounded-3xl border border-zinc-200/60 p-8 shadow-xl dark:border-white/10", dashboardGlass)}>
-        <p className={cn("text-sm uppercase tracking-wide", secondaryText)}>Admin dashboard</p>
-        <h1 className={cn("mt-2 font-display text-3xl font-bold", primaryText)}>
-          Which brand are you managing?
-        </h1>
-        <p className={cn("mt-2 text-sm", secondaryText)}>
-          Menu, toppings, deals, and orders are scoped to the brand you pick.
-        </p>
+      <div
+        className={cn(
+          "w-full max-w-2xl rounded-3xl border border-zinc-200/60 p-8 shadow-xl dark:border-white/10",
+          dashboardGlass
+        )}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className={cn("text-sm uppercase tracking-wide", secondaryText)}>Admin dashboard</p>
+            <h1 className={cn("mt-2 font-display text-3xl font-bold", primaryText)}>
+              Which store are you managing?
+            </h1>
+            <p className={cn("mt-2 text-sm", secondaryText)}>
+              Menu, toppings, deals, and orders are scoped to the store you pick.
+            </p>
+          </div>
+          {token ? (
+            <Button
+              className="shrink-0"
+              onClick={() => setShowCreateWizard(true)}
+              type="button"
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              Create store
+            </Button>
+          ) : null}
+        </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           {brands.map((brand) => (
@@ -49,10 +87,26 @@ export function BrandPicker(): React.ReactElement {
               </p>
             </button>
           ))}
+
+          {token ? (
+            <button
+              className="flex min-h-[140px] flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-white/40 p-6 text-center transition-all hover:border-[#d81b60]/50 hover:bg-white/70 dark:border-white/20 dark:bg-zinc-900/30"
+              onClick={() => setShowCreateWizard(true)}
+              type="button"
+            >
+              <Plus className="mb-2 h-6 w-6 text-[#d81b60]" />
+              <span className={cn("font-medium", primaryText)}>Create new store</span>
+              <span className={cn("mt-1 text-xs", secondaryText)}>
+                Branding, location, path, cash
+              </span>
+            </button>
+          ) : null}
         </div>
 
         {brands.length === 0 ? (
-          <p className="mt-6 text-sm text-[#d81b60]">No brands found. Check the API connection.</p>
+          <p className="mt-6 text-sm text-[#d81b60]">
+            No stores yet. Create your first store to get started.
+          </p>
         ) : null}
       </div>
     </div>

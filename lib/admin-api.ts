@@ -31,7 +31,7 @@ import type {
   UpdateCrustOptionPayload,
   UpdateStoreSettingsPayload,
 } from "@/types/store";
-import type { Brand } from "@/types/brand";
+import type { Brand, CreatedStore, CreateStorePayload } from "@/types/brand";
 import { apiRequest } from "@/lib/api-client";
 import { getAdminBrandSlug } from "@/lib/brand-storage";
 
@@ -48,6 +48,14 @@ export function loginRequest(credentials: LoginCredentials): Promise<AuthRespons
 
 export function fetchBrands(token: string): Promise<Brand[]> {
   return apiRequest<Brand[]>("/brands", { token });
+}
+
+export function createStore(token: string, payload: CreateStorePayload): Promise<CreatedStore> {
+  return apiRequest<CreatedStore>("/brands", {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
 }
 
 export function fetchOrders(token: string, brandSlug?: string): Promise<AdminOrder[]> {
