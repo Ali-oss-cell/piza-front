@@ -13,6 +13,7 @@ import {
   UtensilsCrossed,
   CircleDot,
   Tag,
+  CreditCard,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -30,6 +31,7 @@ const NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashboard }[
   { id: "categories", label: "Topping Categories", icon: FolderPlus },
   { id: "crusts", label: "Crusts", icon: CircleDot },
   { id: "deals", label: "Deals", icon: Tag },
+  { id: "payments", label: "Payments", icon: CreditCard },
   { id: "settings", label: "System Settings", icon: Settings },
 ];
 

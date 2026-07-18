@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ApiError } from "@/lib/api-client";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import { useAuth } from "@/providers/auth-provider";
+import { canAccessAdminDashboard } from "@/types/auth";
 import { cn } from "@/lib/utils";
 
 interface LoginFormState {
@@ -68,7 +69,7 @@ export function LoginForm(): React.ReactElement {
         password: values.password,
       });
 
-      if (user.role === "ADMIN") {
+      if (canAccessAdminDashboard(user)) {
         router.push("/admin/dashboard");
         return;
       }

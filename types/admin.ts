@@ -129,6 +129,7 @@ export interface AdminMenuItem {
   } | null;
   allowedToppingIds: string[];
   isActive: boolean;
+  brandSlug?: string;
 }
 
 export type AdminView =
@@ -141,6 +142,7 @@ export type AdminView =
   | "menu-categories"
   | "crusts"
   | "deals"
+  | "payments"
   | "settings";
 
 export interface CreateMenuItemPayload {

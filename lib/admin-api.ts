@@ -32,6 +32,11 @@ import type {
   UpdateStoreSettingsPayload,
 } from "@/types/store";
 import type { Brand, CreatedStore, CreateStorePayload } from "@/types/brand";
+import type {
+  PaymentSettings,
+  StoreDomain,
+  UpdatePaymentSettingsPayload,
+} from "@/types/payments";
 import { apiRequest } from "@/lib/api-client";
 import { getAdminBrandSlug } from "@/lib/brand-storage";
 
@@ -407,6 +412,47 @@ export function updateStoreSettings(
     token,
     brandSlug: withBrand(brandSlug),
     body: JSON.stringify(payload),
+  });
+}
+
+export function fetchPaymentSettings(
+  token: string,
+  brandSlug?: string
+): Promise<PaymentSettings> {
+  return apiRequest<PaymentSettings>("/payment-settings", {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function updatePaymentSettings(
+  token: string,
+  payload: UpdatePaymentSettingsPayload,
+  brandSlug?: string
+): Promise<PaymentSettings> {
+  return apiRequest<PaymentSettings>("/payment-settings", {
+    method: "PUT",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchStoreDomains(token: string, brandSlug: string): Promise<StoreDomain[]> {
+  return apiRequest<StoreDomain[]>(`/brands/${encodeURIComponent(brandSlug)}/domains`, {
+    token,
+  });
+}
+
+export function updateStoreStatus(
+  token: string,
+  brandSlug: string,
+  isActive: boolean
+): Promise<Brand> {
+  return apiRequest<Brand>(`/brands/${encodeURIComponent(brandSlug)}/status`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({ isActive }),
   });
 }
 

@@ -17,6 +17,7 @@ import { ToppingsView } from "@/components/admin/views/toppings-view";
 import { OrdersView } from "@/components/admin/views/orders-view";
 import { OverviewView } from "@/components/admin/views/overview-view";
 import { SettingsView } from "@/components/admin/views/settings-view";
+import { PaymentsView } from "@/components/admin/views/payments-view";
 import {
   fetchAdminCrusts,
   fetchAdminDeals,
@@ -26,6 +27,8 @@ import {
   fetchIngredientCategories,
   fetchMenuCategories,
   fetchOrders,
+  fetchPaymentSettings,
+  fetchStoreDomains,
   fetchStoreSettings,
   fetchToppingCategories,
 } from "@/lib/admin-api";
@@ -42,6 +45,8 @@ import type {
   IngredientCategoryGroup,
   ToppingCategoryGroup,
 } from "@/types/admin";
+import { canAccessAdminDashboard, isPlatformAdmin } from "@/types/auth";
+import type { PaymentSettings, StoreDomain } from "@/types/payments";
 import type { AdminCrustOption, StoreSettings } from "@/types/store";
 import type { Deal } from "@/types/deals";
 import { cn } from "@/lib/utils";
@@ -49,7 +54,7 @@ import { cn } from "@/lib/utils";
 export function AdminDashboardContent(): React.ReactElement {
   const router = useRouter();
   const { user, token, isAuthReady, isAuthenticated } = useAuth();
-  const { selectedBrand } = useAdminBrand();
+  const { selectedBrand, clearBrand, refreshBrands } = useAdminBrand();
   const [activeView, setActiveView] = useState<AdminView>("overview");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -63,10 +68,13 @@ export function AdminDashboardContent(): React.ReactElement {
   const [crusts, setCrusts] = useState<AdminCrustOption[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
+  const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
+  const [storeDomains, setStoreDomains] = useState<StoreDomain[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const brandSlug = selectedBrand?.slug;
+  const platformAdmin = isPlatformAdmin(user);
 
   const loadData = useCallback(async (): Promise<void> => {
     if (!token || !brandSlug) {
@@ -88,6 +96,8 @@ export function AdminDashboardContent(): React.ReactElement {
         nextCrusts,
         nextDeals,
         nextSettings,
+        nextPayments,
+        nextDomains,
       ] = await Promise.all([
         fetchOrders(token, brandSlug),
         fetchAdminMenuItems(token, brandSlug),
@@ -99,6 +109,8 @@ export function AdminDashboardContent(): React.ReactElement {
         fetchAdminCrusts(token, brandSlug),
         fetchAdminDeals(token, brandSlug),
         fetchStoreSettings(token, brandSlug),
+        fetchPaymentSettings(token, brandSlug),
+        fetchStoreDomains(token, brandSlug),
       ]);
       setOrders(nextOrders);
       setMenuItems(nextMenu);
@@ -110,6 +122,8 @@ export function AdminDashboardContent(): React.ReactElement {
       setCrusts(nextCrusts);
       setDeals(nextDeals);
       setStoreSettings(nextSettings);
+      setPaymentSettings(nextPayments);
+      setStoreDomains(nextDomains);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -126,7 +140,7 @@ export function AdminDashboardContent(): React.ReactElement {
       return;
     }
 
-    if (!isAuthenticated || user?.role !== "ADMIN") {
+    if (!isAuthenticated || !canAccessAdminDashboard(user)) {
       router.replace("/login");
       return;
     }
@@ -141,7 +155,7 @@ export function AdminDashboardContent(): React.ReactElement {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [isAuthReady, isAuthenticated, user?.role, router, loadData, brandSlug]);
+  }, [isAuthReady, isAuthenticated, user, router, loadData, brandSlug]);
 
   const refreshToppingCatalog = useCallback(async (): Promise<void> => {
     if (!token || !brandSlug) {
@@ -165,7 +179,7 @@ export function AdminDashboardContent(): React.ReactElement {
     setIngredientCategories(nextCategories);
   }, [token, brandSlug]);
 
-  if (!isAuthReady || !isAuthenticated || user?.role !== "ADMIN") {
+  if (!isAuthReady || !isAuthenticated || !canAccessAdminDashboard(user)) {
     return (
       <div className={cn("flex min-h-screen items-center justify-center", pageShell)}>
         <Loader2 className="h-8 w-8 animate-spin text-[#d81b60]" />
@@ -269,9 +283,23 @@ export function AdminDashboardContent(): React.ReactElement {
                 {activeView === "deals" ? (
                   <DealsView deals={deals} onDealsChange={setDeals} token={token!} />
                 ) : null}
+                {activeView === "payments" && paymentSettings ? (
+                  <PaymentsView
+                    onSettingsChange={setPaymentSettings}
+                    settings={paymentSettings}
+                    token={token!}
+                  />
+                ) : null}
                 {activeView === "settings" && storeSettings ? (
                   <SettingsView
+                    brandSlug={brandSlug!}
+                    domains={storeDomains}
+                    isPlatformAdmin={platformAdmin}
                     onSettingsChange={setStoreSettings}
+                    onStoreSuspended={() => {
+                      clearBrand();
+                      void refreshBrands();
+                    }}
                     settings={storeSettings}
                     token={token!}
                   />

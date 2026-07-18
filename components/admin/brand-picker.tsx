@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import { useAdminBrand } from "@/providers/admin-brand-provider";
 import { useAuth } from "@/providers/auth-provider";
+import { isPlatformAdmin } from "@/types/auth";
 import { cn } from "@/lib/utils";
 
 export function BrandPicker(): React.ReactElement {
-  const { token } = useAuth();
+  const { user, token } = useAuth();
   const { brands, isLoading, selectBrand, refreshBrands } = useAdminBrand();
   const [showCreateWizard, setShowCreateWizard] = useState(false);
+  const canCreate = isPlatformAdmin(user);
 
   if (isLoading) {
     return (
@@ -22,7 +24,7 @@ export function BrandPicker(): React.ReactElement {
     );
   }
 
-  if (showCreateWizard && token) {
+  if (showCreateWizard && token && canCreate) {
     return (
       <CreateStoreWizard
         onCancel={() => setShowCreateWizard(false)}
@@ -46,15 +48,17 @@ export function BrandPicker(): React.ReactElement {
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className={cn("text-sm uppercase tracking-wide", secondaryText)}>Admin dashboard</p>
+            <p className={cn("text-sm uppercase tracking-wide", secondaryText)}>
+              {canCreate ? "Platform admin" : "Store admin"}
+            </p>
             <h1 className={cn("mt-2 font-display text-3xl font-bold", primaryText)}>
               Which store are you managing?
             </h1>
             <p className={cn("mt-2 text-sm", secondaryText)}>
-              Menu, toppings, deals, and orders are scoped to the store you pick.
+              Menu, toppings, deals, payments, and orders are scoped to the store you pick.
             </p>
           </div>
-          {token ? (
+          {token && canCreate ? (
             <Button
               className="shrink-0"
               onClick={() => setShowCreateWizard(true)}
@@ -88,7 +92,7 @@ export function BrandPicker(): React.ReactElement {
             </button>
           ))}
 
-          {token ? (
+          {token && canCreate ? (
             <button
               className="flex min-h-[140px] flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-white/40 p-6 text-center transition-all hover:border-[#d81b60]/50 hover:bg-white/70 dark:border-white/20 dark:bg-zinc-900/30"
               onClick={() => setShowCreateWizard(true)}
@@ -105,7 +109,9 @@ export function BrandPicker(): React.ReactElement {
 
         {brands.length === 0 ? (
           <p className="mt-6 text-sm text-[#d81b60]">
-            No stores yet. Create your first store to get started.
+            {canCreate
+              ? "No stores yet. Create your first store to get started."
+              : "No stores assigned to your account. Ask a platform admin."}
           </p>
         ) : null}
       </div>

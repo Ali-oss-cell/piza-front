@@ -4,15 +4,20 @@ import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { updateStoreSettings } from "@/lib/admin-api";
+import { updateStoreSettings, updateStoreStatus } from "@/lib/admin-api";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import type { StoreDomain } from "@/types/payments";
 import type { StoreSettings, UpdateStoreSettingsPayload } from "@/types/store";
 import { cn } from "@/lib/utils";
 
 interface SettingsViewProps {
   token: string;
   settings: StoreSettings;
+  brandSlug: string;
+  isPlatformAdmin: boolean;
+  domains: StoreDomain[];
   onSettingsChange: (settings: StoreSettings) => void;
+  onStoreSuspended?: () => void;
 }
 
 interface SettingsFormState {
@@ -40,10 +45,15 @@ function formFromSettings(settings: StoreSettings): SettingsFormState {
 export function SettingsView({
   token,
   settings,
+  brandSlug,
+  isPlatformAdmin,
+  domains,
   onSettingsChange,
+  onStoreSuspended,
 }: SettingsViewProps): React.ReactElement {
   const [form, setForm] = useState<SettingsFormState>(() => formFromSettings(settings));
   const [isSaving, setIsSaving] = useState(false);
+  const [isSuspending, setIsSuspending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -156,6 +166,68 @@ export function SettingsView({
           Save Settings
         </Button>
       </div>
+
+      <div className={cn("max-w-2xl space-y-3 rounded-2xl border p-6", dashboardGlass)}>
+        <h3 className={cn("font-display text-lg font-bold", primaryText)}>Domains</h3>
+        <p className={cn("text-sm", secondaryText)}>
+          Path and host routing for this storefront. DNS / Traefik for custom hosts comes later.
+        </p>
+        {domains.length === 0 ? (
+          <p className={cn("text-sm", secondaryText)}>No domains configured.</p>
+        ) : (
+          <ul className="space-y-2">
+            {domains.map((domain) => (
+              <li
+                className="rounded-xl border border-zinc-200/70 px-4 py-3 text-sm dark:border-white/10"
+                key={domain.id}
+              >
+                <p className={cn("font-medium", primaryText)}>
+                  {domain.pathPrefix ?? "(no path)"}
+                  {domain.isPrimary ? " · primary" : ""}
+                </p>
+                <p className={cn("text-xs", secondaryText)}>
+                  Host: {domain.host ?? "—"} · {domain.isActive ? "active" : "inactive"}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {isPlatformAdmin ? (
+        <div className={cn("max-w-2xl space-y-3 rounded-2xl border border-[#d81b60]/30 p-6", dashboardGlass)}>
+          <h3 className={cn("font-display text-lg font-bold", primaryText)}>Platform controls</h3>
+          <p className={cn("text-sm", secondaryText)}>
+            Suspend this store to hide it from customers, POS brand lists, and admin pickers.
+          </p>
+          <Button
+            disabled={isSuspending}
+            onClick={() => {
+              void (async () => {
+                setIsSuspending(true);
+                setError(null);
+                try {
+                  await updateStoreStatus(token, brandSlug, false);
+                  onStoreSuspended?.();
+                } catch (suspendError) {
+                  setError(
+                    suspendError instanceof Error
+                      ? suspendError.message
+                      : "Unable to suspend store.",
+                  );
+                } finally {
+                  setIsSuspending(false);
+                }
+              })();
+            }}
+            type="button"
+            variant="outline"
+          >
+            {isSuspending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Suspend store
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
