@@ -122,40 +122,42 @@ export function SettingsView({
           />
         </div>
 
-        <div>
-          <label className={cn("mb-2 block text-sm font-medium", primaryText)}>
-            Light mode logo
-          </label>
-          <p className={cn("mb-2 text-xs", secondaryText)}>
-            Used on light backgrounds (white header).
-          </p>
-          <LogoUploader
-            label="Light logo"
-            onChange={(logoUrl) => setForm((current) => ({ ...current, logoUrl }))}
-            previewMode="light"
-            primaryColor={form.primaryColor || "#D81B60"}
-            storeName={form.storeName || "Store"}
-            token={token}
-            value={form.logoUrl}
-          />
-        </div>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="rounded-2xl border border-zinc-200/70 p-4 dark:border-white/10">
+            <label className={cn("mb-1 block text-sm font-semibold", primaryText)}>
+              Light mode logo
+            </label>
+            <p className={cn("mb-3 text-xs", secondaryText)}>
+              Shown when the site is in light mode. Stored on the server.
+            </p>
+            <LogoUploader
+              label="Upload light logo"
+              onChange={(logoUrl) => setForm((current) => ({ ...current, logoUrl }))}
+              previewMode="light"
+              primaryColor={form.primaryColor || "#D81B60"}
+              storeName={form.storeName || "Store"}
+              token={token}
+              value={form.logoUrl}
+            />
+          </div>
 
-        <div>
-          <label className={cn("mb-2 block text-sm font-medium", primaryText)}>
-            Dark mode logo
-          </label>
-          <p className={cn("mb-2 text-xs", secondaryText)}>
-            Used on dark backgrounds. If empty, the light logo is reused.
-          </p>
-          <LogoUploader
-            label="Dark logo"
-            onChange={(logoDarkUrl) => setForm((current) => ({ ...current, logoDarkUrl }))}
-            previewMode="dark"
-            primaryColor={form.primaryColor || "#D81B60"}
-            storeName={form.storeName || "Store"}
-            token={token}
-            value={form.logoDarkUrl}
-          />
+          <div className="rounded-2xl border border-zinc-200/70 p-4 dark:border-white/10">
+            <label className={cn("mb-1 block text-sm font-semibold", primaryText)}>
+              Dark mode logo
+            </label>
+            <p className={cn("mb-3 text-xs", secondaryText)}>
+              Shown when the site is in dark mode. Stored on the server.
+            </p>
+            <LogoUploader
+              label="Upload dark logo"
+              onChange={(logoDarkUrl) => setForm((current) => ({ ...current, logoDarkUrl }))}
+              previewMode="dark"
+              primaryColor={form.primaryColor || "#D81B60"}
+              storeName={form.storeName || "Store"}
+              token={token}
+              value={form.logoDarkUrl}
+            />
+          </div>
         </div>
 
         <div>

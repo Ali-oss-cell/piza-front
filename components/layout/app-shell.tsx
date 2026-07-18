@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CartDrawer } from "@/components/features/cart-drawer";
 import { MenuSheet } from "@/components/features/menu-sheet";
+import { SiteFooter } from "@/components/features/site-footer";
 import { SiteHeader } from "@/components/features/site-header";
 import { getSiteBrandSlug } from "@/lib/brand-storage";
 import { useCart } from "@/lib/cart-context";
@@ -21,7 +22,36 @@ function homeHrefForSlug(slug: string): string {
   return `/${slug}`;
 }
 
-export function AppShell({ children }: { children: React.ReactNode }): React.ReactElement {
+/** Bundled Leovorno logos (marinapizzas.com.au → Leovorno for now). */
+const LEOVORNO_LOGO_LIGHT = "/leovorno-logo-light.png";
+const LEOVORNO_LOGO_DARK = "/leovorno-logo-dark.png";
+
+function defaultLogosForSlug(slug: string): {
+  logoUrl: string | null;
+  logoDarkUrl: string | null;
+} {
+  if (slug === DEFAULT_BRAND_SLUG) {
+    return { logoUrl: LEOVORNO_LOGO_LIGHT, logoDarkUrl: LEOVORNO_LOGO_DARK };
+  }
+  return { logoUrl: null, logoDarkUrl: null };
+}
+
+export interface InitialSiteBranding {
+  brandSlug: string;
+  brandName: string;
+  logoUrl: string | null;
+  logoDarkUrl: string | null;
+  tagline?: string | null;
+  address?: string | null;
+}
+
+export function AppShell({
+  children,
+  initialBranding,
+}: {
+  children: React.ReactNode;
+  initialBranding?: InitialSiteBranding;
+}): React.ReactElement {
   const pathname = usePathname();
   const {
     items,
@@ -38,10 +68,26 @@ export function AppShell({ children }: { children: React.ReactNode }): React.Rea
   } = useCart();
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [brandSlug, setBrandSlug] = useState(DEFAULT_BRAND_SLUG);
-  const [brandName, setBrandName] = useState("Leovorno");
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [logoDarkUrl, setLogoDarkUrl] = useState<string | null>(null);
+  const [brandSlug, setBrandSlug] = useState(
+    initialBranding?.brandSlug ?? DEFAULT_BRAND_SLUG,
+  );
+  const [brandName, setBrandName] = useState(
+    initialBranding?.brandName ?? "Leovorno",
+  );
+  const [logoUrl, setLogoUrl] = useState<string | null>(
+    initialBranding?.logoUrl ??
+      defaultLogosForSlug(initialBranding?.brandSlug ?? DEFAULT_BRAND_SLUG).logoUrl,
+  );
+  const [logoDarkUrl, setLogoDarkUrl] = useState<string | null>(
+    initialBranding?.logoDarkUrl ??
+      defaultLogosForSlug(initialBranding?.brandSlug ?? DEFAULT_BRAND_SLUG).logoDarkUrl,
+  );
+  const [tagline, setTagline] = useState<string | null>(
+    initialBranding?.tagline ?? null,
+  );
+  const [address, setAddress] = useState<string | null>(
+    initialBranding?.address ?? null,
+  );
 
   useEffect(() => {
     const onScroll = (): void => setIsScrolled(window.scrollY > 50);
@@ -71,23 +117,27 @@ export function AppShell({ children }: { children: React.ReactNode }): React.Rea
         if (cancelled) {
           return;
         }
+        const fallbacks = defaultLogosForSlug(brandSlug);
         setBrandName(settings.storeName || "Store");
-        setLogoUrl(settings.logoUrl ?? null);
-        setLogoDarkUrl(settings.logoDarkUrl ?? null);
+        setLogoUrl(settings.logoUrl || fallbacks.logoUrl);
+        setLogoDarkUrl(settings.logoDarkUrl || fallbacks.logoDarkUrl);
+        setTagline(settings.tagline ?? null);
+        setAddress(settings.address ?? null);
       })
       .catch(() => {
         if (cancelled) {
           return;
         }
+        const fallbacks = defaultLogosForSlug(brandSlug);
         setBrandName(brandSlug === DEFAULT_BRAND_SLUG ? "Leovorno" : brandSlug);
-        setLogoUrl(null);
-        setLogoDarkUrl(null);
+        setLogoUrl(fallbacks.logoUrl);
+        setLogoDarkUrl(fallbacks.logoDarkUrl);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [brandSlug]);
+  }, [brandSlug, initialBranding?.brandSlug]);
 
   if (isStandaloneRoute(pathname)) {
     return <>{children}</>;
@@ -107,6 +157,14 @@ export function AppShell({ children }: { children: React.ReactNode }): React.Rea
         scrolled={isScrolled}
       />
       {children}
+      <SiteFooter
+        address={address}
+        brandName={brandName}
+        deliveryFee={String(deliveryFee)}
+        logoDarkUrl={logoDarkUrl}
+        logoUrl={logoUrl}
+        tagline={tagline}
+      />
       <MenuSheet onOpenChange={setMenuOpen} open={isMenuOpen} />
       <CartDrawer
         deliveryFeeAmount={deliveryFee}

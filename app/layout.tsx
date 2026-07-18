@@ -6,18 +6,10 @@ import { montserrat } from "@/lib/fonts";
 import { fetchStoreSettings } from "@/lib/menu-api";
 import { AuthProvider } from "@/providers/auth-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { DEFAULT_BRAND_SLUG } from "@/types/brand";
 import "./globals.css";
 
 const DEFAULT_DELIVERY_FEE = 5;
-
-async function getDeliveryFee(): Promise<number> {
-  try {
-    const settings = await fetchStoreSettings();
-    return Number(settings.deliveryFee);
-  } catch {
-    return DEFAULT_DELIVERY_FEE;
-  }
-}
 
 const bodyFont = montserrat;
 
@@ -31,7 +23,35 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const deliveryFee = await getDeliveryFee();
+  let deliveryFee = DEFAULT_DELIVERY_FEE;
+  // Bundled fallbacks so Leovorno shows logos on marinapizzas.com.au before admin upload.
+  const defaultLogoUrl = "/leovorno-logo-light.png";
+  const defaultLogoDarkUrl = "/leovorno-logo-dark.png";
+
+  let initialBranding = {
+    brandSlug: DEFAULT_BRAND_SLUG,
+    brandName: "Leovorno",
+    logoUrl: defaultLogoUrl as string | null,
+    logoDarkUrl: defaultLogoDarkUrl as string | null,
+    tagline: null as string | null,
+    address: null as string | null,
+  };
+
+  try {
+    // marinapizzas.com.au hosts Leovorno for now
+    const settings = await fetchStoreSettings(DEFAULT_BRAND_SLUG);
+    deliveryFee = Number(settings.deliveryFee) || DEFAULT_DELIVERY_FEE;
+    initialBranding = {
+      brandSlug: DEFAULT_BRAND_SLUG,
+      brandName: settings.storeName || "Leovorno",
+      logoUrl: settings.logoUrl || defaultLogoUrl,
+      logoDarkUrl: settings.logoDarkUrl || defaultLogoDarkUrl,
+      tagline: settings.tagline ?? null,
+      address: settings.address ?? null,
+    };
+  } catch {
+    // keep defaults with bundled logos
+  }
 
   return (
     <html
@@ -53,7 +73,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <CartProvider deliveryFee={deliveryFee}>
-              <AppShell>{children}</AppShell>
+              <AppShell initialBranding={initialBranding}>{children}</AppShell>
             </CartProvider>
           </AuthProvider>
         </ThemeProvider>

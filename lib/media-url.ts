@@ -11,8 +11,20 @@ export function resolveMediaUrl(url: string | null | undefined): string | null {
     return trimmed;
   }
 
+  // Uploaded files live on the API host.
+  const isApiUpload =
+    trimmed.startsWith("/api/uploads/") ||
+    trimmed.startsWith("api/uploads/") ||
+    trimmed.startsWith("/uploads/") ||
+    trimmed.startsWith("uploads/");
+
+  if (!isApiUpload) {
+    return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  }
+
   const origin = API_BASE.replace(/\/api\/?$/, "");
-  return `${origin}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+  const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return `${origin}${path}`;
 }
 
 export function storeMonogram(name: string): string {

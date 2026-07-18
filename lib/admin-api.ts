@@ -67,17 +67,24 @@ export async function uploadLogo(
   token: string,
   file: File
 ): Promise<{ url: string; filename: string }> {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
   const body = new FormData();
   body.append("file", file);
 
-  const response = await fetch(`${apiBase}/uploads/logo`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body,
-  });
+  // Same-origin proxy → API stores the file on the server (not a pasted URL).
+  let response: Response;
+  try {
+    response = await fetch("/api/uploads/logo", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body,
+    });
+  } catch {
+    throw new Error(
+      "Could not upload logo (network error). Check that the website and API are running.",
+    );
+  }
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => ({}))) as {

@@ -1,47 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { getSiteBrandSlug } from "@/lib/brand-storage";
-import { fetchStoreSettings } from "@/lib/menu-api";
 
-export function SiteFooter(): React.ReactElement {
-  const [brandName, setBrandName] = useState("Leovorno");
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [logoDarkUrl, setLogoDarkUrl] = useState<string | null>(null);
-  const [tagline, setTagline] = useState(
-    "Experience the zenith of Italian culinary art. Designed for the urban epicurean who demands both speed and soul.",
-  );
-  const [address, setAddress] = useState("231 Murrumbeena Rd.\nMelbourne, VIC 3163\nAustralia");
-  const [deliveryFee, setDeliveryFee] = useState("5");
+interface SiteFooterProps {
+  brandName?: string;
+  logoUrl?: string | null;
+  logoDarkUrl?: string | null;
+  tagline?: string | null;
+  address?: string | null;
+  deliveryFee?: string;
+}
 
-  useEffect(() => {
-    const load = (): void => {
-      const slug = getSiteBrandSlug();
-      void fetchStoreSettings(slug)
-        .then((settings) => {
-          setBrandName(settings.storeName || "Store");
-          setLogoUrl(settings.logoUrl ?? null);
-          setLogoDarkUrl(settings.logoDarkUrl ?? null);
-          if (settings.tagline) {
-            setTagline(settings.tagline);
-          }
-          if (settings.address) {
-            setAddress(settings.address);
-          }
-          setDeliveryFee(String(settings.deliveryFee));
-        })
-        .catch(() => {
-          // keep defaults
-        });
-    };
-
-    load();
-    window.addEventListener("marina-site-brand-change", load);
-    return () => window.removeEventListener("marina-site-brand-change", load);
-  }, []);
-
+export function SiteFooter({
+  brandName = "Leovorno",
+  logoUrl = null,
+  logoDarkUrl = null,
+  tagline = "Experience the zenith of Italian culinary art. Designed for the urban epicurean who demands both speed and soul.",
+  address = "231 Murrumbeena Rd.\nMelbourne, VIC 3163\nAustralia",
+  deliveryFee = "5",
+}: SiteFooterProps): React.ReactElement {
   const hasLogo = Boolean(logoUrl || logoDarkUrl);
+  const resolvedTagline =
+    tagline?.trim() ||
+    "Experience the zenith of Italian culinary art. Designed for the urban epicurean who demands both speed and soul.";
+  const resolvedAddress =
+    address?.trim() || "231 Murrumbeena Rd.\nMelbourne, VIC 3163\nAustralia";
 
   return (
     <footer className="w-full border-t border-zinc-200/70 bg-zinc-50 px-margin-mobile py-16 transition-colors duration-150 ease-out dark:border-white/5 dark:bg-zinc-950 md:px-margin-desktop">
@@ -63,7 +46,7 @@ export function SiteFooter(): React.ReactElement {
               </h2>
             )}
             <p className="mb-8 max-w-sm text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400">
-              {tagline}
+              {resolvedTagline}
             </p>
           </div>
           <div>
@@ -71,7 +54,7 @@ export function SiteFooter(): React.ReactElement {
               Location
             </h4>
             <p className="whitespace-pre-line leading-loose text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400">
-              {address}
+              {resolvedAddress}
             </p>
             <p className="mt-4 font-bold text-[#d81b60]">${deliveryFee} Flat Delivery</p>
           </div>
