@@ -24,17 +24,53 @@ export interface TimeSlot {
   label: string;
 }
 
-const WEEKDAY_KEYS: WeekdayKey[] = [
-  "sunday",
+/** Display order Mon → Sun for admin / footer. */
+export const DISPLAY_WEEKDAY_KEYS: WeekdayKey[] = [
   "monday",
   "tuesday",
   "wednesday",
   "thursday",
   "friday",
   "saturday",
+  "sunday",
 ];
 
-function parseOpeningHours(value: unknown): OpeningHoursConfig | null {
+export const WEEKDAY_LABELS: Record<WeekdayKey, string> = {
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
+  sunday: "Sunday",
+};
+
+export const WEEKDAY_SHORT: Record<WeekdayKey, string> = {
+  monday: "Mon",
+  tuesday: "Tue",
+  wednesday: "Wed",
+  thursday: "Thu",
+  friday: "Fri",
+  saturday: "Sat",
+  sunday: "Sun",
+};
+
+export const DEFAULT_OPENING_HOURS: OpeningHoursConfig = {
+  timezone: "Australia/Melbourne",
+  leadTimeMinutes: 45,
+  slotIntervalMinutes: 15,
+  days: {
+    monday: { open: "17:00", close: "23:00" },
+    tuesday: { open: "17:00", close: "23:00" },
+    wednesday: { open: "17:00", close: "23:00" },
+    thursday: { open: "17:00", close: "23:00" },
+    friday: { open: "17:00", close: "23:00" },
+    saturday: { open: "12:00", close: "23:59" },
+    sunday: { open: "12:00", close: "23:59" },
+  },
+};
+
+export function parseOpeningHours(value: unknown): OpeningHoursConfig | null {
   if (!value || typeof value !== "object") {
     return null;
   }
@@ -53,9 +89,72 @@ function parseOpeningHours(value: unknown): OpeningHoursConfig | null {
   return config as OpeningHoursConfig;
 }
 
+export function coerceOpeningHours(value: unknown): OpeningHoursConfig {
+  return parseOpeningHours(value) ?? structuredClone(DEFAULT_OPENING_HOURS);
+}
+
 function parseTimeToMinutes(time: string): number {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
+}
+
+function formatClock(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  if (h === 0 && m === 0) {
+    return "12am";
+  }
+  if (h === 23 && m === 59) {
+    return "12am";
+  }
+  const period = h >= 12 ? "pm" : "am";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return m === 0 ? `${hour12}${period}` : `${hour12}:${String(m).padStart(2, "0")}${period}`;
+}
+
+function dayKey(day: DayHours | null): string {
+  if (!day) {
+    return "closed";
+  }
+  return `${day.open}-${day.close}`;
+}
+
+/** Compact lines like "Mon — Fri: 5pm – 11pm". */
+export function formatOpeningHoursLines(openingHours: unknown): string[] {
+  const config = parseOpeningHours(openingHours);
+  if (!config) {
+    return [];
+  }
+
+  const lines: string[] = [];
+  let i = 0;
+  while (i < DISPLAY_WEEKDAY_KEYS.length) {
+    const startKey = DISPLAY_WEEKDAY_KEYS[i];
+    const startDay = config.days[startKey];
+    let j = i + 1;
+    while (
+      j < DISPLAY_WEEKDAY_KEYS.length &&
+      dayKey(config.days[DISPLAY_WEEKDAY_KEYS[j]]) === dayKey(startDay)
+    ) {
+      j += 1;
+    }
+
+    const endKey = DISPLAY_WEEKDAY_KEYS[j - 1];
+    const dayLabel =
+      startKey === endKey
+        ? WEEKDAY_SHORT[startKey]
+        : `${WEEKDAY_SHORT[startKey]} — ${WEEKDAY_SHORT[endKey]}`;
+
+    if (!startDay) {
+      lines.push(`${dayLabel}: Closed`);
+    } else {
+      lines.push(
+        `${dayLabel}: ${formatClock(startDay.open)} – ${formatClock(startDay.close)}`,
+      );
+    }
+    i = j;
+  }
+
+  return lines;
 }
 
 function weekdayKeyFromDate(date: Date, timezone: string): WeekdayKey {

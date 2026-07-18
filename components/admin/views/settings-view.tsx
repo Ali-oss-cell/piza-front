@@ -3,9 +3,11 @@
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LogoUploader } from "@/components/admin/logo-uploader";
+import { OpeningHoursEditor } from "@/components/admin/opening-hours-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateStoreSettings, updateStoreStatus } from "@/lib/admin-api";
+import { coerceOpeningHours, type OpeningHoursConfig } from "@/lib/opening-hours";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import type { StoreDomain } from "@/types/payments";
 import type { StoreSettings, UpdateStoreSettingsPayload } from "@/types/store";
@@ -32,6 +34,7 @@ interface SettingsFormState {
   contactEmail: string;
   contactPhone: string;
   address: string;
+  openingHours: OpeningHoursConfig;
 }
 
 function formFromSettings(settings: StoreSettings): SettingsFormState {
@@ -46,6 +49,7 @@ function formFromSettings(settings: StoreSettings): SettingsFormState {
     contactEmail: settings.contactEmail ?? "",
     contactPhone: settings.contactPhone ?? "",
     address: settings.address ?? "",
+    openingHours: coerceOpeningHours(settings.openingHours),
   };
 }
 
@@ -84,6 +88,7 @@ export function SettingsView({
       contactEmail: form.contactEmail.trim(),
       contactPhone: form.contactPhone.trim(),
       address: form.address.trim(),
+      openingHours: form.openingHours,
     };
 
     try {
@@ -102,7 +107,7 @@ export function SettingsView({
       <div>
         <h2 className={cn("font-display text-2xl font-bold", primaryText)}>System Settings</h2>
         <p className={cn("mt-1 text-sm", secondaryText)}>
-          Store details, logo, and delivery pricing used on the customer site and checkout.
+          Store details, logo, hours, and delivery pricing used on the customer site and checkout.
         </p>
       </div>
 
@@ -225,6 +230,13 @@ export function SettingsView({
           <Input
             onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))}
             value={form.address}
+          />
+        </div>
+
+        <div className="border-t border-zinc-200/70 pt-4 dark:border-white/10">
+          <OpeningHoursEditor
+            onChange={(openingHours) => setForm((current) => ({ ...current, openingHours }))}
+            value={form.openingHours}
           />
         </div>
 

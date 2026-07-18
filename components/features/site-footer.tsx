@@ -1,6 +1,7 @@
 "use client";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { formatOpeningHoursLines } from "@/lib/opening-hours";
 
 interface SiteFooterProps {
   brandName?: string;
@@ -9,7 +10,10 @@ interface SiteFooterProps {
   tagline?: string | null;
   address?: string | null;
   deliveryFee?: string;
+  openingHours?: unknown;
 }
+
+const FALLBACK_HOURS = ["Mon — Fri: 5pm – 11pm", "Sat — Sun: 12pm – 12am"];
 
 export function SiteFooter({
   brandName = "Leovorno",
@@ -18,6 +22,7 @@ export function SiteFooter({
   tagline = "Experience the zenith of Italian culinary art. Designed for the urban epicurean who demands both speed and soul.",
   address = "231 Murrumbeena Rd.\nMelbourne, VIC 3163\nAustralia",
   deliveryFee = "5",
+  openingHours = null,
 }: SiteFooterProps): React.ReactElement {
   const hasLogo = Boolean(logoUrl || logoDarkUrl);
   const resolvedTagline =
@@ -25,6 +30,8 @@ export function SiteFooter({
     "Experience the zenith of Italian culinary art. Designed for the urban epicurean who demands both speed and soul.";
   const resolvedAddress =
     address?.trim() || "231 Murrumbeena Rd.\nMelbourne, VIC 3163\nAustralia";
+  const hourLines = formatOpeningHoursLines(openingHours);
+  const displayHours = hourLines.length > 0 ? hourLines : FALLBACK_HOURS;
 
   return (
     <footer className="w-full border-t border-zinc-200/70 bg-zinc-50 px-margin-mobile py-16 transition-colors duration-150 ease-out dark:border-white/5 dark:bg-zinc-950 md:px-margin-desktop">
@@ -63,9 +70,11 @@ export function SiteFooter({
               Hours
             </h4>
             <p className="leading-loose text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400">
-              Mon — Fri: 5pm – 11pm
-              <br />
-              Sat — Sun: 12pm – 12am
+              {displayHours.map((line) => (
+                <span className="block" key={line}>
+                  {line}
+                </span>
+              ))}
             </p>
           </div>
         </div>

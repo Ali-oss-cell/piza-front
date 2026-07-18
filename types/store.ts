@@ -1,3 +1,5 @@
+import type { OpeningHoursConfig } from "@/lib/opening-hours";
+
 export interface StoreSettings {
   id: string;
   storeName: string;
@@ -10,7 +12,7 @@ export interface StoreSettings {
   contactEmail?: string | null;
   contactPhone?: string | null;
   address?: string | null;
-  openingHours?: Record<string, unknown> | null;
+  openingHours?: OpeningHoursConfig | Record<string, unknown> | null;
   updatedAt: string;
 }
 
@@ -44,4 +46,5 @@ export interface UpdateStoreSettingsPayload {
   contactEmail?: string;
   contactPhone?: string;
   address?: string;
+  openingHours?: OpeningHoursConfig | null;
 }

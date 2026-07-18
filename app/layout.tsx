@@ -35,6 +35,7 @@ export default async function RootLayout({
     logoDarkUrl: defaultLogoDarkUrl as string | null,
     tagline: null as string | null,
     address: null as string | null,
+    openingHours: null as unknown,
   };
 
   try {
@@ -48,6 +49,7 @@ export default async function RootLayout({
       logoDarkUrl: settings.logoDarkUrl || defaultLogoDarkUrl,
       tagline: settings.tagline ?? null,
       address: settings.address ?? null,
+      openingHours: settings.openingHours ?? null,
     };
   } catch {
     // keep defaults with bundled logos

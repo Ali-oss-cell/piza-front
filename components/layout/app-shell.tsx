@@ -43,6 +43,7 @@ export interface InitialSiteBranding {
   logoDarkUrl: string | null;
   tagline?: string | null;
   address?: string | null;
+  openingHours?: unknown;
 }
 
 export function AppShell({
@@ -88,6 +89,9 @@ export function AppShell({
   const [address, setAddress] = useState<string | null>(
     initialBranding?.address ?? null,
   );
+  const [openingHours, setOpeningHours] = useState<unknown>(
+    initialBranding?.openingHours ?? null,
+  );
 
   useEffect(() => {
     const onScroll = (): void => setIsScrolled(window.scrollY > 50);
@@ -123,6 +127,7 @@ export function AppShell({
         setLogoDarkUrl(settings.logoDarkUrl || fallbacks.logoDarkUrl);
         setTagline(settings.tagline ?? null);
         setAddress(settings.address ?? null);
+        setOpeningHours(settings.openingHours ?? null);
       })
       .catch(() => {
         if (cancelled) {
@@ -132,6 +137,7 @@ export function AppShell({
         setBrandName(brandSlug === DEFAULT_BRAND_SLUG ? "Leovorno" : brandSlug);
         setLogoUrl(fallbacks.logoUrl);
         setLogoDarkUrl(fallbacks.logoDarkUrl);
+        setOpeningHours(null);
       });
 
     return () => {
@@ -163,6 +169,7 @@ export function AppShell({
         deliveryFee={String(deliveryFee)}
         logoDarkUrl={logoDarkUrl}
         logoUrl={logoUrl}
+        openingHours={openingHours}
         tagline={tagline}
       />
       <MenuSheet onOpenChange={setMenuOpen} open={isMenuOpen} />
