@@ -24,6 +24,7 @@ interface FormState {
   slug: string;
   tagline: string;
   logoUrl: string;
+  logoDarkUrl: string;
   primaryColor: string;
   pathPrefix: string;
   host: string;
@@ -65,6 +66,7 @@ export function CreateStoreWizard({
     slug: "",
     tagline: "",
     logoUrl: "",
+    logoDarkUrl: "",
     primaryColor: "#D81B60",
     pathPrefix: "",
     host: "",
@@ -136,6 +138,7 @@ export function CreateStoreWizard({
       slug: form.slug.trim(),
       tagline: form.tagline.trim() || undefined,
       logoUrl: form.logoUrl.trim() || undefined,
+      logoDarkUrl: form.logoDarkUrl.trim() || undefined,
       primaryColor: form.primaryColor.trim() || undefined,
       pathPrefix: normalizePathPrefix(form.slug, form.pathPrefix),
       host: form.host.trim() || undefined,
@@ -250,13 +253,26 @@ export function CreateStoreWizard({
                   />
                 </div>
               </Field>
-              <Field label="Logo">
+              <Field label="Light mode logo">
                 <LogoUploader
+                  label="Light logo"
                   onChange={(logoUrl) => update("logoUrl", logoUrl)}
+                  previewMode="light"
                   primaryColor={form.primaryColor || "#D81B60"}
                   storeName={form.name || "Store"}
                   token={token}
                   value={form.logoUrl}
+                />
+              </Field>
+              <Field label="Dark mode logo">
+                <LogoUploader
+                  label="Dark logo"
+                  onChange={(logoDarkUrl) => update("logoDarkUrl", logoDarkUrl)}
+                  previewMode="dark"
+                  primaryColor={form.primaryColor || "#D81B60"}
+                  storeName={form.name || "Store"}
+                  token={token}
+                  value={form.logoDarkUrl}
                 />
               </Field>
               <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Menu, ShoppingCart } from "lucide-react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
   DESKTOP_NAV_ITEMS,
@@ -28,6 +29,10 @@ interface SiteHeaderProps {
   onOpenMenu: () => void;
   onOpenCart: () => void;
   scrolled: boolean;
+  brandName?: string;
+  logoUrl?: string | null;
+  logoDarkUrl?: string | null;
+  homeHref?: string;
 }
 
 export function SiteHeader({
@@ -36,6 +41,10 @@ export function SiteHeader({
   onOpenMenu,
   onOpenCart,
   scrolled,
+  brandName = "Leovorno",
+  logoUrl,
+  logoDarkUrl,
+  homeHref = "/",
 }: SiteHeaderProps): React.ReactElement {
   const pathname = usePathname();
   const [cartBump, setCartBump] = useState(false);
@@ -57,6 +66,7 @@ export function SiteHeader({
   }, [cartCount, isCartReady]);
 
   const displayCount = isCartReady ? cartCount : 0;
+  const hasLogo = Boolean(logoUrl || logoDarkUrl);
 
   return (
     <header
@@ -68,10 +78,25 @@ export function SiteHeader({
     >
       <div className="flex items-center gap-8">
         <Link
-          className="font-display text-headline-md font-bold uppercase tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white"
-          href="/"
+          aria-label={brandName}
+          className="flex items-center transition-opacity duration-150 ease-out hover:opacity-90"
+          href={homeHref}
         >
-          Leovorno
+          {hasLogo ? (
+            <BrandLogo
+              brandName={brandName}
+              imageClassName={cn(
+                "w-auto",
+                scrolled ? "h-9 md:h-10" : "h-10 md:h-12"
+              )}
+              logoDarkUrl={logoDarkUrl}
+              logoUrl={logoUrl}
+            />
+          ) : (
+            <span className="font-display text-headline-md font-bold uppercase tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white">
+              {brandName}
+            </span>
+          )}
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           {DESKTOP_NAV_ITEMS.map((item) => (

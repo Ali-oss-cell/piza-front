@@ -25,6 +25,7 @@ interface SettingsFormState {
   storeName: string;
   tagline: string;
   logoUrl: string;
+  logoDarkUrl: string;
   primaryColor: string;
   deliveryFee: string;
   minOrderAmount: string;
@@ -38,6 +39,7 @@ function formFromSettings(settings: StoreSettings): SettingsFormState {
     storeName: settings.storeName,
     tagline: settings.tagline ?? "",
     logoUrl: settings.logoUrl ?? "",
+    logoDarkUrl: settings.logoDarkUrl ?? "",
     primaryColor: settings.primaryColor ?? "#D81B60",
     deliveryFee: String(settings.deliveryFee),
     minOrderAmount: String(settings.minOrderAmount),
@@ -75,6 +77,7 @@ export function SettingsView({
       storeName: form.storeName.trim(),
       tagline: form.tagline.trim(),
       logoUrl: form.logoUrl.trim() || null,
+      logoDarkUrl: form.logoDarkUrl.trim() || null,
       primaryColor: form.primaryColor.trim() || null,
       deliveryFee: Number(form.deliveryFee),
       minOrderAmount: Number(form.minOrderAmount),
@@ -120,13 +123,38 @@ export function SettingsView({
         </div>
 
         <div>
-          <label className={cn("mb-2 block text-sm font-medium", primaryText)}>Logo</label>
+          <label className={cn("mb-2 block text-sm font-medium", primaryText)}>
+            Light mode logo
+          </label>
+          <p className={cn("mb-2 text-xs", secondaryText)}>
+            Used on light backgrounds (white header).
+          </p>
           <LogoUploader
+            label="Light logo"
             onChange={(logoUrl) => setForm((current) => ({ ...current, logoUrl }))}
+            previewMode="light"
             primaryColor={form.primaryColor || "#D81B60"}
             storeName={form.storeName || "Store"}
             token={token}
             value={form.logoUrl}
+          />
+        </div>
+
+        <div>
+          <label className={cn("mb-2 block text-sm font-medium", primaryText)}>
+            Dark mode logo
+          </label>
+          <p className={cn("mb-2 text-xs", secondaryText)}>
+            Used on dark backgrounds. If empty, the light logo is reused.
+          </p>
+          <LogoUploader
+            label="Dark logo"
+            onChange={(logoDarkUrl) => setForm((current) => ({ ...current, logoDarkUrl }))}
+            previewMode="dark"
+            primaryColor={form.primaryColor || "#D81B60"}
+            storeName={form.storeName || "Store"}
+            token={token}
+            value={form.logoDarkUrl}
           />
         </div>
 

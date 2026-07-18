@@ -9,6 +9,7 @@ export interface Brand {
   name: string;
   tagline?: string | null;
   logoUrl?: string | null;
+  logoDarkUrl?: string | null;
   primaryColor?: string | null;
   isActive: boolean;
   status?: "DRAFT" | "LIVE";
@@ -31,6 +32,7 @@ export interface CreateStorePayload {
   slug: string;
   tagline?: string;
   logoUrl?: string;
+  logoDarkUrl?: string;
   primaryColor?: string;
   pathPrefix?: string;
   host?: string;

@@ -3,6 +3,7 @@ export interface StoreSettings {
   storeName: string;
   tagline?: string | null;
   logoUrl?: string | null;
+  logoDarkUrl?: string | null;
   primaryColor?: string | null;
   deliveryFee: string | number;
   minOrderAmount: string | number;
@@ -36,6 +37,7 @@ export interface UpdateStoreSettingsPayload {
   storeName?: string;
   tagline?: string;
   logoUrl?: string | null;
+  logoDarkUrl?: string | null;
   primaryColor?: string | null;
   deliveryFee?: number;
   minOrderAmount?: number;

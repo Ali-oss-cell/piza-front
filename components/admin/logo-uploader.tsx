@@ -12,6 +12,8 @@ interface LogoUploaderProps {
   value: string;
   storeName?: string;
   primaryColor?: string;
+  label?: string;
+  previewMode?: "light" | "dark";
   onChange: (logoUrl: string) => void;
   className?: string;
 }
@@ -21,6 +23,8 @@ export function LogoUploader({
   value,
   storeName = "Store",
   primaryColor = "#D81B60",
+  label = "Upload logo",
+  previewMode = "light",
   onChange,
   className,
 }: LogoUploaderProps): React.ReactElement {
@@ -29,6 +33,8 @@ export function LogoUploader({
   const [error, setError] = useState<string | null>(null);
 
   const preview = resolveMediaUrl(value);
+  const previewBg =
+    previewMode === "dark" ? "bg-zinc-900 dark:bg-black" : "bg-white dark:bg-zinc-100";
 
   const handleFile = async (file: File | undefined): Promise<void> => {
     if (!file) {
@@ -54,7 +60,10 @@ export function LogoUploader({
     <div className={cn("space-y-3", className)}>
       <div className="flex flex-wrap items-center gap-4">
         <div
-          className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900"
+          className={cn(
+            "flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-200/70 shadow-sm dark:border-white/10",
+            previewBg,
+          )}
           style={!preview ? { backgroundColor: `${primaryColor}22` } : undefined}
         >
           {preview ? (
@@ -79,7 +88,7 @@ export function LogoUploader({
             ) : (
               <ImagePlus className="h-4 w-4 text-[#d81b60]" />
             )}
-            {isUploading ? "Uploading…" : value ? "Replace logo" : "Upload logo"}
+            {isUploading ? "Uploading…" : value ? `Replace ${label.toLowerCase()}` : label}
           </button>
           <p className={cn("text-xs", secondaryText)}>
             JPEG, PNG, WebP or GIF · max 2&nbsp;MB
@@ -90,7 +99,7 @@ export function LogoUploader({
               onClick={() => onChange("")}
               type="button"
             >
-              Remove logo
+              Remove
             </button>
           ) : null}
         </div>

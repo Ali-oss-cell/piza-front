@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Loader2, Plus } from "lucide-react";
 import { CreateStoreWizard } from "@/components/admin/create-store-wizard";
+import { BrandLogoMark } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
-import { resolveMediaUrl, storeMonogram } from "@/lib/media-url";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import { useAdminBrand } from "@/providers/admin-brand-provider";
 import { useAuth } from "@/providers/auth-provider";
@@ -20,7 +20,6 @@ function StoreCard({
   onSelect: () => void;
 }): React.ReactElement {
   const accent = brand.primaryColor?.trim() || "#D81B60";
-  const logoSrc = resolveMediaUrl(brand.logoUrl);
   const pathHint = brand.pathPrefix || (brand.host ? brand.host : null);
 
   return (
@@ -36,21 +35,13 @@ function StoreCard({
         }}
       >
         <div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: accent }} />
-        {logoSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            alt=""
-            className="max-h-24 max-w-[70%] object-contain drop-shadow-sm transition duration-300 group-hover:scale-[1.03]"
-            src={logoSrc}
-          />
-        ) : (
-          <span
-            className="flex h-20 w-20 items-center justify-center rounded-2xl font-display text-2xl font-bold text-white shadow-lg"
-            style={{ backgroundColor: accent }}
-          >
-            {storeMonogram(brand.name)}
-          </span>
-        )}
+        <BrandLogoMark
+          brandName={brand.name}
+          className="max-h-24 max-w-[70%] transition duration-300 group-hover:scale-[1.03]"
+          logoDarkUrl={brand.logoDarkUrl}
+          logoUrl={brand.logoUrl}
+          primaryColor={accent}
+        />
         {brand.status ? (
           <span
             className={cn(
@@ -201,7 +192,6 @@ export function BrandSwitcher(): React.ReactElement {
   return (
     <div className="flex flex-wrap items-center gap-2">
       {brands.map((brand) => {
-        const logoSrc = resolveMediaUrl(brand.logoUrl);
         const active = brand.slug === selectedBrand.slug;
 
         return (
@@ -211,17 +201,13 @@ export function BrandSwitcher(): React.ReactElement {
             onClick={() => selectBrand(brand.slug)}
             variant={active ? "default" : "outline"}
           >
-            {logoSrc ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img alt="" className="h-5 w-5 rounded object-contain" src={logoSrc} />
-            ) : (
-              <span
-                className="flex h-5 w-5 items-center justify-center rounded text-[9px] font-bold text-white"
-                style={{ backgroundColor: brand.primaryColor ?? "#D81B60" }}
-              >
-                {storeMonogram(brand.name).slice(0, 1)}
-              </span>
-            )}
+            <BrandLogoMark
+              brandName={brand.name}
+              className="h-5 w-5"
+              logoDarkUrl={brand.logoDarkUrl}
+              logoUrl={brand.logoUrl}
+              primaryColor={brand.primaryColor}
+            />
             {brand.name}
           </Button>
         );
