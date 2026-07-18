@@ -1,6 +1,13 @@
 import type { CartItem } from "@/types/menu";
+import { DEFAULT_BRAND_SLUG } from "@/types/brand";
+import { getSiteBrandSlug } from "@/lib/brand-storage";
 
-export const CART_STORAGE_KEY = "leovorno-cart";
+export const CART_STORAGE_KEY_PREFIX = "marina-cart";
+
+function cartStorageKey(brandSlug?: string): string {
+  const slug = (brandSlug ?? getSiteBrandSlug() ?? DEFAULT_BRAND_SLUG).trim().toLowerCase();
+  return `${CART_STORAGE_KEY_PREFIX}:${slug}`;
+}
 
 function isCartItem(value: unknown): value is CartItem {
   if (!value || typeof value !== "object") {
@@ -21,14 +28,33 @@ function isCartItem(value: unknown): value is CartItem {
   );
 }
 
-export function readCartFromStorage(): CartItem[] | null {
+export function readCartFromStorage(brandSlug?: string): CartItem[] | null {
   if (typeof window === "undefined") {
     return null;
   }
 
-  const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+  const raw = window.localStorage.getItem(cartStorageKey(brandSlug));
 
   if (!raw) {
+    // Migrate legacy single-key cart into default brand once.
+    if (!brandSlug || brandSlug === DEFAULT_BRAND_SLUG) {
+      const legacy = window.localStorage.getItem("leovorno-cart");
+      if (legacy) {
+        try {
+          const parsed: unknown = JSON.parse(legacy);
+          if (Array.isArray(parsed)) {
+            const items = parsed.filter(isCartItem);
+            if (items.length > 0) {
+              writeCartToStorage(items, DEFAULT_BRAND_SLUG);
+              window.localStorage.removeItem("leovorno-cart");
+              return items;
+            }
+          }
+        } catch {
+          // ignore corrupt legacy cart
+        }
+      }
+    }
     return null;
   }
 
@@ -47,10 +73,10 @@ export function readCartFromStorage(): CartItem[] | null {
   }
 }
 
-export function writeCartToStorage(items: CartItem[]): void {
+export function writeCartToStorage(items: CartItem[], brandSlug?: string): void {
   if (typeof window === "undefined") {
     return;
   }
 
-  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  window.localStorage.setItem(cartStorageKey(brandSlug), JSON.stringify(items));
 }

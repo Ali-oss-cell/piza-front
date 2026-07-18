@@ -100,16 +100,21 @@ export function CartProvider({
   useEffect(() => clearToastTimeout, []);
 
   useEffect(() => {
-    const storedItems = readCartFromStorage();
-    const frame = window.requestAnimationFrame(() => {
-      if (storedItems) {
-        setItems(storedItems);
-      }
-
+    const loadCart = (): void => {
+      const storedItems = readCartFromStorage();
+      setItems(storedItems ?? []);
       setIsCartReady(true);
-    });
+    };
 
-    return () => window.cancelAnimationFrame(frame);
+    const frame = window.requestAnimationFrame(loadCart);
+    window.addEventListener("marina-site-brand-change", loadCart);
+    window.addEventListener("storage", loadCart);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("marina-site-brand-change", loadCart);
+      window.removeEventListener("storage", loadCart);
+    };
   }, []);
 
   useEffect(() => {

@@ -44,3 +44,24 @@ export function fetchStoreSettings(brandSlug?: string): Promise<StoreSettings> {
 export function fetchDeals(brandSlug?: string): Promise<Deal[]> {
   return apiRequest<Deal[]>("/deals", { brandSlug });
 }
+
+export interface ResolvedStore {
+  id: string;
+  slug: string;
+  name: string;
+  tagline?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+  isActive: boolean;
+  pathPrefix?: string | null;
+  host?: string | null;
+}
+
+export function resolveStoreByPath(storePath: string): Promise<ResolvedStore> {
+  const path = storePath.startsWith("/") ? storePath : `/${storePath}`;
+  return apiRequest<ResolvedStore>(`/brands/resolve?path=${encodeURIComponent(path)}`);
+}
+
+export function resolveStoreByHost(host: string): Promise<ResolvedStore> {
+  return apiRequest<ResolvedStore>(`/brands/resolve?host=${encodeURIComponent(host)}`);
+}
