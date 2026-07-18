@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { LogoUploader } from "@/components/admin/logo-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createStore } from "@/lib/admin-api";
@@ -249,10 +250,12 @@ export function CreateStoreWizard({
                   />
                 </div>
               </Field>
-              <Field label="Logo URL (optional)">
-                <Input
-                  onChange={(event) => update("logoUrl", event.target.value)}
-                  placeholder="https://..."
+              <Field label="Logo">
+                <LogoUploader
+                  onChange={(logoUrl) => update("logoUrl", logoUrl)}
+                  primaryColor={form.primaryColor || "#D81B60"}
+                  storeName={form.name || "Store"}
+                  token={token}
                   value={form.logoUrl}
                 />
               </Field>

@@ -12,6 +12,8 @@ export interface Brand {
   primaryColor?: string | null;
   isActive: boolean;
   status?: "DRAFT" | "LIVE";
+  pathPrefix?: string | null;
+  host?: string | null;
 }
 
 export interface CreateStoreLocationPayload {

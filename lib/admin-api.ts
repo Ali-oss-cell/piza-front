@@ -63,6 +63,35 @@ export function createStore(token: string, payload: CreateStorePayload): Promise
   });
 }
 
+export async function uploadLogo(
+  token: string,
+  file: File
+): Promise<{ url: string; filename: string }> {
+  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
+  const body = new FormData();
+  body.append("file", file);
+
+  const response = await fetch(`${apiBase}/uploads/logo`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body,
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => ({}))) as {
+      message?: string | string[];
+    };
+    const message = Array.isArray(payload.message)
+      ? payload.message.join(", ")
+      : payload.message ?? response.statusText;
+    throw new Error(message || "Logo upload failed");
+  }
+
+  return response.json() as Promise<{ url: string; filename: string }>;
+}
+
 export function fetchOrders(token: string, brandSlug?: string): Promise<AdminOrder[]> {
   return apiRequest<AdminOrder[]>("/orders", { token, brandSlug: withBrand(brandSlug) });
 }

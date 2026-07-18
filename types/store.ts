@@ -2,6 +2,8 @@ export interface StoreSettings {
   id: string;
   storeName: string;
   tagline?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
   deliveryFee: string | number;
   minOrderAmount: string | number;
   contactEmail?: string | null;
@@ -33,6 +35,8 @@ export type UpdateCrustOptionPayload = Partial<CreateCrustOptionPayload>;
 export interface UpdateStoreSettingsPayload {
   storeName?: string;
   tagline?: string;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
   deliveryFee?: number;
   minOrderAmount?: number;
   contactEmail?: string;

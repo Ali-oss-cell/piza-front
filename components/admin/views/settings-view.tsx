@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { LogoUploader } from "@/components/admin/logo-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateStoreSettings, updateStoreStatus } from "@/lib/admin-api";
@@ -23,6 +24,8 @@ interface SettingsViewProps {
 interface SettingsFormState {
   storeName: string;
   tagline: string;
+  logoUrl: string;
+  primaryColor: string;
   deliveryFee: string;
   minOrderAmount: string;
   contactEmail: string;
@@ -34,6 +37,8 @@ function formFromSettings(settings: StoreSettings): SettingsFormState {
   return {
     storeName: settings.storeName,
     tagline: settings.tagline ?? "",
+    logoUrl: settings.logoUrl ?? "",
+    primaryColor: settings.primaryColor ?? "#D81B60",
     deliveryFee: String(settings.deliveryFee),
     minOrderAmount: String(settings.minOrderAmount),
     contactEmail: settings.contactEmail ?? "",
@@ -69,6 +74,8 @@ export function SettingsView({
     const payload: UpdateStoreSettingsPayload = {
       storeName: form.storeName.trim(),
       tagline: form.tagline.trim(),
+      logoUrl: form.logoUrl.trim() || null,
+      primaryColor: form.primaryColor.trim() || null,
       deliveryFee: Number(form.deliveryFee),
       minOrderAmount: Number(form.minOrderAmount),
       contactEmail: form.contactEmail.trim(),
@@ -92,7 +99,7 @@ export function SettingsView({
       <div>
         <h2 className={cn("font-display text-2xl font-bold", primaryText)}>System Settings</h2>
         <p className={cn("mt-1 text-sm", secondaryText)}>
-          Store details and delivery pricing used on the customer site and checkout.
+          Store details, logo, and delivery pricing used on the customer site and checkout.
         </p>
       </div>
 
@@ -111,6 +118,39 @@ export function SettingsView({
             value={form.tagline}
           />
         </div>
+
+        <div>
+          <label className={cn("mb-2 block text-sm font-medium", primaryText)}>Logo</label>
+          <LogoUploader
+            onChange={(logoUrl) => setForm((current) => ({ ...current, logoUrl }))}
+            primaryColor={form.primaryColor || "#D81B60"}
+            storeName={form.storeName || "Store"}
+            token={token}
+            value={form.logoUrl}
+          />
+        </div>
+
+        <div>
+          <label className={cn("mb-1 block text-sm font-medium", primaryText)}>Primary color</label>
+          <div className="flex items-center gap-3">
+            <input
+              className="h-10 w-14 cursor-pointer rounded border border-zinc-200 bg-transparent dark:border-white/10"
+              onChange={(event) =>
+                setForm((current) => ({ ...current, primaryColor: event.target.value }))
+              }
+              type="color"
+              value={form.primaryColor || "#D81B60"}
+            />
+            <Input
+              onChange={(event) =>
+                setForm((current) => ({ ...current, primaryColor: event.target.value }))
+              }
+              placeholder="#D81B60"
+              value={form.primaryColor}
+            />
+          </div>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={cn("mb-1 block text-sm font-medium", primaryText)}>Delivery fee ($)</label>
