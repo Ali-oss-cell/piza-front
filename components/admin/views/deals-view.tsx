@@ -5,7 +5,7 @@ import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createDeal, deleteDeal, updateDeal } from "@/lib/admin-api";
+import { createDeal, deleteDeal, pushDealToStores, updateDeal } from "@/lib/admin-api";
 import { slugifyMenuName } from "@/lib/menu-categories";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import type { CreateDealPayload, Deal, DealDiscountType, UpdateDealPayload } from "@/types/deals";
@@ -16,6 +16,8 @@ interface DealsViewProps {
   token: string;
   deals: Deal[];
   onDealsChange: (deals: Deal[]) => void;
+  brands?: import("@/types/brand").Brand[];
+  isPlatformAdmin?: boolean;
 }
 
 interface DealFormState {
@@ -121,7 +123,13 @@ function buildPayload(form: DealFormState): CreateDealPayload {
   return payload;
 }
 
-export function DealsView({ token, deals, onDealsChange }: DealsViewProps): React.ReactElement {
+export function DealsView({
+  token,
+  deals,
+  onDealsChange,
+  brands = [],
+  isPlatformAdmin = false,
+}: DealsViewProps): React.ReactElement {
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
@@ -129,6 +137,9 @@ export function DealsView({ token, deals, onDealsChange }: DealsViewProps): Reac
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pushDealId, setPushDealId] = useState<string | null>(null);
+  const [pushTargets, setPushTargets] = useState<string[]>([]);
+  const [pushMessage, setPushMessage] = useState<string | null>(null);
 
   const sortedDeals = [...deals].sort(
     (a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title)
@@ -277,6 +288,19 @@ export function DealsView({ token, deals, onDealsChange }: DealsViewProps): Reac
                 <Button onClick={() => openEditModal(deal)} size="icon" variant="ghost">
                   <Pencil className="h-4 w-4" />
                 </Button>
+                {isPlatformAdmin && brands.length > 1 ? (
+                  <Button
+                    onClick={() => {
+                      setPushDealId(deal.id);
+                      setPushTargets([]);
+                      setPushMessage(null);
+                    }}
+                    type="button"
+                    variant="outline"
+                  >
+                    Push
+                  </Button>
+                ) : null}
                 <Button
                   disabled={busyId === deal.id}
                   onClick={() => void handleDelete(deal)}
@@ -290,6 +314,57 @@ export function DealsView({ token, deals, onDealsChange }: DealsViewProps): Reac
           ))
         )}
       </div>
+
+      {pushDealId ? (
+        <div className={cn("space-y-3 rounded-2xl border p-4", dashboardGlass)}>
+          <p className={cn("text-sm font-medium", primaryText)}>Push deal to other stores</p>
+          <div className="flex flex-wrap gap-3">
+            {brands.map((brand) => (
+              <label className="flex items-center gap-2 text-sm" key={brand.id}>
+                <input
+                  checked={pushTargets.includes(brand.slug)}
+                  onChange={(event) => {
+                    setPushTargets((current) =>
+                      event.target.checked
+                        ? [...current, brand.slug]
+                        : current.filter((slug) => slug !== brand.slug),
+                    );
+                  }}
+                  type="checkbox"
+                />
+                {brand.name}
+              </label>
+            ))}
+          </div>
+          {pushMessage ? <p className={cn("text-sm", secondaryText)}>{pushMessage}</p> : null}
+          <div className="flex gap-2">
+            <Button
+              disabled={pushTargets.length === 0 || busyId === pushDealId}
+              onClick={() => {
+                void (async () => {
+                  setBusyId(pushDealId);
+                  try {
+                    const result = await pushDealToStores(token, pushDealId, pushTargets);
+                    setPushMessage(`Pushed to: ${result.pushedTo.join(", ") || "none"}`);
+                  } catch (pushError) {
+                    setPushMessage(
+                      pushError instanceof Error ? pushError.message : "Push failed.",
+                    );
+                  } finally {
+                    setBusyId(null);
+                  }
+                })();
+              }}
+              type="button"
+            >
+              Confirm push
+            </Button>
+            <Button onClick={() => setPushDealId(null)} type="button" variant="outline">
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <Dialog.Root onOpenChange={setIsModalOpen} open={isModalOpen}>
         <Dialog.Portal>

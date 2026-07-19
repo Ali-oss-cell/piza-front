@@ -1,17 +1,18 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { LogoUploader } from "@/components/admin/logo-uploader";
 import { OpeningHoursEditor } from "@/components/admin/opening-hours-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { updateStoreSettings, updateStoreStatus } from "@/lib/admin-api";
+import { fetchOnboarding, updateStoreSettings, updateStoreStatus } from "@/lib/admin-api";
 import { coerceOpeningHours, type OpeningHoursConfig } from "@/lib/opening-hours";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import type { HqReadiness } from "@/types/hq";
 import type { StoreDomain } from "@/types/payments";
 import type { StoreSettings, UpdateStoreSettingsPayload } from "@/types/store";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 interface SettingsViewProps {
   token: string;
@@ -67,10 +68,29 @@ export function SettingsView({
   const [isSuspending, setIsSuspending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [readiness, setReadiness] = useState<HqReadiness | null>(null);
 
   useEffect(() => {
     setForm(formFromSettings(settings));
   }, [settings]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchOnboarding(token, brandSlug)
+      .then((next) => {
+        if (!cancelled) {
+          setReadiness(next);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setReadiness(null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, brandSlug, settings]);
 
   const handleSubmit = async (): Promise<void> => {
     setIsSaving(true);
@@ -110,6 +130,21 @@ export function SettingsView({
           Store details, logo, hours, and delivery pricing used on the customer site and checkout.
         </p>
       </div>
+
+      {readiness ? (
+        <div className={cn("max-w-2xl space-y-3 rounded-2xl border p-6", dashboardGlass)}>
+          <h3 className={cn("font-display text-lg font-bold", primaryText)}>
+            Onboarding · {readiness.percent}%
+          </h3>
+          <ul className="space-y-2">
+            {readiness.checks.map((check) => (
+              <li className={cn("text-sm", check.done ? "text-emerald-600" : secondaryText)} key={check.id}>
+                {check.done ? "✓" : "○"} {check.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className={cn("max-w-2xl space-y-4 rounded-2xl border p-6", dashboardGlass)}>
         <div>

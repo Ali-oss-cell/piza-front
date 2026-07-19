@@ -19,6 +19,7 @@ export interface Deal {
   sortOrder: number;
   isActive: boolean;
   isFeatured: boolean;
+  scope?: "STORE" | "PLATFORM";
 }
 
 export interface CreateDealPayload {

@@ -21,6 +21,8 @@ const ThemeToggle = dynamic(
 
 const VIEW_LABELS: Record<AdminView, string> = {
   overview: "Overview",
+  hq: "HQ Overview",
+  reports: "Reports",
   orders: "Live Orders",
   menu: "Menu Management",
   "menu-categories": "Menu Categories",
@@ -31,6 +33,12 @@ const VIEW_LABELS: Record<AdminView, string> = {
   deals: "Deals & Promotions",
   payments: "Payments",
   settings: "System Settings",
+  team: "Team",
+  locations: "Locations",
+  domains: "Domains",
+  templates: "Menu Templates",
+  customers: "Customers",
+  activity: "Activity",
 };
 
 interface AdminHeaderProps {

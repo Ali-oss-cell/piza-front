@@ -18,6 +18,14 @@ import { OrdersView } from "@/components/admin/views/orders-view";
 import { OverviewView } from "@/components/admin/views/overview-view";
 import { SettingsView } from "@/components/admin/views/settings-view";
 import { PaymentsView } from "@/components/admin/views/payments-view";
+import { HqOverviewView } from "@/components/admin/views/hq-overview-view";
+import { HqReportsView } from "@/components/admin/views/hq-reports-view";
+import { TeamView } from "@/components/admin/views/team-view";
+import { LocationsView } from "@/components/admin/views/locations-view";
+import { DomainsView } from "@/components/admin/views/domains-view";
+import { TemplatesView } from "@/components/admin/views/templates-view";
+import { CustomersView } from "@/components/admin/views/customers-view";
+import { ActivityView } from "@/components/admin/views/activity-view";
 import {
   fetchAdminCrusts,
   fetchAdminDeals,
@@ -54,10 +62,11 @@ import { cn } from "@/lib/utils";
 export function AdminDashboardContent(): React.ReactElement {
   const router = useRouter();
   const { user, token, isAuthReady, isAuthenticated } = useAuth();
-  const { selectedBrand, clearBrand, refreshBrands } = useAdminBrand();
+  const { selectedBrand, clearBrand, refreshBrands, selectBrand, brands } = useAdminBrand();
   const [activeView, setActiveView] = useState<AdminView>("overview");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showStoreGallery, setShowStoreGallery] = useState(false);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [menuItems, setMenuItems] = useState<AdminMenuItem[]>([]);
   const [toppingCatalog, setToppingCatalog] = useState<ToppingCategoryGroup[]>([]);
@@ -75,6 +84,16 @@ export function AdminDashboardContent(): React.ReactElement {
 
   const brandSlug = selectedBrand?.slug;
   const platformAdmin = isPlatformAdmin(user);
+
+  useEffect(() => {
+    if (platformAdmin && !selectedBrand && !showStoreGallery) {
+      setActiveView((current) =>
+        ["hq", "reports", "domains", "templates", "customers", "activity"].includes(current)
+          ? current
+          : "hq",
+      );
+    }
+  }, [platformAdmin, selectedBrand, showStoreGallery]);
 
   const loadData = useCallback(async (): Promise<void> => {
     if (!token || !brandSlug) {
@@ -187,8 +206,61 @@ export function AdminDashboardContent(): React.ReactElement {
     );
   }
 
-  if (!selectedBrand) {
-    return <BrandPicker />;
+  if (!selectedBrand && (!platformAdmin || showStoreGallery)) {
+    return <BrandPicker onBackToHq={platformAdmin ? () => setShowStoreGallery(false) : undefined} />;
+  }
+
+  if (platformAdmin && !selectedBrand && !showStoreGallery) {
+    return (
+      <div className={cn("min-h-screen", pageShell)}>
+        <AdminSidebar
+          activeView={activeView}
+          collapsed={collapsed}
+          mobileOpen={mobileOpen}
+          mode="hq"
+          onCloseMobile={() => setMobileOpen(false)}
+          onSelectView={setActiveView}
+        />
+
+        <div className={cn("transition-all duration-300", collapsed ? "lg:pl-20" : "lg:pl-72")}>
+          <AdminHeader
+            activeView={activeView}
+            brandName="Franchise HQ"
+            collapsed={collapsed}
+            onOpenMobileNav={() => setMobileOpen(true)}
+            onToggleCollapsed={() => setCollapsed((current) => !current)}
+          />
+
+          <main className="p-4 md:p-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                initial={{ opacity: 0, y: 12 }}
+                key={activeView}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+              >
+                {activeView === "hq" ? (
+                  <HqOverviewView
+                    onManageStores={() => setShowStoreGallery(true)}
+                    onOpenStore={(slug) => {
+                      selectBrand(slug);
+                      setActiveView("overview");
+                    }}
+                    token={token!}
+                  />
+                ) : null}
+                {activeView === "reports" ? <HqReportsView token={token!} /> : null}
+                {activeView === "domains" ? <DomainsView brands={brands} token={token!} /> : null}
+                {activeView === "templates" ? <TemplatesView brands={brands} token={token!} /> : null}
+                {activeView === "customers" ? <CustomersView token={token!} /> : null}
+                {activeView === "activity" ? <ActivityView token={token!} /> : null}
+              </motion.div>
+            </AnimatePresence>
+          </main>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -197,6 +269,8 @@ export function AdminDashboardContent(): React.ReactElement {
         activeView={activeView}
         collapsed={collapsed}
         mobileOpen={mobileOpen}
+        mode="store"
+        isPlatformAdmin={platformAdmin}
         onCloseMobile={() => setMobileOpen(false)}
         onSelectView={setActiveView}
       />
@@ -204,7 +278,7 @@ export function AdminDashboardContent(): React.ReactElement {
       <div className={cn("transition-all duration-300", collapsed ? "lg:pl-20" : "lg:pl-72")}>
         <AdminHeader
           activeView={activeView}
-          brandName={selectedBrand.name}
+          brandName={selectedBrand!.name}
           collapsed={collapsed}
           onOpenMobileNav={() => setMobileOpen(true)}
           onToggleCollapsed={() => setCollapsed((current) => !current)}
@@ -281,7 +355,19 @@ export function AdminDashboardContent(): React.ReactElement {
                   <CrustsView crusts={crusts} onCrustsChange={setCrusts} token={token!} />
                 ) : null}
                 {activeView === "deals" ? (
-                  <DealsView deals={deals} onDealsChange={setDeals} token={token!} />
+                  <DealsView
+                    brands={brands}
+                    deals={deals}
+                    isPlatformAdmin={platformAdmin}
+                    onDealsChange={setDeals}
+                    token={token!}
+                  />
+                ) : null}
+                {activeView === "team" ? (
+                  <TeamView brandSlug={brandSlug!} token={token!} />
+                ) : null}
+                {activeView === "locations" ? (
+                  <LocationsView brandSlug={brandSlug!} token={token!} />
                 ) : null}
                 {activeView === "payments" && paymentSettings ? (
                   <PaymentsView

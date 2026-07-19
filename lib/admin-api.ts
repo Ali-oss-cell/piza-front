@@ -530,3 +530,244 @@ export function deleteDeal(token: string, id: string, brandSlug?: string): Promi
     brandSlug: withBrand(brandSlug),
   });
 }
+
+export function pushDealToStores(
+  token: string,
+  dealId: string,
+  targetBrandSlugs: string[],
+): Promise<{ dealId: string; pushedTo: string[] }> {
+  return apiRequest(`/hq/deals/${dealId}/push`, {
+    method: "POST",
+    token,
+    body: JSON.stringify({ targetBrandSlugs }),
+  });
+}
+
+export function fetchHqOverview(
+  token: string,
+  params?: { from?: string; to?: string },
+): Promise<import("@/types/hq").HqOverview> {
+  const query = new URLSearchParams();
+  if (params?.from) query.set("from", params.from);
+  if (params?.to) query.set("to", params.to);
+  const suffix = query.toString() ? `?${query}` : "";
+  return apiRequest(`/hq/overview${suffix}`, { token });
+}
+
+export function fetchHqSalesReport(
+  token: string,
+  params?: { from?: string; to?: string; brand?: string },
+): Promise<import("@/types/hq").HqSalesReport> {
+  const query = new URLSearchParams();
+  if (params?.from) query.set("from", params.from);
+  if (params?.to) query.set("to", params.to);
+  if (params?.brand) query.set("brand", params.brand);
+  const suffix = query.toString() ? `?${query}` : "";
+  return apiRequest(`/hq/reports/sales${suffix}`, { token });
+}
+
+export function hqSalesCsvUrl(params?: { from?: string; to?: string; brand?: string }): string {
+  const query = new URLSearchParams();
+  if (params?.from) query.set("from", params.from);
+  if (params?.to) query.set("to", params.to);
+  if (params?.brand) query.set("brand", params.brand);
+  const suffix = query.toString() ? `?${query}` : "";
+  return `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api"}/hq/reports/sales.csv${suffix}`;
+}
+
+export function fetchOnboarding(
+  token: string,
+  brandSlug: string,
+): Promise<import("@/types/hq").HqReadiness> {
+  return apiRequest(`/hq/onboarding/${encodeURIComponent(brandSlug)}`, { token });
+}
+
+export function fetchHqDomains(token: string): Promise<import("@/types/hq").HqDomain[]> {
+  return apiRequest("/hq/domains", { token });
+}
+
+export function createHqDomain(
+  token: string,
+  payload: {
+    storeSlug: string;
+    host?: string;
+    pathPrefix?: string;
+    isPrimary?: boolean;
+  },
+): Promise<import("@/types/hq").HqDomain> {
+  return apiRequest("/hq/domains", {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateHqDomain(
+  token: string,
+  id: string,
+  payload: {
+    host?: string | null;
+    pathPrefix?: string | null;
+    isPrimary?: boolean;
+    isActive?: boolean;
+  },
+): Promise<import("@/types/hq").HqDomain> {
+  return apiRequest(`/hq/domains/${id}`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchMenuTemplates(
+  token: string,
+): Promise<import("@/types/hq").HqMenuTemplate[]> {
+  return apiRequest("/hq/menu-templates", { token });
+}
+
+export function createMenuTemplate(
+  token: string,
+  payload: {
+    name: string;
+    description?: string;
+    sourceBrandSlug: string;
+    lockItems?: boolean;
+  },
+): Promise<import("@/types/hq").HqMenuTemplate> {
+  return apiRequest("/hq/menu-templates", {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function applyMenuTemplate(
+  token: string,
+  id: string,
+  targetBrandSlugs: string[],
+  lockItems?: boolean,
+): Promise<{ templateId: string; results: Array<{ slug: string; categories: number; items: number }> }> {
+  return apiRequest(`/hq/menu-templates/${id}/apply`, {
+    method: "POST",
+    token,
+    body: JSON.stringify({ targetBrandSlugs, lockItems }),
+  });
+}
+
+export function searchHqCustomers(
+  token: string,
+  q: string,
+  brand?: string,
+): Promise<import("@/types/hq").HqCustomer[]> {
+  const query = new URLSearchParams({ q });
+  if (brand) query.set("brand", brand);
+  return apiRequest(`/hq/customers?${query}`, { token });
+}
+
+export function fetchCustomerOrders(token: string, key: string): Promise<AdminOrder[]> {
+  return apiRequest(`/hq/customers/${encodeURIComponent(key)}/orders`, { token });
+}
+
+export function fetchHqActivity(
+  token: string,
+  params?: { store?: string; limit?: number },
+): Promise<import("@/types/hq").HqAuditEvent[]> {
+  const query = new URLSearchParams();
+  if (params?.store) query.set("store", params.store);
+  if (params?.limit) query.set("limit", String(params.limit));
+  const suffix = query.toString() ? `?${query}` : "";
+  return apiRequest(`/hq/activity${suffix}`, { token });
+}
+
+export function fetchTeam(
+  token: string,
+  brandSlug: string,
+): Promise<import("@/types/hq").TeamMembership[]> {
+  return apiRequest(`/team?brand=${encodeURIComponent(brandSlug)}`, { token });
+}
+
+export function inviteTeamMember(
+  token: string,
+  payload: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    brandSlug: string;
+    temporaryPassword?: string;
+    locationId?: string;
+  },
+): Promise<{
+  membership: import("@/types/hq").TeamMembership;
+  temporaryPassword?: string;
+}> {
+  return apiRequest("/team/invite", {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateTeamMember(
+  token: string,
+  id: string,
+  payload: { role?: string; isActive?: boolean; locationId?: string | null },
+): Promise<import("@/types/hq").TeamMembership> {
+  return apiRequest(`/team/${id}`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchAdminLocations(
+  token: string,
+  brandSlug: string,
+): Promise<import("@/types/hq").AdminLocation[]> {
+  return apiRequest(`/locations?brand=${encodeURIComponent(brandSlug)}`, { token });
+}
+
+export function createAdminLocation(
+  token: string,
+  payload: {
+    brandSlug: string;
+    name: string;
+    suburb?: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    deliveryFee?: number;
+    minOrderAmount?: number;
+    isDefault?: boolean;
+  },
+): Promise<import("@/types/hq").AdminLocation> {
+  return apiRequest("/locations", {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateAdminLocation(
+  token: string,
+  id: string,
+  payload: Partial<{
+    name: string;
+    suburb: string;
+    address: string;
+    phone: string;
+    email: string;
+    deliveryFee: number;
+    minOrderAmount: number;
+    isActive: boolean;
+    isDefault: boolean;
+    openingHours: unknown;
+  }>,
+): Promise<import("@/types/hq").AdminLocation> {
+  return apiRequest(`/locations/${id}`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+

@@ -143,7 +143,15 @@ export type AdminView =
   | "crusts"
   | "deals"
   | "payments"
-  | "settings";
+  | "settings"
+  | "hq"
+  | "reports"
+  | "team"
+  | "locations"
+  | "domains"
+  | "templates"
+  | "customers"
+  | "activity";
 
 export interface CreateMenuItemPayload {
   slug: string;

@@ -76,7 +76,11 @@ function StoreCard({
   );
 }
 
-export function BrandPicker(): React.ReactElement {
+export function BrandPicker({
+  onBackToHq,
+}: {
+  onBackToHq?: () => void;
+} = {}): React.ReactElement {
   const { user, token } = useAuth();
   const { brands, isLoading, selectBrand, refreshBrands } = useAdminBrand();
   const [showCreateWizard, setShowCreateWizard] = useState(false);
@@ -129,6 +133,11 @@ export function BrandPicker(): React.ReactElement {
               Pick a store to manage menu, orders, payments, and branding. Each store keeps its own
               logo and look.
             </p>
+            {onBackToHq ? (
+              <Button className="mt-4" onClick={onBackToHq} type="button" variant="outline">
+                ← Back to Franchise HQ
+              </Button>
+            ) : null}
           </div>
           {token && canCreate ? (
             <Button
