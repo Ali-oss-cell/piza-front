@@ -45,18 +45,22 @@ interface AdminHeaderProps {
   activeView: AdminView;
   brandName: string;
   collapsed: boolean;
+  mode?: "hq" | "store";
   onToggleCollapsed: () => void;
   onOpenMobileNav: () => void;
   onAllStores?: () => void;
+  onSelectView?: (view: AdminView) => void;
 }
 
 export function AdminHeader({
   activeView,
   brandName,
   collapsed,
+  mode = "store",
   onToggleCollapsed,
   onOpenMobileNav,
   onAllStores,
+  onSelectView,
 }: AdminHeaderProps): React.ReactElement {
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -99,6 +103,10 @@ export function AdminHeader({
     router.push("/login");
   };
 
+  const homeView: AdminView = mode === "hq" ? "hq" : "overview";
+  const crumbClass =
+    "rounded-sm transition-colors hover:text-[#d81b60] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d81b60]/40";
+
   return (
     <header className={cn("sticky top-0 z-30 border-b border-zinc-200/50 px-4 py-4 dark:border-white/10", dashboardGlass)}>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -110,13 +118,42 @@ export function AdminHeader({
             <Menu className="h-5 w-5" />
           </Button>
           <div>
-            <div className={cn("flex items-center gap-2 text-xs uppercase tracking-wide", secondaryText)}>
-              <span>{brandName}</span>
-              <ChevronRight className="h-3 w-3" />
-              <span>Dashboard</span>
-              <ChevronRight className="h-3 w-3" />
-              <span className="text-[#d81b60]">{VIEW_LABELS[activeView]}</span>
-            </div>
+            <nav
+              aria-label="Breadcrumb"
+              className={cn("flex items-center gap-2 text-xs uppercase tracking-wide", secondaryText)}
+            >
+              {onAllStores ? (
+                <button className={crumbClass} onClick={onAllStores} type="button">
+                  {brandName}
+                </button>
+              ) : onSelectView ? (
+                <button
+                  className={crumbClass}
+                  onClick={() => onSelectView(homeView)}
+                  type="button"
+                >
+                  {brandName}
+                </button>
+              ) : (
+                <span>{brandName}</span>
+              )}
+              <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
+              {onSelectView && activeView !== homeView ? (
+                <button
+                  className={crumbClass}
+                  onClick={() => onSelectView(homeView)}
+                  type="button"
+                >
+                  Dashboard
+                </button>
+              ) : (
+                <span>Dashboard</span>
+              )}
+              <ChevronRight className="h-3 w-3 shrink-0" aria-hidden />
+              <span aria-current="page" className="text-[#d81b60]">
+                {VIEW_LABELS[activeView]}
+              </span>
+            </nav>
             <h1 className={cn("font-display text-xl font-bold", primaryText)}>
               {VIEW_LABELS[activeView]}
             </h1>

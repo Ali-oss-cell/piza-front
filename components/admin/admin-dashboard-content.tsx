@@ -232,8 +232,10 @@ export function AdminDashboardContent(): React.ReactElement {
             activeView={activeView}
             brandName="Franchise HQ"
             collapsed={collapsed}
+            mode="hq"
             onAllStores={goToAllStores}
             onOpenMobileNav={() => setMobileOpen(true)}
+            onSelectView={setActiveView}
             onToggleCollapsed={() => setCollapsed((current) => !current)}
           />
 
@@ -287,8 +289,10 @@ export function AdminDashboardContent(): React.ReactElement {
           activeView={activeView}
           brandName={selectedBrand!.name}
           collapsed={collapsed}
+          mode="store"
           onAllStores={goToAllStores}
           onOpenMobileNav={() => setMobileOpen(true)}
+          onSelectView={setActiveView}
           onToggleCollapsed={() => setCollapsed((current) => !current)}
         />
 
