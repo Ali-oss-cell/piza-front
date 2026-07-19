@@ -118,7 +118,7 @@ export function BrandPicker({
       <div className="relative mx-auto max-w-6xl px-6 py-12 md:py-16">
         <div
           className={cn(
-            "mb-10 flex flex-col gap-6 rounded-[2rem] border border-zinc-200/60 p-8 shadow-xl dark:border-white/10 sm:flex-row sm:items-end sm:justify-between",
+            "mb-10 flex flex-col gap-6 rounded-[2rem] border border-zinc-200/60 p-8 dark:border-white/10 sm:flex-row sm:items-end sm:justify-between",
             dashboardGlass,
           )}
         >
