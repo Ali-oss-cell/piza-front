@@ -1,30 +1,39 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { resolveMediaUrl } from "@/lib/media-url";
+
+const DEFAULT_HERO =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuBvLbch0jQ5PYw35jNjOwWrBuRd7eU_GlrTVGHvtPk_llIBerZFSgY2-RGO1dkxZpRa0FX5hKSYfkpRZWQRQksuFZZNgBNXgziC80aEEXAonKXkXEUYm4mwhAe2yXLjnYzXeQco1l4G3bHIp2nG1Qx7a-toviugVlrlrKmuQ3TJCB6mWpuKtKNdc6U62q70HyfIP3rarjnJI9-VWRee5BI3XwPb_CVeEzmfQrbaLax7OCoHPN4g82XSYhXqCFl6xZSnspMSAzb2QnU";
 
 interface HeroSectionProps {
   onOpenCart: () => void;
   brandName?: string;
   tagline?: string;
+  heroImageUrl?: string | null;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
 }
 
 export function HeroSection({
   onOpenCart,
   brandName,
   tagline,
+  heroImageUrl,
+  primaryColor,
+  secondaryColor,
 }: HeroSectionProps): React.ReactElement {
   const isBunnyBoys = brandName === "Bunny Boys";
-  const accentClass = isBunnyBoys ? "text-[#FF6B35]" : "text-[#d81b60]";
+  const accent = secondaryColor?.trim() || primaryColor?.trim() || "#d81b60";
+  const heroSrc = resolveMediaUrl(heroImageUrl) ?? DEFAULT_HERO;
 
   return (
     <section className="relative flex min-h-[85vh] items-center overflow-hidden px-margin-mobile transition-colors duration-150 ease-out md:px-margin-desktop">
       <div className="absolute inset-0 z-0">
-        <Image
-          alt="Hero background"
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          alt=""
           className="h-full w-full scale-105 object-cover opacity-60"
-          fill
-          priority
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvLbch0jQ5PYw35jNjOwWrBuRd7eU_GlrTVGHvtPk_llIBerZFSgY2-RGO1dkxZpRa0FX5hKSYfkpRZWQRQksuFZZNgBNXgziC80aEEXAonKXkXEUYm4mwhAe2yXLjnYzXeQco1l4G3bHIp2nG1Qx7a-toviugVlrlrKmuQ3TJCB6mWpuKtKNdc6U62q70HyfIP3rarjnJI9-VWRee5BI3XwPb_CVeEzmfQrbaLax7OCoHPN4g82XSYhXqCFl6xZSnspMSAzb2QnU"
+          src={heroSrc}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent transition-colors duration-150 ease-out dark:from-black dark:via-black/80" />
       </div>
@@ -35,12 +44,12 @@ export function HeroSection({
             {isBunnyBoys ? (
               <>
                 BUNNY <br />
-                BOYS <span className={accentClass}>DELIVERED.</span>
+                BOYS <span style={{ color: accent }}>DELIVERED.</span>
               </>
             ) : (
               <>
                 PIZZA & <br />
-                PASTA <span className={accentClass}>REFINED.</span>
+                PASTA <span style={{ color: accent }}>REFINED.</span>
               </>
             )}
           </h1>

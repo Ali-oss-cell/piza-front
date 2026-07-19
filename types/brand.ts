@@ -11,6 +11,8 @@ export interface Brand {
   logoUrl?: string | null;
   logoDarkUrl?: string | null;
   primaryColor?: string | null;
+  secondaryColor?: string | null;
+  heroImageUrl?: string | null;
   isActive: boolean;
   status?: "DRAFT" | "LIVE";
   pathPrefix?: string | null;
@@ -34,6 +36,8 @@ export interface CreateStorePayload {
   logoUrl?: string;
   logoDarkUrl?: string;
   primaryColor?: string;
+  secondaryColor?: string;
+  heroImageUrl?: string;
   pathPrefix?: string;
   host?: string;
   createStarterCategories?: boolean;

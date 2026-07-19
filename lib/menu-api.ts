@@ -53,6 +53,8 @@ export interface ResolvedStore {
   logoUrl?: string | null;
   logoDarkUrl?: string | null;
   primaryColor?: string | null;
+  secondaryColor?: string | null;
+  heroImageUrl?: string | null;
   isActive: boolean;
   pathPrefix?: string | null;
   host?: string | null;

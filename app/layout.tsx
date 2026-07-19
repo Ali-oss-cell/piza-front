@@ -36,6 +36,8 @@ export default async function RootLayout({
     tagline: null as string | null,
     address: null as string | null,
     openingHours: null as unknown,
+    primaryColor: "#d81b60" as string | null,
+    secondaryColor: "#111827" as string | null,
   };
 
   try {
@@ -50,6 +52,8 @@ export default async function RootLayout({
       tagline: settings.tagline ?? null,
       address: settings.address ?? null,
       openingHours: settings.openingHours ?? null,
+      primaryColor: settings.primaryColor ?? "#d81b60",
+      secondaryColor: settings.secondaryColor ?? "#111827",
     };
   } catch {
     // keep defaults with bundled logos

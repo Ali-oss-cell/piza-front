@@ -99,6 +99,41 @@ export async function uploadLogo(
   return response.json() as Promise<{ url: string; filename: string }>;
 }
 
+export async function uploadHeroImage(
+  token: string,
+  file: File,
+): Promise<{ url: string; filename: string }> {
+  const body = new FormData();
+  body.append("file", file);
+
+  let response: Response;
+  try {
+    response = await fetch("/api/uploads/hero", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body,
+    });
+  } catch {
+    throw new Error(
+      "Could not upload hero image (network error). Check that the website and API are running.",
+    );
+  }
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => ({}))) as {
+      message?: string | string[];
+    };
+    const message = Array.isArray(payload.message)
+      ? payload.message.join(", ")
+      : payload.message ?? response.statusText;
+    throw new Error(message || "Hero image upload failed");
+  }
+
+  return response.json() as Promise<{ url: string; filename: string }>;
+}
+
 export function fetchOrders(token: string, brandSlug?: string): Promise<AdminOrder[]> {
   return apiRequest<AdminOrder[]>("/orders", { token, brandSlug: withBrand(brandSlug) });
 }

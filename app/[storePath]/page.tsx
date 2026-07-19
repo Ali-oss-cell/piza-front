@@ -54,7 +54,10 @@ export default async function DynamicStorefrontPage({
           brandName={store.name}
           brandSlug={store.slug}
           categories={mapApiMenuCategories(apiCategories)}
+          heroImageUrl={store.heroImageUrl}
           menuItems={apiItems.map(mapApiMenuItem)}
+          primaryColor={store.primaryColor}
+          secondaryColor={store.secondaryColor}
           tagline={store.tagline ?? undefined}
         />
       </>

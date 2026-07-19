@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { HeroImageUploader } from "@/components/admin/hero-image-uploader";
 import { LogoUploader } from "@/components/admin/logo-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,8 @@ interface FormState {
   logoUrl: string;
   logoDarkUrl: string;
   primaryColor: string;
+  secondaryColor: string;
+  heroImageUrl: string;
   pathPrefix: string;
   host: string;
   createStarterCategories: boolean;
@@ -68,6 +71,8 @@ export function CreateStoreWizard({
     logoUrl: "",
     logoDarkUrl: "",
     primaryColor: "#D81B60",
+    secondaryColor: "#111827",
+    heroImageUrl: "",
     pathPrefix: "",
     host: "",
     createStarterCategories: true,
@@ -140,6 +145,8 @@ export function CreateStoreWizard({
       logoUrl: form.logoUrl.trim() || undefined,
       logoDarkUrl: form.logoDarkUrl.trim() || undefined,
       primaryColor: form.primaryColor.trim() || undefined,
+      secondaryColor: form.secondaryColor.trim() || undefined,
+      heroImageUrl: form.heroImageUrl.trim() || undefined,
       pathPrefix: normalizePathPrefix(form.slug, form.pathPrefix),
       host: form.host.trim() || undefined,
       createStarterCategories: form.createStarterCategories,
@@ -238,21 +245,38 @@ export function CreateStoreWizard({
 
           {step === 1 ? (
             <>
-              <Field label="Primary color">
-                <div className="flex items-center gap-3">
-                  <input
-                    className="h-10 w-14 cursor-pointer rounded border border-zinc-200 bg-transparent dark:border-white/10"
-                    onChange={(event) => update("primaryColor", event.target.value)}
-                    type="color"
-                    value={form.primaryColor || "#D81B60"}
-                  />
-                  <Input
-                    onChange={(event) => update("primaryColor", event.target.value)}
-                    placeholder="#D81B60"
-                    value={form.primaryColor}
-                  />
-                </div>
-              </Field>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Primary colour">
+                  <div className="flex items-center gap-3">
+                    <input
+                      className="h-10 w-14 cursor-pointer rounded border border-zinc-200 bg-transparent dark:border-white/10"
+                      onChange={(event) => update("primaryColor", event.target.value)}
+                      type="color"
+                      value={form.primaryColor || "#D81B60"}
+                    />
+                    <Input
+                      onChange={(event) => update("primaryColor", event.target.value)}
+                      placeholder="#D81B60"
+                      value={form.primaryColor}
+                    />
+                  </div>
+                </Field>
+                <Field label="Secondary colour">
+                  <div className="flex items-center gap-3">
+                    <input
+                      className="h-10 w-14 cursor-pointer rounded border border-zinc-200 bg-transparent dark:border-white/10"
+                      onChange={(event) => update("secondaryColor", event.target.value)}
+                      type="color"
+                      value={form.secondaryColor || "#111827"}
+                    />
+                    <Input
+                      onChange={(event) => update("secondaryColor", event.target.value)}
+                      placeholder="#111827"
+                      value={form.secondaryColor}
+                    />
+                  </div>
+                </Field>
+              </div>
               <Field label="Light mode logo">
                 <LogoUploader
                   label="Light logo"
@@ -273,6 +297,13 @@ export function CreateStoreWizard({
                   storeName={form.name || "Store"}
                   token={token}
                   value={form.logoDarkUrl}
+                />
+              </Field>
+              <Field label="Homepage hero image">
+                <HeroImageUploader
+                  onChange={(heroImageUrl) => update("heroImageUrl", heroImageUrl)}
+                  token={token}
+                  value={form.heroImageUrl}
                 />
               </Field>
               <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
@@ -374,7 +405,12 @@ export function CreateStoreWizard({
               <ReviewRow label="Slug" value={form.slug} />
               <ReviewRow label="Path" value={pathPreview} />
               <ReviewRow label="Location" value={form.locationName} />
-              <ReviewRow label="Color" value={form.primaryColor || "#D81B60"} />
+              <ReviewRow label="Primary" value={form.primaryColor || "#D81B60"} />
+              <ReviewRow label="Secondary" value={form.secondaryColor || "#111827"} />
+              <ReviewRow
+                label="Hero image"
+                value={form.heroImageUrl ? "Uploaded" : "Default"}
+              />
               <ReviewRow
                 label="Starter categories"
                 value={form.createStarterCategories ? "Yes" : "No"}

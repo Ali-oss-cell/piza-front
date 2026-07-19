@@ -25,6 +25,8 @@ function homeHrefForSlug(slug: string): string {
 /** Bundled Leovorno logos (marinapizzas.com.au → Leovorno for now). */
 const LEOVORNO_LOGO_LIGHT = "/leovorno-logo-light.png";
 const LEOVORNO_LOGO_DARK = "/leovorno-logo-dark.png";
+const DEFAULT_PRIMARY = "#d81b60";
+const DEFAULT_SECONDARY = "#111827";
 
 function defaultLogosForSlug(slug: string): {
   logoUrl: string | null;
@@ -44,6 +46,8 @@ export interface InitialSiteBranding {
   tagline?: string | null;
   address?: string | null;
   openingHours?: unknown;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
 }
 
 export function AppShell({
@@ -92,6 +96,12 @@ export function AppShell({
   const [openingHours, setOpeningHours] = useState<unknown>(
     initialBranding?.openingHours ?? null,
   );
+  const [primaryColor, setPrimaryColor] = useState(
+    initialBranding?.primaryColor?.trim() || DEFAULT_PRIMARY,
+  );
+  const [secondaryColor, setSecondaryColor] = useState(
+    initialBranding?.secondaryColor?.trim() || DEFAULT_SECONDARY,
+  );
 
   useEffect(() => {
     const onScroll = (): void => setIsScrolled(window.scrollY > 50);
@@ -128,6 +138,8 @@ export function AppShell({
         setTagline(settings.tagline ?? null);
         setAddress(settings.address ?? null);
         setOpeningHours(settings.openingHours ?? null);
+        setPrimaryColor(settings.primaryColor?.trim() || DEFAULT_PRIMARY);
+        setSecondaryColor(settings.secondaryColor?.trim() || DEFAULT_SECONDARY);
       })
       .catch(() => {
         if (cancelled) {
@@ -138,12 +150,20 @@ export function AppShell({
         setLogoUrl(fallbacks.logoUrl);
         setLogoDarkUrl(fallbacks.logoDarkUrl);
         setOpeningHours(null);
+        setPrimaryColor(DEFAULT_PRIMARY);
+        setSecondaryColor(DEFAULT_SECONDARY);
       });
 
     return () => {
       cancelled = true;
     };
   }, [brandSlug, initialBranding?.brandSlug]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--brand-primary", primaryColor);
+    root.style.setProperty("--brand-secondary", secondaryColor);
+  }, [primaryColor, secondaryColor]);
 
   if (isStandaloneRoute(pathname)) {
     return <>{children}</>;
