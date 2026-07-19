@@ -258,7 +258,9 @@ export function AdminDashboardContent(): React.ReactElement {
                     token={token!}
                   />
                 ) : null}
-                {activeView === "reports" ? <HqReportsView token={token!} /> : null}
+                {activeView === "reports" ? (
+                  <HqReportsView brands={brands} token={token!} />
+                ) : null}
                 {activeView === "domains" ? <DomainsView brands={brands} token={token!} /> : null}
                 {activeView === "templates" ? <TemplatesView brands={brands} token={token!} /> : null}
                 {/* CRM paused for now */}

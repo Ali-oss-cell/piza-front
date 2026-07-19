@@ -6,31 +6,42 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchHqSalesReport, hqSalesCsvUrl } from "@/lib/admin-api";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import type { Brand } from "@/types/brand";
 import type { HqSalesReport } from "@/types/hq";
 import { cn } from "@/lib/utils";
 
 interface HqReportsViewProps {
   token: string;
+  brands: Brand[];
 }
 
 function formatMoney(value: number): string {
   return `$${Number(value || 0).toFixed(2)}`;
 }
 
-export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement {
+export function HqReportsView({ token, brands }: HqReportsViewProps): React.ReactElement {
+  const [brandSlug, setBrandSlug] = useState(brands[0]?.slug ?? "");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [report, setReport] = useState<HqSalesReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const selectedBrand = brands.find((brand) => brand.slug === brandSlug) ?? null;
+
   const handleLoad = async (): Promise<void> => {
+    if (!brandSlug) {
+      setError("Select a store to load its report.");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
       const data = await fetchHqSalesReport(token, {
         from: from || undefined,
         to: to || undefined,
+        brand: brandSlug,
       });
       setReport(data);
     } catch (loadError) {
@@ -41,8 +52,14 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
   };
 
   const handleDownloadCsv = async (): Promise<void> => {
+    if (!brandSlug) return;
+
     try {
-      const url = hqSalesCsvUrl({ from: from || undefined, to: to || undefined });
+      const url = hqSalesCsvUrl({
+        from: from || undefined,
+        to: to || undefined,
+        brand: brandSlug,
+      });
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -53,7 +70,7 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = downloadUrl;
-      link.download = `sales-report-${from || "all"}-${to || "all"}.csv`;
+      link.download = `sales-report-${brandSlug}-${from || "all"}-${to || "all"}.csv`;
       link.click();
       window.URL.revokeObjectURL(downloadUrl);
     } catch (downloadError) {
@@ -64,17 +81,40 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
   const days = report?.days ?? [];
   const channels = report?.channelMix ?? [];
   const payments = report?.paymentMix ?? [];
+  const storeName = report?.store?.name ?? selectedBrand?.name ?? brandSlug;
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className={cn("font-display text-2xl font-bold", primaryText)}>Sales Reports</h2>
         <p className={cn("mt-1 text-sm", secondaryText)}>
-          Cross-store revenue and order analytics
+          One store at a time — pick a store to see its revenue, orders, and daily breakdown
         </p>
       </div>
 
       <div className={cn("max-w-2xl space-y-4 rounded-2xl border p-6", dashboardGlass)}>
+        <div>
+          <label className={cn("mb-1 block text-sm font-medium", primaryText)}>Store</label>
+          <select
+            className="flex h-11 w-full rounded-xl border border-zinc-200/70 bg-white px-4 text-sm dark:border-white/10 dark:bg-zinc-900"
+            onChange={(event) => {
+              setBrandSlug(event.target.value);
+              setReport(null);
+              setError(null);
+            }}
+            value={brandSlug}
+          >
+            {brands.length === 0 ? (
+              <option value="">No stores available</option>
+            ) : (
+              brands.map((brand) => (
+                <option key={brand.id} value={brand.slug}>
+                  {brand.name}
+                </option>
+              ))
+            )}
+          </select>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={cn("mb-1 block text-sm font-medium", primaryText)}>From date</label>
@@ -90,7 +130,7 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
           </div>
         </div>
         <div className="flex gap-3">
-          <Button disabled={isLoading} onClick={() => void handleLoad()}>
+          <Button disabled={isLoading || !brandSlug} onClick={() => void handleLoad()}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Load Report
           </Button>
@@ -108,17 +148,22 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
         <>
           <section className={cn("overflow-hidden", dashboardGlass)}>
             <div className="border-b border-zinc-200/50 px-6 py-4 dark:border-white/10">
-              <h3 className={cn("font-display text-xl font-semibold", primaryText)}>Totals</h3>
+              <h3 className={cn("font-display text-xl font-semibold", primaryText)}>
+                {storeName} totals
+              </h3>
+              <p className={cn("mt-1 text-xs", secondaryText)}>
+                Paid orders only · Melbourne day boundaries
+              </p>
             </div>
             <div className="grid gap-4 p-6 md:grid-cols-3">
               <div>
-                <p className={cn("text-sm", secondaryText)}>Total Revenue</p>
+                <p className={cn("text-sm", secondaryText)}>Revenue</p>
                 <p className="mt-1 text-2xl font-bold text-[#d81b60]">
                   {formatMoney(report.totals.revenue)}
                 </p>
               </div>
               <div>
-                <p className={cn("text-sm", secondaryText)}>Total Orders</p>
+                <p className={cn("text-sm", secondaryText)}>Orders</p>
                 <p className={cn("mt-1 text-2xl font-bold", primaryText)}>
                   {report.totals.orders ?? 0}
                 </p>
@@ -168,7 +213,7 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
                   {channels.length === 0 ? (
                     <tr>
                       <td className={cn("px-6 py-8 text-center", secondaryText)} colSpan={3}>
-                        No channel data in this range.
+                        No channel data for this store in this range.
                       </td>
                     </tr>
                   ) : null}
@@ -210,6 +255,13 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
                       <td className={cn("px-6 py-4", secondaryText)}>{row.orders}</td>
                     </tr>
                   ))}
+                  {payments.length === 0 ? (
+                    <tr>
+                      <td className={cn("px-6 py-8 text-center", secondaryText)} colSpan={3}>
+                        No payment data for this store in this range.
+                      </td>
+                    </tr>
+                  ) : null}
                 </tbody>
               </table>
             </div>
@@ -249,7 +301,7 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
                   {days.length === 0 ? (
                     <tr>
                       <td className={cn("px-6 py-8 text-center", secondaryText)} colSpan={3}>
-                        No paid orders in this range.
+                        No paid orders for this store in this range.
                       </td>
                     </tr>
                   ) : null}

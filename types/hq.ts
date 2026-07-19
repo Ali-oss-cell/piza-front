@@ -53,11 +53,19 @@ export interface HqOverview {
 
 export interface HqSalesReport {
   range: { from: string; to: string; timezone?: string };
+  store: { slug: string; name: string } | null;
   totals: {
     revenue: number;
     orders: number;
     averageOrderValue: number;
   };
+  byStore: Array<{
+    slug: string;
+    name: string;
+    revenue: number;
+    orders: number;
+    averageOrderValue: number;
+  }>;
   days: Array<{ date: string; revenue: number; orders: number }>;
   paymentMix: Array<{ method: string; revenue: number; orders: number }>;
   channelMix: Array<{ channel: string; revenue: number; orders: number }>;
