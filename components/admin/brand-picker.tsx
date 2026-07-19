@@ -196,42 +196,19 @@ export function BrandSwitcher({
 }: {
   onAllStores?: () => void;
 } = {}): React.ReactElement {
-  const { brands, selectedBrand, selectBrand, clearBrand } = useAdminBrand();
+  const { selectedBrand, clearBrand } = useAdminBrand();
 
   if (!selectedBrand) {
     return <div />;
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {brands.map((brand) => {
-        const active = brand.slug === selectedBrand.slug;
-
-        return (
-          <Button
-            className="h-9 gap-2 px-3 text-sm"
-            key={brand.id}
-            onClick={() => selectBrand(brand.slug)}
-            variant={active ? "default" : "outline"}
-          >
-            <BrandLogoMark
-              brandName={brand.name}
-              className="h-5 w-5"
-              logoDarkUrl={brand.logoDarkUrl}
-              logoUrl={brand.logoUrl}
-              primaryColor={brand.primaryColor}
-            />
-            {brand.name}
-          </Button>
-        );
-      })}
-      <Button
-        className="h-9 px-3 text-sm"
-        onClick={onAllStores ?? clearBrand}
-        variant="ghost"
-      >
-        All stores
-      </Button>
-    </div>
+    <Button
+      className="h-9 px-3 text-sm"
+      onClick={onAllStores ?? clearBrand}
+      variant="ghost"
+    >
+      All stores
+    </Button>
   );
 }
