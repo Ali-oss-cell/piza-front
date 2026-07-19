@@ -36,7 +36,7 @@ const VIEW_LABELS: Record<AdminView, string> = {
   team: "Team",
   locations: "Locations",
   domains: "Domains",
-  templates: "Menu Templates",
+  templates: "Transfer Menu",
   customers: "Customers",
   activity: "Activity",
 };

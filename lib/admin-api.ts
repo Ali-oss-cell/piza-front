@@ -646,11 +646,34 @@ export function applyMenuTemplate(
   id: string,
   targetBrandSlugs: string[],
   lockItems?: boolean,
-): Promise<{ templateId: string; results: Array<{ slug: string; categories: number; items: number }> }> {
+): Promise<{ applied: string[]; failed: Array<{ slug: string; reason: string }> }> {
   return apiRequest(`/hq/menu-templates/${id}/apply`, {
     method: "POST",
     token,
     body: JSON.stringify({ targetBrandSlugs, lockItems }),
+  });
+}
+
+export function transferMenu(
+  token: string,
+  payload: {
+    sourceBrandSlug: string;
+    targetBrandSlugs: string[];
+    itemSlugs: string[];
+    lockItems?: boolean;
+    saveAsName?: string;
+    saveAsDescription?: string;
+  },
+): Promise<{
+  itemCount: number;
+  applied: string[];
+  failed: Array<{ slug: string; reason: string }>;
+  templateId: string | null;
+}> {
+  return apiRequest("/hq/menu-transfer", {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
   });
 }
 
