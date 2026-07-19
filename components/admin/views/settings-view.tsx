@@ -134,12 +134,15 @@ export function SettingsView({
       {readiness ? (
         <div className={cn("max-w-2xl space-y-3 rounded-2xl border p-6", dashboardGlass)}>
           <h3 className={cn("font-display text-lg font-bold", primaryText)}>
-            Onboarding · {readiness.percent}%
+            Onboarding · {readiness.percentComplete ?? 0}%
           </h3>
           <ul className="space-y-2">
-            {readiness.checks.map((check) => (
-              <li className={cn("text-sm", check.done ? "text-emerald-600" : secondaryText)} key={check.id}>
-                {check.done ? "✓" : "○"} {check.label}
+            {(readiness.checks ?? []).map((check) => (
+              <li
+                className={cn("text-sm", check.complete ? "text-emerald-600" : secondaryText)}
+                key={check.key}
+              >
+                {check.complete ? "✓" : "○"} {check.label}
               </li>
             ))}
           </ul>

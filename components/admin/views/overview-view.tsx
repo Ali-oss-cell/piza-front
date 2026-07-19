@@ -98,7 +98,9 @@ export function OverviewView({ orders }: OverviewViewProps): React.ReactElement 
                         month: "short",
                       }).format(new Date(order.createdAt))}
                     </td>
-                    <td className={cn("px-6 py-4", secondaryText)}>{order.items.length}</td>
+                    <td className={cn("px-6 py-4", secondaryText)}>
+                      {order.items?.length ?? 0}
+                    </td>
                     <td className="px-6 py-4 font-semibold text-[#d81b60]">
                       {formatMoney(order.total)}
                     </td>

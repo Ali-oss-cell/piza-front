@@ -14,7 +14,7 @@ interface HqReportsViewProps {
 }
 
 function formatMoney(value: number): string {
-  return `$${value.toFixed(2)}`;
+  return `$${Number(value || 0).toFixed(2)}`;
 }
 
 export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement {
@@ -28,7 +28,10 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchHqSalesReport(token, { from: from || undefined, to: to || undefined });
+      const data = await fetchHqSalesReport(token, {
+        from: from || undefined,
+        to: to || undefined,
+      });
       setReport(data);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Unable to load sales report.");
@@ -58,6 +61,10 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
     }
   };
 
+  const days = report?.days ?? [];
+  const channels = report?.channelMix ?? [];
+  const payments = report?.paymentMix ?? [];
+
   return (
     <div className="space-y-6">
       <div>
@@ -79,11 +86,7 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
           </div>
           <div>
             <label className={cn("mb-1 block text-sm font-medium", primaryText)}>To date</label>
-            <Input
-              onChange={(event) => setTo(event.target.value)}
-              type="date"
-              value={to}
-            />
+            <Input onChange={(event) => setTo(event.target.value)} type="date" value={to} />
           </div>
         </div>
         <div className="flex gap-3">
@@ -107,52 +110,25 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
             <div className="border-b border-zinc-200/50 px-6 py-4 dark:border-white/10">
               <h3 className={cn("font-display text-xl font-semibold", primaryText)}>Totals</h3>
             </div>
-            <div className="p-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <p className={cn("text-sm", secondaryText)}>Total Revenue</p>
-                  <p className={cn("mt-1 text-2xl font-bold text-[#d81b60]")}>
-                    {formatMoney(report.totals.revenue)}
-                  </p>
-                </div>
-                <div>
-                  <p className={cn("text-sm", secondaryText)}>Total Orders</p>
-                  <p className={cn("mt-1 text-2xl font-bold", primaryText)}>
-                    {report.totals.orderCount}
-                  </p>
-                </div>
+            <div className="grid gap-4 p-6 md:grid-cols-3">
+              <div>
+                <p className={cn("text-sm", secondaryText)}>Total Revenue</p>
+                <p className="mt-1 text-2xl font-bold text-[#d81b60]">
+                  {formatMoney(report.totals.revenue)}
+                </p>
               </div>
-            </div>
-          </section>
-
-          <section className={cn("overflow-hidden", dashboardGlass)}>
-            <div className="border-b border-zinc-200/50 px-6 py-4 dark:border-white/10">
-              <h3 className={cn("font-display text-xl font-semibold", primaryText)}>By Store</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className={cn("border-b border-zinc-200/50 text-xs uppercase tracking-wide dark:border-white/10", secondaryText)}>
-                  <tr>
-                    <th className="px-6 py-3">Store</th>
-                    <th className="px-6 py-3">Revenue</th>
-                    <th className="px-6 py-3">Orders</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {report.byStore.map((store) => (
-                    <tr
-                      className="border-b border-zinc-200/40 last:border-0 dark:border-white/5"
-                      key={store.slug}
-                    >
-                      <td className={cn("px-6 py-4 font-medium", primaryText)}>{store.name}</td>
-                      <td className={cn("px-6 py-4 font-semibold text-[#d81b60]")}>
-                        {formatMoney(store.revenue)}
-                      </td>
-                      <td className={cn("px-6 py-4", secondaryText)}>{store.orderCount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div>
+                <p className={cn("text-sm", secondaryText)}>Total Orders</p>
+                <p className={cn("mt-1 text-2xl font-bold", primaryText)}>
+                  {report.totals.orders ?? 0}
+                </p>
+              </div>
+              <div>
+                <p className={cn("text-sm", secondaryText)}>AOV</p>
+                <p className={cn("mt-1 text-2xl font-bold", primaryText)}>
+                  {formatMoney(report.totals.averageOrderValue)}
+                </p>
+              </div>
             </div>
           </section>
 
@@ -162,7 +138,12 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className={cn("border-b border-zinc-200/50 text-xs uppercase tracking-wide dark:border-white/10", secondaryText)}>
+                <thead
+                  className={cn(
+                    "border-b border-zinc-200/50 text-xs uppercase tracking-wide dark:border-white/10",
+                    secondaryText,
+                  )}
+                >
                   <tr>
                     <th className="px-6 py-3">Channel</th>
                     <th className="px-6 py-3">Revenue</th>
@@ -170,16 +151,63 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
                   </tr>
                 </thead>
                 <tbody>
-                  {report.byChannel.map((channel) => (
+                  {channels.map((channel) => (
                     <tr
                       className="border-b border-zinc-200/40 last:border-0 dark:border-white/5"
                       key={channel.channel}
                     >
-                      <td className={cn("px-6 py-4 font-medium", primaryText)}>{channel.channel}</td>
-                      <td className={cn("px-6 py-4 font-semibold text-[#d81b60]")}>
+                      <td className={cn("px-6 py-4 font-medium", primaryText)}>
+                        {channel.channel}
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-[#d81b60]">
                         {formatMoney(channel.revenue)}
                       </td>
-                      <td className={cn("px-6 py-4", secondaryText)}>{channel.orderCount}</td>
+                      <td className={cn("px-6 py-4", secondaryText)}>{channel.orders}</td>
+                    </tr>
+                  ))}
+                  {channels.length === 0 ? (
+                    <tr>
+                      <td className={cn("px-6 py-8 text-center", secondaryText)} colSpan={3}>
+                        No channel data in this range.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className={cn("overflow-hidden", dashboardGlass)}>
+            <div className="border-b border-zinc-200/50 px-6 py-4 dark:border-white/10">
+              <h3 className={cn("font-display text-xl font-semibold", primaryText)}>
+                Payment mix
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead
+                  className={cn(
+                    "border-b border-zinc-200/50 text-xs uppercase tracking-wide dark:border-white/10",
+                    secondaryText,
+                  )}
+                >
+                  <tr>
+                    <th className="px-6 py-3">Method</th>
+                    <th className="px-6 py-3">Revenue</th>
+                    <th className="px-6 py-3">Orders</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map((row) => (
+                    <tr
+                      className="border-b border-zinc-200/40 last:border-0 dark:border-white/5"
+                      key={row.method}
+                    >
+                      <td className={cn("px-6 py-4 font-medium", primaryText)}>{row.method}</td>
+                      <td className="px-6 py-4 font-semibold text-[#d81b60]">
+                        {formatMoney(row.revenue)}
+                      </td>
+                      <td className={cn("px-6 py-4", secondaryText)}>{row.orders}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -193,7 +221,12 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className={cn("border-b border-zinc-200/50 text-xs uppercase tracking-wide dark:border-white/10", secondaryText)}>
+                <thead
+                  className={cn(
+                    "border-b border-zinc-200/50 text-xs uppercase tracking-wide dark:border-white/10",
+                    secondaryText,
+                  )}
+                >
                   <tr>
                     <th className="px-6 py-3">Date</th>
                     <th className="px-6 py-3">Revenue</th>
@@ -201,18 +234,25 @@ export function HqReportsView({ token }: HqReportsViewProps): React.ReactElement
                   </tr>
                 </thead>
                 <tbody>
-                  {report.daily.map((day) => (
+                  {days.map((day) => (
                     <tr
                       className="border-b border-zinc-200/40 last:border-0 dark:border-white/5"
                       key={day.date}
                     >
                       <td className={cn("px-6 py-4 font-medium", primaryText)}>{day.date}</td>
-                      <td className={cn("px-6 py-4 font-semibold text-[#d81b60]")}>
+                      <td className="px-6 py-4 font-semibold text-[#d81b60]">
                         {formatMoney(day.revenue)}
                       </td>
-                      <td className={cn("px-6 py-4", secondaryText)}>{day.orderCount}</td>
+                      <td className={cn("px-6 py-4", secondaryText)}>{day.orders}</td>
                     </tr>
                   ))}
+                  {days.length === 0 ? (
+                    <tr>
+                      <td className={cn("px-6 py-8 text-center", secondaryText)} colSpan={3}>
+                        No paid orders in this range.
+                      </td>
+                    </tr>
+                  ) : null}
                 </tbody>
               </table>
             </div>

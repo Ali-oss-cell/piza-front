@@ -112,8 +112,9 @@ export function CustomersView({ token }: CustomersViewProps): React.ReactElement
                     {customer.email || customer.phone || "No contact"}
                     {" · "}
                     {customer.orderCount} order{customer.orderCount !== 1 ? "s" : ""}
-                    {" · "}
-                    {customer.brands.join(", ")}
+                    {(customer.brands?.length ?? 0) > 0
+                      ? ` · ${customer.brands!.join(", ")}`
+                      : ""}
                   </p>
                 </div>
               </button>
@@ -168,7 +169,9 @@ export function CustomersView({ token }: CustomersViewProps): React.ReactElement
                             month: "short",
                           }).format(new Date(order.createdAt))}
                         </td>
-                        <td className={cn("px-6 py-4", secondaryText)}>{order.items.length}</td>
+                        <td className={cn("px-6 py-4", secondaryText)}>
+                          {order.items?.length ?? 0}
+                        </td>
                         <td className={cn("px-6 py-4 font-semibold text-[#d81b60]")}>
                           {formatMoney(order.total)}
                         </td>

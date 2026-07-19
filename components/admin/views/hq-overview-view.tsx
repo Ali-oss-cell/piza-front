@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertTriangle,
   DollarSign,
   Loader2,
   ShoppingBag,
@@ -23,7 +24,7 @@ interface HqOverviewViewProps {
 }
 
 function money(value: number): string {
-  return `$${value.toFixed(2)}`;
+  return `$${Number(value || 0).toFixed(2)}`;
 }
 
 export function HqOverviewView({
@@ -76,6 +77,15 @@ export function HqOverviewView({
     );
   }
 
+  const stores = data.stores ?? [];
+  const totals = data.totals;
+  const flatAlerts = stores.flatMap((store) =>
+    (store.alerts ?? []).map((message) => ({
+      brandSlug: store.slug,
+      message: `${store.name}: ${message}`,
+    })),
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -97,41 +107,42 @@ export function HqOverviewView({
           hint="Paid orders"
           icon={DollarSign}
           label="Revenue"
-          value={money(data.totals.revenue)}
+          value={money(totals.revenue)}
         />
         <KpiCard
           hint="Paid in period"
           icon={ShoppingBag}
           label="Orders"
-          value={String(data.totals.orderCount)}
+          value={String(totals.orders ?? 0)}
         />
         <KpiCard
           hint="Average order value"
           icon={TrendingUp}
           label="AOV"
-          value={money(data.totals.averageOrderValue)}
+          value={money(totals.averageOrderValue)}
         />
         <KpiCard
           hint="In progress"
           icon={ShoppingBag}
           label="Live orders"
-          value={String(data.totals.liveOrders)}
+          value={String(totals.liveOrders ?? 0)}
         />
         <KpiCard
-          hint={`${data.totals.activeLocations} locations`}
+          hint={`${totals.suspendedStoreCount ?? 0} suspended · ${totals.alerts ?? 0} alerts`}
           icon={MapPin}
           label="Active stores"
-          value={String(data.totals.activeStores)}
+          value={String(totals.activeStoreCount ?? totals.storeCount ?? 0)}
         />
       </div>
 
-      {data.alerts.length > 0 ? (
+      {flatAlerts.length > 0 ? (
         <div className="flex flex-wrap gap-2">
-          {data.alerts.slice(0, 12).map((alert) => (
+          {flatAlerts.slice(0, 12).map((alert) => (
             <span
-              className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-800 dark:text-amber-200"
-              key={`${alert.type}-${alert.brandSlug}-${alert.message}`}
+              className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-800 dark:text-amber-200"
+              key={`${alert.brandSlug}-${alert.message}`}
             >
+              <AlertTriangle className="h-3 w-3" />
               {alert.message}
             </span>
           ))}
@@ -143,52 +154,35 @@ export function HqOverviewView({
           <h3 className={cn("font-display text-lg font-bold", primaryText)}>Stores</h3>
         </div>
         <div className="divide-y divide-zinc-200/50 dark:divide-white/10">
-          {data.byStore.map((store) => (
-            <div
-              className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
-              key={store.brandId}
-            >
-              <div>
-                <p className={cn("font-medium", primaryText)}>
-                  {store.name}
-                  {!store.isActive ? (
-                    <span className="ml-2 text-xs text-red-500">suspended</span>
-                  ) : null}
-                </p>
-                <p className={cn("text-xs", secondaryText)}>
-                  {store.pathPrefix ?? store.slug} · Ready {store.readiness.percent}% ·{" "}
-                  {store.liveOrders} live · {money(store.revenue)}
-                </p>
+          {stores.length === 0 ? (
+            <p className={cn("px-6 py-8 text-sm", secondaryText)}>No stores found.</p>
+          ) : (
+            stores.map((store) => (
+              <div
+                className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
+                key={store.id}
+              >
+                <div>
+                  <p className={cn("font-medium", primaryText)}>
+                    {store.name}
+                    {!store.isActive ? (
+                      <span className="ml-2 text-xs text-red-500">suspended</span>
+                    ) : null}
+                  </p>
+                  <p className={cn("text-xs", secondaryText)}>
+                    {store.primaryPath ?? store.primaryHost ?? store.slug} ·{" "}
+                    {store.liveOrders} live · {money(store.revenue)} · {store.orders} paid
+                    {(store.alerts?.length ?? 0) > 0
+                      ? ` · ${store.alerts.length} alert(s)`
+                      : ""}
+                  </p>
+                </div>
+                <Button onClick={() => onOpenStore(store.slug)} type="button">
+                  Open
+                </Button>
               </div>
-              <Button onClick={() => onOpenStore(store.slug)} type="button">
-                Open
-              </Button>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className={cn("overflow-hidden", dashboardGlass)}>
-        <div className="border-b border-zinc-200/50 px-6 py-4 dark:border-white/10">
-          <h3 className={cn("font-display text-lg font-bold", primaryText)}>Recent orders</h3>
-        </div>
-        <div className="divide-y divide-zinc-200/50 dark:divide-white/10">
-          {data.recentOrders.map((order) => (
-            <div className="flex items-center justify-between px-6 py-3 text-sm" key={order.id}>
-              <div>
-                <p className={primaryText}>
-                  {order.brandName} · {order.customerName}
-                </p>
-                <p className={secondaryText}>
-                  {order.channel} · {order.status} · {order.paymentStatus}
-                </p>
-              </div>
-              <p className={cn("font-medium", primaryText)}>{money(order.total)}</p>
-            </div>
-          ))}
-          {data.recentOrders.length === 0 ? (
-            <p className={cn("px-6 py-8 text-sm", secondaryText)}>No recent orders.</p>
-          ) : null}
+            ))
+          )}
         </div>
       </section>
     </div>
