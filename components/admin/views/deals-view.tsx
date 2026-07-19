@@ -345,7 +345,7 @@ export function DealsView({
                   setBusyId(pushDealId);
                   try {
                     const result = await pushDealToStores(token, pushDealId, pushTargets);
-                    setPushMessage(`Pushed to: ${result.pushedTo.join(", ") || "none"}`);
+                    setPushMessage(`Pushed to: ${result.pushed.join(", ") || "none"}`);
                   } catch (pushError) {
                     setPushMessage(
                       pushError instanceof Error ? pushError.message : "Push failed.",

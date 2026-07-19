@@ -128,6 +128,28 @@ export interface TeamMembership {
     role: string;
   };
   location: { id: string; slug: string; name: string } | null;
+  store?: { id: string; slug: string; name: string };
+}
+
+export interface HqStoreHealthRow {
+  id: string;
+  slug: string;
+  name: string;
+  status: string;
+  isActive: boolean;
+  severity: "ok" | "warning" | "critical";
+  alerts: Array<{ code: string; message: string; severity: "warning" | "critical" }>;
+}
+
+export interface HqStoreHealth {
+  totals: {
+    stores: number;
+    healthy: number;
+    warning: number;
+    critical: number;
+    alerts: number;
+  };
+  stores: HqStoreHealthRow[];
 }
 
 export interface AdminLocation {

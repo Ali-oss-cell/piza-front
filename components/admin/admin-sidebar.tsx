@@ -19,10 +19,11 @@ import {
   BarChart3,
   Globe,
   FileText,
-  // Users,
+  Users,
   MapPin,
   Activity as ActivityIcon,
   UsersRound,
+  HeartPulse,
 } from "lucide-react";
 import Link from "next/link";
 import type { AdminView } from "@/types/admin";
@@ -48,10 +49,12 @@ const STORE_NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashbo
 const HQ_NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "hq", label: "HQ Overview", icon: Building2 },
   { id: "reports", label: "Reports", icon: BarChart3 },
+  { id: "health", label: "Store health", icon: HeartPulse },
   { id: "domains", label: "Domains", icon: Globe },
   { id: "templates", label: "Transfer menu", icon: FileText },
-  // CRM paused for now
-  // { id: "customers", label: "Customers", icon: Users },
+  { id: "deals", label: "Deals push", icon: Tag },
+  { id: "customers", label: "Customers", icon: Users },
+  { id: "people", label: "People", icon: UsersRound },
   { id: "activity", label: "Activity", icon: ActivityIcon },
 ];
 

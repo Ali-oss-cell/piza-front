@@ -151,6 +151,8 @@ export type AdminView =
   | "domains"
   | "templates"
   | "customers"
+  | "people"
+  | "health"
   | "activity";
 
 export interface CreateMenuItemPayload {

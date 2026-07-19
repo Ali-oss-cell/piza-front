@@ -535,7 +535,7 @@ export function pushDealToStores(
   token: string,
   dealId: string,
   targetBrandSlugs: string[],
-): Promise<{ dealId: string; pushedTo: string[] }> {
+): Promise<{ pushed: string[]; failed: Array<{ slug: string; reason: string }> }> {
   return apiRequest(`/hq/deals/${dealId}/push`, {
     method: "POST",
     token,
@@ -689,6 +689,54 @@ export function searchHqCustomers(
 
 export function fetchCustomerOrders(token: string, key: string): Promise<AdminOrder[]> {
   return apiRequest(`/hq/customers/${encodeURIComponent(key)}/orders`, { token });
+}
+
+export function fetchHqStoreHealth(
+  token: string,
+): Promise<import("@/types/hq").HqStoreHealth> {
+  return apiRequest("/hq/health", { token });
+}
+
+export function fetchHqMemberships(
+  token: string,
+  brand?: string,
+): Promise<import("@/types/hq").TeamMembership[]> {
+  const query = brand ? `?brand=${encodeURIComponent(brand)}` : "";
+  return apiRequest(`/hq/memberships${query}`, { token });
+}
+
+export function inviteHqMember(
+  token: string,
+  payload: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    brandSlugs: string[];
+    temporaryPassword?: string;
+  },
+): Promise<{
+  invited: import("@/types/hq").TeamMembership[];
+  failed: Array<{ slug: string; reason: string }>;
+  temporaryPassword?: string;
+}> {
+  return apiRequest("/hq/memberships/invite", {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateHqMembership(
+  token: string,
+  id: string,
+  payload: { role?: string; isActive?: boolean; locationId?: string | null },
+): Promise<import("@/types/hq").TeamMembership> {
+  return apiRequest(`/hq/memberships/${id}`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify(payload),
+  });
 }
 
 export function fetchHqActivity(

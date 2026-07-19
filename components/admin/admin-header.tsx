@@ -38,6 +38,8 @@ const VIEW_LABELS: Record<AdminView, string> = {
   domains: "Domains",
   templates: "Transfer Menu",
   customers: "Customers",
+  people: "People",
+  health: "Store Health",
   activity: "Activity",
 };
 

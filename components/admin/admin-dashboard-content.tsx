@@ -24,7 +24,10 @@ import { TeamView } from "@/components/admin/views/team-view";
 import { LocationsView } from "@/components/admin/views/locations-view";
 import { DomainsView } from "@/components/admin/views/domains-view";
 import { TemplatesView } from "@/components/admin/views/templates-view";
-// import { CustomersView } from "@/components/admin/views/customers-view";
+import { CustomersView } from "@/components/admin/views/customers-view";
+import { PeopleView } from "@/components/admin/views/people-view";
+import { HqDealsView } from "@/components/admin/views/hq-deals-view";
+import { StoreHealthView } from "@/components/admin/views/store-health-view";
 import { ActivityView } from "@/components/admin/views/activity-view";
 import {
   fetchAdminCrusts,
@@ -88,7 +91,9 @@ export function AdminDashboardContent(): React.ReactElement {
   useEffect(() => {
     if (platformAdmin && !selectedBrand && !showStoreGallery) {
       setActiveView((current) =>
-        ["hq", "reports", "domains", "templates", "activity"].includes(current)
+        ["hq", "reports", "health", "domains", "templates", "deals", "customers", "people", "activity"].includes(
+          current,
+        )
           ? current
           : "hq",
       );
@@ -261,10 +266,22 @@ export function AdminDashboardContent(): React.ReactElement {
                 {activeView === "reports" ? (
                   <HqReportsView brands={brands} token={token!} />
                 ) : null}
+                {activeView === "health" ? (
+                  <StoreHealthView
+                    onOpenStore={(slug) => {
+                      selectBrand(slug);
+                      setActiveView("overview");
+                    }}
+                    token={token!}
+                  />
+                ) : null}
                 {activeView === "domains" ? <DomainsView brands={brands} token={token!} /> : null}
                 {activeView === "templates" ? <TemplatesView brands={brands} token={token!} /> : null}
-                {/* CRM paused for now */}
-                {/* {activeView === "customers" ? <CustomersView token={token!} /> : null} */}
+                {activeView === "deals" ? <HqDealsView brands={brands} token={token!} /> : null}
+                {activeView === "customers" ? (
+                  <CustomersView brands={brands} token={token!} />
+                ) : null}
+                {activeView === "people" ? <PeopleView brands={brands} token={token!} /> : null}
                 {activeView === "activity" ? <ActivityView token={token!} /> : null}
               </motion.div>
             </AnimatePresence>
