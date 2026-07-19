@@ -101,6 +101,65 @@ export interface HqCustomer {
   totalSpent?: number;
 }
 
+export interface CrmTag {
+  id: string;
+  slug: string;
+  label: string;
+  color: string | null;
+}
+
+export interface CrmSegmentRules {
+  minOrders?: number;
+  minSpend?: number;
+  lastOrderWithinDays?: number;
+  lastOrderBeforeDays?: number;
+  hasTags?: string[];
+  missingTags?: string[];
+  marketingEmailOptIn?: boolean;
+  marketingSmsOptIn?: boolean;
+}
+
+export interface CrmSegment {
+  id: string;
+  name: string;
+  description: string | null;
+  rules: CrmSegmentRules;
+  memberCount?: number;
+}
+
+export interface CrmCustomer {
+  id: string;
+  brandId: string;
+  identityKey: string;
+  phone: string | null;
+  email: string | null;
+  name: string | null;
+  notes: string | null;
+  orderCount: number;
+  totalSpent: string | number;
+  lastOrderAt: string | null;
+  firstOrderAt: string | null;
+  marketingEmailOptIn: boolean;
+  marketingSmsOptIn: boolean;
+  consentUpdatedAt: string | null;
+  tags: CrmTag[];
+  brand?: { id: string; slug: string; name: string };
+  orders?: Array<{
+    id: string;
+    status: string;
+    total: string | number;
+    createdAt: string;
+    paymentStatus: string;
+    location?: { id: string; name: string };
+  }>;
+}
+
+export interface CrmCustomerListResponse {
+  brand: { id: string; slug: string; name: string };
+  total: number;
+  customers: CrmCustomer[];
+}
+
 export interface HqAuditEvent {
   id: string;
   action: string;

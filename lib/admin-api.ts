@@ -691,6 +691,138 @@ export function fetchCustomerOrders(token: string, key: string): Promise<AdminOr
   return apiRequest(`/hq/customers/${encodeURIComponent(key)}/orders`, { token });
 }
 
+export function fetchCrmCustomers(
+  token: string,
+  params: {
+    brand: string;
+    q?: string;
+    tag?: string;
+    segment?: string;
+    take?: number;
+    skip?: number;
+  },
+): Promise<import("@/types/hq").CrmCustomerListResponse> {
+  const query = new URLSearchParams({ brand: params.brand });
+  if (params.q) query.set("q", params.q);
+  if (params.tag) query.set("tag", params.tag);
+  if (params.segment) query.set("segment", params.segment);
+  if (params.take) query.set("take", String(params.take));
+  if (params.skip) query.set("skip", String(params.skip));
+  return apiRequest(`/hq/crm/customers?${query}`, { token });
+}
+
+export function fetchCrmCustomer(
+  token: string,
+  id: string,
+): Promise<import("@/types/hq").CrmCustomer> {
+  return apiRequest(`/hq/crm/customers/${id}`, { token });
+}
+
+export function updateCrmCustomer(
+  token: string,
+  id: string,
+  payload: {
+    name?: string;
+    notes?: string | null;
+    marketingEmailOptIn?: boolean;
+    marketingSmsOptIn?: boolean;
+    tagIds?: string[];
+  },
+): Promise<import("@/types/hq").CrmCustomer> {
+  return apiRequest(`/hq/crm/customers/${id}`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchCrmTags(
+  token: string,
+  brand: string,
+): Promise<import("@/types/hq").CrmTag[]> {
+  return apiRequest(`/hq/crm/tags?brand=${encodeURIComponent(brand)}`, { token });
+}
+
+export function createCrmTag(
+  token: string,
+  brand: string,
+  payload: { label: string; slug?: string; color?: string },
+): Promise<import("@/types/hq").CrmTag> {
+  return apiRequest(`/hq/crm/tags?brand=${encodeURIComponent(brand)}`, {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteCrmTag(token: string, id: string): Promise<{ deleted: boolean }> {
+  return apiRequest(`/hq/crm/tags/${id}`, { method: "DELETE", token });
+}
+
+export function fetchCrmSegments(
+  token: string,
+  brand: string,
+): Promise<import("@/types/hq").CrmSegment[]> {
+  return apiRequest(`/hq/crm/segments?brand=${encodeURIComponent(brand)}`, { token });
+}
+
+export function createCrmSegment(
+  token: string,
+  brand: string,
+  payload: {
+    name: string;
+    description?: string;
+    rules: import("@/types/hq").CrmSegmentRules;
+  },
+): Promise<import("@/types/hq").CrmSegment> {
+  return apiRequest(`/hq/crm/segments?brand=${encodeURIComponent(brand)}`, {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateCrmSegment(
+  token: string,
+  id: string,
+  payload: {
+    name?: string;
+    description?: string | null;
+    rules?: import("@/types/hq").CrmSegmentRules;
+  },
+): Promise<import("@/types/hq").CrmSegment> {
+  return apiRequest(`/hq/crm/segments/${id}`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteCrmSegment(token: string, id: string): Promise<{ deleted: boolean }> {
+  return apiRequest(`/hq/crm/segments/${id}`, { method: "DELETE", token });
+}
+
+export function backfillCrm(
+  token: string,
+  brand?: string,
+): Promise<unknown> {
+  const query = brand ? `?brand=${encodeURIComponent(brand)}` : "";
+  return apiRequest(`/hq/crm/backfill${query}`, { method: "POST", token });
+}
+
+export function crmExportUrl(params: {
+  brand: string;
+  q?: string;
+  tag?: string;
+  segment?: string;
+}): string {
+  const query = new URLSearchParams({ brand: params.brand });
+  if (params.q) query.set("q", params.q);
+  if (params.tag) query.set("tag", params.tag);
+  if (params.segment) query.set("segment", params.segment);
+  return `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api"}/hq/crm/export.csv?${query}`;
+}
+
 export function fetchHqStoreHealth(
   token: string,
 ): Promise<import("@/types/hq").HqStoreHealth> {
