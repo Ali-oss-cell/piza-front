@@ -191,7 +191,11 @@ export function BrandPicker({
   );
 }
 
-export function BrandSwitcher(): React.ReactElement {
+export function BrandSwitcher({
+  onAllStores,
+}: {
+  onAllStores?: () => void;
+} = {}): React.ReactElement {
   const { brands, selectedBrand, selectBrand, clearBrand } = useAdminBrand();
 
   if (!selectedBrand) {
@@ -221,7 +225,11 @@ export function BrandSwitcher(): React.ReactElement {
           </Button>
         );
       })}
-      <Button className="h-9 px-3 text-sm" onClick={clearBrand} variant="ghost">
+      <Button
+        className="h-9 px-3 text-sm"
+        onClick={onAllStores ?? clearBrand}
+        variant="ghost"
+      >
         All stores
       </Button>
     </div>

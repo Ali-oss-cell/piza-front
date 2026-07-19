@@ -19,7 +19,7 @@ import {
   BarChart3,
   Globe,
   FileText,
-  Users,
+  // Users,
   MapPin,
   Activity as ActivityIcon,
   UsersRound,
@@ -50,7 +50,8 @@ const HQ_NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashboard
   { id: "reports", label: "Reports", icon: BarChart3 },
   { id: "domains", label: "Domains", icon: Globe },
   { id: "templates", label: "Templates", icon: FileText },
-  { id: "customers", label: "Customers", icon: Users },
+  // CRM paused for now
+  // { id: "customers", label: "Customers", icon: Users },
   { id: "activity", label: "Activity", icon: ActivityIcon },
 ];
 

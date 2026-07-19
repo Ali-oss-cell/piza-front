@@ -47,6 +47,7 @@ interface AdminHeaderProps {
   collapsed: boolean;
   onToggleCollapsed: () => void;
   onOpenMobileNav: () => void;
+  onAllStores?: () => void;
 }
 
 export function AdminHeader({
@@ -55,6 +56,7 @@ export function AdminHeader({
   collapsed,
   onToggleCollapsed,
   onOpenMobileNav,
+  onAllStores,
 }: AdminHeaderProps): React.ReactElement {
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -122,7 +124,7 @@ export function AdminHeader({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <BrandSwitcher />
+          <BrandSwitcher onAllStores={onAllStores} />
           <span className={cn("hidden text-sm md:inline", secondaryText)}>{clock}</span>
           <ThemeToggle />
           <div className="relative" ref={menuRef}>

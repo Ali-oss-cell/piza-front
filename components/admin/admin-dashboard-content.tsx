@@ -24,7 +24,7 @@ import { TeamView } from "@/components/admin/views/team-view";
 import { LocationsView } from "@/components/admin/views/locations-view";
 import { DomainsView } from "@/components/admin/views/domains-view";
 import { TemplatesView } from "@/components/admin/views/templates-view";
-import { CustomersView } from "@/components/admin/views/customers-view";
+// import { CustomersView } from "@/components/admin/views/customers-view";
 import { ActivityView } from "@/components/admin/views/activity-view";
 import {
   fetchAdminCrusts,
@@ -66,7 +66,7 @@ export function AdminDashboardContent(): React.ReactElement {
   const [activeView, setActiveView] = useState<AdminView>("overview");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [showStoreGallery, setShowStoreGallery] = useState(false);
+  const [showStoreGallery, setShowStoreGallery] = useState(true);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [menuItems, setMenuItems] = useState<AdminMenuItem[]>([]);
   const [toppingCatalog, setToppingCatalog] = useState<ToppingCategoryGroup[]>([]);
@@ -88,12 +88,17 @@ export function AdminDashboardContent(): React.ReactElement {
   useEffect(() => {
     if (platformAdmin && !selectedBrand && !showStoreGallery) {
       setActiveView((current) =>
-        ["hq", "reports", "domains", "templates", "customers", "activity"].includes(current)
+        ["hq", "reports", "domains", "templates", "activity"].includes(current)
           ? current
           : "hq",
       );
     }
   }, [platformAdmin, selectedBrand, showStoreGallery]);
+
+  const goToAllStores = useCallback((): void => {
+    clearBrand();
+    setShowStoreGallery(true);
+  }, [clearBrand]);
 
   const loadData = useCallback(async (): Promise<void> => {
     if (!token || !brandSlug) {
@@ -227,6 +232,7 @@ export function AdminDashboardContent(): React.ReactElement {
             activeView={activeView}
             brandName="Franchise HQ"
             collapsed={collapsed}
+            onAllStores={goToAllStores}
             onOpenMobileNav={() => setMobileOpen(true)}
             onToggleCollapsed={() => setCollapsed((current) => !current)}
           />
@@ -253,7 +259,8 @@ export function AdminDashboardContent(): React.ReactElement {
                 {activeView === "reports" ? <HqReportsView token={token!} /> : null}
                 {activeView === "domains" ? <DomainsView brands={brands} token={token!} /> : null}
                 {activeView === "templates" ? <TemplatesView brands={brands} token={token!} /> : null}
-                {activeView === "customers" ? <CustomersView token={token!} /> : null}
+                {/* CRM paused for now */}
+                {/* {activeView === "customers" ? <CustomersView token={token!} /> : null} */}
                 {activeView === "activity" ? <ActivityView token={token!} /> : null}
               </motion.div>
             </AnimatePresence>
@@ -280,6 +287,7 @@ export function AdminDashboardContent(): React.ReactElement {
           activeView={activeView}
           brandName={selectedBrand!.name}
           collapsed={collapsed}
+          onAllStores={goToAllStores}
           onOpenMobileNav={() => setMobileOpen(true)}
           onToggleCollapsed={() => setCollapsed((current) => !current)}
         />
@@ -383,7 +391,7 @@ export function AdminDashboardContent(): React.ReactElement {
                     isPlatformAdmin={platformAdmin}
                     onSettingsChange={setStoreSettings}
                     onStoreSuspended={() => {
-                      clearBrand();
+                      goToAllStores();
                       void refreshBrands();
                     }}
                     settings={storeSettings}
