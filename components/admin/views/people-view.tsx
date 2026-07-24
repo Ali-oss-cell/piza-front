@@ -33,7 +33,7 @@ function emptyForm(brands: Brand[]): InviteFormState {
     email: "",
     firstName: "",
     lastName: "",
-    role: "STORE_ADMIN",
+    role: "STAFF",
     brandSlugs: new Set(brands[0] ? [brands[0].slug] : []),
   };
 }
@@ -125,7 +125,7 @@ export function PeopleView({ token, brands }: PeopleViewProps): React.ReactEleme
         <div>
           <h2 className={cn("font-display text-2xl font-bold", primaryText)}>People</h2>
           <p className={cn("mt-1 text-sm", secondaryText)}>
-            Invite and deactivate store managers across the network
+            Invite staff across stores. For floor POS tablets, use Staff and select one store only.
           </p>
         </div>
         <Button
@@ -212,7 +212,7 @@ export function PeopleView({ token, brands }: PeopleViewProps): React.ReactEleme
             )}
           >
             <Dialog.Title className={cn("font-display text-xl font-bold", primaryText)}>
-              Invite store manager
+              Invite team member
             </Dialog.Title>
             <div className="mt-5 space-y-3">
               <Input
@@ -237,14 +237,19 @@ export function PeopleView({ token, brands }: PeopleViewProps): React.ReactEleme
                   value={form.lastName}
                 />
               </div>
-              <select
-                className="flex h-11 w-full rounded-xl border border-zinc-200/70 bg-white px-4 text-sm dark:border-white/10 dark:bg-zinc-900"
-                onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}
-                value={form.role}
-              >
-                <option value="STORE_ADMIN">Store admin</option>
-                <option value="STAFF">Staff</option>
-              </select>
+              <div>
+                <select
+                  className="flex h-11 w-full rounded-xl border border-zinc-200/70 bg-white px-4 text-sm dark:border-white/10 dark:bg-zinc-900"
+                  onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}
+                  value={form.role}
+                >
+                  <option value="STAFF">Staff (POS only)</option>
+                  <option value="STORE_ADMIN">Store admin</option>
+                </select>
+                <p className={cn("mt-1 text-xs", secondaryText)}>
+                  Staff = POS for selected store(s). Pick one store for floor tablets; multi-select is for managers.
+                </p>
+              </div>
               <div>
                 <p className={cn("mb-2 text-sm font-medium", primaryText)}>Stores</p>
                 <div className="max-h-40 space-y-2 overflow-y-auto">

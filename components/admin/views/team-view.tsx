@@ -27,7 +27,7 @@ function emptyForm(): InviteFormState {
     email: "",
     firstName: "",
     lastName: "",
-    role: "STORE_ADMIN",
+    role: "STAFF",
   };
 }
 
@@ -104,7 +104,7 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
         <div>
           <h2 className={cn("font-display text-2xl font-bold", primaryText)}>Team</h2>
           <p className={cn("mt-1 text-sm", secondaryText)}>
-            Manage store staff and admin access
+            Invite staff for this store. Staff = POS only; Store Admin can also manage the dashboard.
           </p>
         </div>
         <Button onClick={() => setIsModalOpen(true)}>
@@ -214,9 +214,12 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
                   }
                   value={form.role}
                 >
+                  <option value="STAFF">Staff (POS only for this store)</option>
                   <option value="STORE_ADMIN">Store Admin</option>
-                  <option value="STAFF">Staff</option>
                 </select>
+                <p className={cn("mt-1 text-xs", secondaryText)}>
+                  Use Staff for floor tablets so they only access this store&apos;s POS.
+                </p>
               </div>
               {error ? <p className="text-sm text-red-500">{error}</p> : null}
             </div>
