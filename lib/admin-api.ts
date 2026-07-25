@@ -509,6 +509,30 @@ export function updatePaymentSettings(
   });
 }
 
+export function pairLinklyPinpad(
+  token: string,
+  payload: { username: string; password: string; pairCode: string },
+  brandSlug?: string,
+): Promise<PaymentSettings> {
+  return apiRequest<PaymentSettings>("/payment-settings/linkly/pair", {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function unpairLinklyPinpad(
+  token: string,
+  brandSlug?: string,
+): Promise<PaymentSettings> {
+  return apiRequest<PaymentSettings>("/payment-settings/linkly/unpair", {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
 export function fetchStoreDomains(token: string, brandSlug: string): Promise<StoreDomain[]> {
   return apiRequest<StoreDomain[]>(`/brands/${encodeURIComponent(brandSlug)}/domains`, {
     token,

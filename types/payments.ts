@@ -21,6 +21,7 @@ export interface PaymentSettings {
   hasStripeWebhookSecretRef: boolean;
   linklyUsername: string | null;
   hasLinklySecretRef: boolean;
+  linklyPaired?: boolean;
   location: {
     id: string;
     slug: string;
@@ -40,5 +41,12 @@ export interface UpdatePaymentSettingsPayload {
   stripeWebhookSecretRef?: string | null;
   stripeTerminalLocationId?: string | null;
   stripeTerminalReaderId?: string | null;
+  linklyUsername?: string | null;
   locationId?: string;
+}
+
+export interface PairLinklyPayload {
+  username: string;
+  password: string;
+  pairCode: string;
 }
