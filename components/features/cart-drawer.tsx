@@ -54,7 +54,7 @@ export function CartDrawer({
 
   return (
     <Sheet onOpenChange={onOpenChange} open={open}>
-      <SheetContent className="flex flex-col bg-white p-0 dark:bg-zinc-950">
+      <SheetContent className="flex flex-col bg-white p-0 dark:bg-zinc-950" title="Your Cart">
         <div className="p-8">
           <h2 className={cn("font-display text-headline-md", primaryText)}>Your Cart</h2>
           <span className={cn("mt-1 inline-block text-label-sm uppercase tracking-widest", brandPink)}>

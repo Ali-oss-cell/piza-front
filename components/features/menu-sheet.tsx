@@ -27,6 +27,7 @@ export function MenuSheet({ open, onOpenChange }: MenuSheetProps): React.ReactEl
           "flex w-80 flex-col border-l border-zinc-200/60 bg-white p-8 dark:border-white/10 dark:bg-zinc-950",
           themeTransition
         )}
+        title="Menu"
       >
         <nav className="mt-10 space-y-8">
           {MOBILE_NAV_ITEMS.map((item) => (
