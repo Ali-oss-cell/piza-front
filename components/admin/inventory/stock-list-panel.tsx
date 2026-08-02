@@ -1,12 +1,14 @@
 "use client";
 
 import { Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   createStockItem,
   deactivateStockItem,
+  fetchAdminMenuItems,
+  fetchAdminToppings,
   fetchInventorySummary,
   updateStockItem,
 } from "@/lib/admin-api";
@@ -39,8 +41,34 @@ interface ItemFormState {
   isActive: boolean;
 }
 
-interface CreateRow extends ItemFormState {
+interface CreateRow {
   key: string;
+  name: string;
+  sku: string;
+  category: string;
+  unit: StockUnit;
+  notes: string;
+}
+
+interface ImportCandidate {
+  key: string;
+  source: "Menu item" | "Topping" | "Ingredient";
+  name: string;
+  sku: string;
+  category: string;
+  unit: StockUnit;
+  selected: boolean;
+}
+
+function emptyCreateRow(): CreateRow {
+  return {
+    key: `row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    name: "",
+    sku: "",
+    category: "",
+    unit: "EACH",
+    notes: "",
+  };
 }
 
 function emptyItemForm(): ItemFormState {
@@ -54,13 +82,6 @@ function emptyItemForm(): ItemFormState {
     costPerUnit: "",
     notes: "",
     isActive: true,
-  };
-}
-
-function emptyCreateRow(): CreateRow {
-  return {
-    key: `row-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    ...emptyItemForm(),
   };
 }
 
@@ -78,23 +99,43 @@ function formFromItem(item: StockItem): ItemFormState {
   };
 }
 
-function rowToPayload(row: ItemFormState): CreateStockItemPayload | null {
+function createRowToPayload(row: CreateRow): CreateStockItemPayload | null {
   if (!row.name.trim()) {
     return null;
   }
-  const lowStockRaw = row.lowStockAt.trim();
-  const costRaw = row.costPerUnit.trim();
   return {
     name: row.name.trim(),
     sku: row.sku.trim() || null,
     category: row.category.trim() || null,
     unit: row.unit,
-    qtyOnHand: Number(row.qtyOnHand) || 0,
-    lowStockAt: lowStockRaw === "" ? null : Number(lowStockRaw),
-    costPerUnit: costRaw === "" ? null : Number(costRaw),
+    qtyOnHand: 0,
+    costPerUnit: null,
     notes: row.notes.trim() || null,
-    isActive: row.isActive,
+    isActive: true,
   };
+}
+
+function skuFromName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
+}
+
+function alreadyInStock(items: StockItem[], name: string, sku: string): boolean {
+  const nameKey = name.trim().toLowerCase();
+  const skuKey = sku.trim().toLowerCase();
+  return items.some((item) => {
+    if (item.name.trim().toLowerCase() === nameKey) {
+      return true;
+    }
+    if (skuKey && item.sku?.trim().toLowerCase() === skuKey) {
+      return true;
+    }
+    return false;
+  });
 }
 
 interface StockListPanelProps {
@@ -118,7 +159,7 @@ export function StockListPanel({
   onSummaryChange,
   lowStockOnly = false,
   title = "Stock list",
-  description = "Catalog items for this store — add several at once, then edit in the table.",
+  description = "Add catalog items with name and SKU only — qty and cost can wait until Receive.",
 }: StockListPanelProps): React.ReactElement {
   const [search, setSearch] = useState("");
   const [showInactive, setShowInactive] = useState(false);
@@ -127,13 +168,137 @@ export function StockListPanel({
     emptyCreateRow(),
     emptyCreateRow(),
   ]);
+  const [importCandidates, setImportCandidates] = useState<ImportCandidate[]>(
+    [],
+  );
+  const [isLoadingImport, setIsLoadingImport] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<ItemFormState>(emptyItemForm);
   const [isSavingCreate, setIsSavingCreate] = useState(false);
+  const [isSavingImport, setIsSavingImport] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const existingNameKeys = useMemo(
+    () => new Set(items.map((item) => item.name.trim().toLowerCase())),
+    [items],
+  );
+  const existingSkuKeys = useMemo(
+    () =>
+      new Set(
+        items
+          .map((item) => item.sku?.trim().toLowerCase())
+          .filter(Boolean) as string[],
+      ),
+    [items],
+  );
+
+  const loadImportCandidates = useCallback(async (): Promise<void> => {
+    if (lowStockOnly) {
+      return;
+    }
+    setIsLoadingImport(true);
+    try {
+      const [menuItems, toppingGroups] = await Promise.all([
+        fetchAdminMenuItems(token, brandSlug),
+        fetchAdminToppings(token, brandSlug),
+      ]);
+
+      const next: ImportCandidate[] = [];
+      const seenNames = new Set<string>();
+
+      const pushCandidate = (
+        candidate: Omit<ImportCandidate, "selected">,
+      ): void => {
+        const nameKey = candidate.name.trim().toLowerCase();
+        if (!nameKey || seenNames.has(nameKey)) {
+          return;
+        }
+        if (existingNameKeys.has(nameKey)) {
+          return;
+        }
+        const skuKey = candidate.sku.trim().toLowerCase();
+        if (skuKey && existingSkuKeys.has(skuKey)) {
+          return;
+        }
+        seenNames.add(nameKey);
+        next.push({ ...candidate, selected: false });
+      };
+
+      for (const item of menuItems) {
+        if (!item.isActive) {
+          continue;
+        }
+        pushCandidate({
+          key: `menu-${item.id}`,
+          source: "Menu item",
+          name: item.name,
+          sku: `M-${item.number}`,
+          category: item.categorySlug,
+          unit: "EACH",
+        });
+        for (const ingredient of item.ingredients ?? []) {
+          const name = ingredient.trim();
+          if (!name) {
+            continue;
+          }
+          pushCandidate({
+            key: `ing-${name.toLowerCase()}`,
+            source: "Ingredient",
+            name,
+            sku: skuFromName(name),
+            category: "Ingredient",
+            unit: "EACH",
+          });
+        }
+      }
+
+      for (const group of toppingGroups) {
+        for (const topping of group.toppings) {
+          if (!topping.isActive) {
+            continue;
+          }
+          pushCandidate({
+            key: `top-${topping.id}`,
+            source: "Topping",
+            name: topping.label,
+            sku: topping.slug,
+            category: topping.categoryLabel || group.label || "Topping",
+            unit: "EACH",
+          });
+        }
+      }
+
+      next.sort((a, b) => {
+        const bySource = a.source.localeCompare(b.source);
+        if (bySource !== 0) {
+          return bySource;
+        }
+        return a.name.localeCompare(b.name);
+      });
+      setImportCandidates(next);
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Unable to load store items for import.",
+      );
+    } finally {
+      setIsLoadingImport(false);
+    }
+  }, [
+    token,
+    brandSlug,
+    lowStockOnly,
+    existingNameKeys,
+    existingSkuKeys,
+  ]);
+
+  useEffect(() => {
+    void loadImportCandidates();
+  }, [loadImportCandidates]);
 
   const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -164,11 +329,25 @@ export function StockListPanel({
     [createRows],
   );
 
+  const selectedImportCount = useMemo(
+    () => importCandidates.filter((row) => row.selected).length,
+    [importCandidates],
+  );
+
   const updateCreateRow = (
     key: string,
-    patch: Partial<ItemFormState>,
+    patch: Partial<CreateRow>,
   ): void => {
     setCreateRows((current) =>
+      current.map((row) => (row.key === key ? { ...row, ...patch } : row)),
+    );
+  };
+
+  const updateImportRow = (
+    key: string,
+    patch: Partial<ImportCandidate>,
+  ): void => {
+    setImportCandidates((current) =>
       current.map((row) => (row.key === key ? { ...row, ...patch } : row)),
     );
   };
@@ -185,9 +364,26 @@ export function StockListPanel({
     setEditForm(emptyItemForm());
   };
 
+  const createMany = async (
+    payloads: CreateStockItemPayload[],
+  ): Promise<number> => {
+    let nextItems = [...items];
+    for (const payload of payloads) {
+      if (alreadyInStock(nextItems, payload.name, payload.sku ?? "")) {
+        continue;
+      }
+      const created = await createStockItem(token, payload, brandSlug);
+      nextItems = [...nextItems, created];
+    }
+    onItemsChange(nextItems);
+    const nextSummary = await fetchInventorySummary(token, brandSlug);
+    onSummaryChange(nextSummary);
+    return nextItems.length - items.length;
+  };
+
   const handleSaveCreate = async (): Promise<void> => {
     const payloads = createRows
-      .map((row) => rowToPayload(row))
+      .map((row) => createRowToPayload(row))
       .filter(Boolean) as CreateStockItemPayload[];
 
     if (payloads.length === 0) {
@@ -195,33 +391,15 @@ export function StockListPanel({
       return;
     }
 
-    for (const payload of payloads) {
-      if (payload.costPerUnit != null && Number.isNaN(payload.costPerUnit)) {
-        setError(`Invalid cost for "${payload.name}".`);
-        return;
-      }
-      if (payload.lowStockAt != null && Number.isNaN(payload.lowStockAt)) {
-        setError(`Invalid low-stock threshold for "${payload.name}".`);
-        return;
-      }
-    }
-
     setIsSavingCreate(true);
     setError(null);
     setSuccess(null);
 
     try {
-      let nextItems = [...items];
-      for (const payload of payloads) {
-        const created = await createStockItem(token, payload, brandSlug);
-        nextItems = [...nextItems, created];
-      }
-      onItemsChange(nextItems);
-      const nextSummary = await fetchInventorySummary(token, brandSlug);
-      onSummaryChange(nextSummary);
+      const added = await createMany(payloads);
       setCreateRows([emptyCreateRow(), emptyCreateRow(), emptyCreateRow()]);
       setSuccess(
-        `Added ${payloads.length} item${payloads.length === 1 ? "" : "s"}.`,
+        `Added ${added} item${added === 1 ? "" : "s"} (qty 0 — receive later).`,
       );
     } catch (saveError) {
       setError(
@@ -231,6 +409,45 @@ export function StockListPanel({
       );
     } finally {
       setIsSavingCreate(false);
+    }
+  };
+
+  const handleImportSelected = async (): Promise<void> => {
+    const selected = importCandidates.filter((row) => row.selected);
+    if (selected.length === 0) {
+      setError("Select at least one store item to import.");
+      return;
+    }
+
+    const payloads: CreateStockItemPayload[] = selected.map((row) => ({
+      name: row.name.trim(),
+      sku: row.sku.trim() || null,
+      category: row.category.trim() || null,
+      unit: row.unit,
+      qtyOnHand: 0,
+      costPerUnit: null,
+      notes: `Imported from ${row.source.toLowerCase()}`,
+      isActive: true,
+    }));
+
+    setIsSavingImport(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const added = await createMany(payloads);
+      setSuccess(
+        `Imported ${added} item${added === 1 ? "" : "s"} from the store menu (qty 0, no cost).`,
+      );
+      await loadImportCandidates();
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Unable to import items.",
+      );
+    } finally {
+      setIsSavingImport(false);
     }
   };
 
@@ -331,188 +548,328 @@ export function StockListPanel({
       </div>
 
       {!lowStockOnly ? (
-        <section className="space-y-3">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h3 className={cn("text-sm font-semibold", primaryText)}>
-                Add items
-              </h3>
-              <p className={cn("text-xs", secondaryText)}>
-                One row per item. Empty name rows are skipped.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() =>
-                  setCreateRows((current) => [...current, emptyCreateRow()])
-                }
-                type="button"
-                variant="outline"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add row
-              </Button>
-              <Button
-                disabled={isSavingCreate || pendingCreateCount === 0}
-                onClick={() => void handleSaveCreate()}
-                type="button"
-              >
-                {isSavingCreate ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Save items
-                {pendingCreateCount > 0 ? ` (${pendingCreateCount})` : ""}
-              </Button>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto rounded-2xl border border-zinc-200/60 dark:border-white/10">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-zinc-200/60 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-900/50">
-                <tr
-                  className={cn("text-xs uppercase tracking-wide", secondaryText)}
+        <>
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h3 className={cn("text-sm font-semibold", primaryText)}>
+                  Import from store menu
+                </h3>
+                <p className={cn("text-xs", secondaryText)}>
+                  Pull menu items, toppings, and ingredients into inventory as
+                  catalog only — no qty or cost. Tick what you need, edit SKU if
+                  you want, then import.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  disabled={isLoadingImport || isSavingImport}
+                  onClick={() => void loadImportCandidates()}
+                  type="button"
+                  variant="outline"
                 >
-                  <th className="px-3 py-3 font-semibold">Name</th>
-                  <th className="px-3 py-3 font-semibold">Unit</th>
-                  <th className="px-3 py-3 font-semibold">Category</th>
-                  <th className="px-3 py-3 font-semibold">Opening</th>
-                  <th className="px-3 py-3 font-semibold">Low at</th>
-                  <th className="px-3 py-3 font-semibold">Cost</th>
-                  <th className="px-3 py-3 font-semibold">SKU</th>
-                  <th className="px-3 py-3 font-semibold">Notes</th>
-                  <th className="px-3 py-3 font-semibold" />
-                </tr>
-              </thead>
-              <tbody>
-                {createRows.map((row) => (
+                  {isLoadingImport ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Refresh list
+                </Button>
+                <Button
+                  disabled={
+                    isSavingImport ||
+                    isLoadingImport ||
+                    selectedImportCount === 0
+                  }
+                  onClick={() => void handleImportSelected()}
+                  type="button"
+                >
+                  {isSavingImport ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Import selected
+                  {selectedImportCount > 0 ? ` (${selectedImportCount})` : ""}
+                </Button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-2xl border border-zinc-200/60 dark:border-white/10">
+              <table className="min-w-full text-left text-sm">
+                <thead className="border-b border-zinc-200/60 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-900/50">
                   <tr
-                    className="border-b border-zinc-100 dark:border-white/5"
-                    key={row.key}
+                    className={cn(
+                      "text-xs uppercase tracking-wide",
+                      secondaryText,
+                    )}
                   >
-                    <td className="px-3 py-2">
-                      <Input
-                        className="h-10 min-w-[9rem]"
-                        onChange={(event) =>
-                          updateCreateRow(row.key, { name: event.target.value })
+                    <th className="px-3 py-3 font-semibold">
+                      <input
+                        checked={
+                          importCandidates.length > 0 &&
+                          importCandidates.every((row) => row.selected)
                         }
-                        placeholder="e.g. Mozzarella"
-                        value={row.name}
+                        disabled={importCandidates.length === 0}
+                        onChange={(event) => {
+                          const selected = event.target.checked;
+                          setImportCandidates((current) =>
+                            current.map((row) => ({ ...row, selected })),
+                          );
+                        }}
+                        type="checkbox"
                       />
-                    </td>
-                    <td className="px-3 py-2">
-                      <select
-                        className={cn(
-                          inventorySelectClassName,
-                          "h-10 min-w-[6.5rem]",
-                        )}
-                        onChange={(event) =>
-                          updateCreateRow(row.key, {
-                            unit: event.target.value as StockUnit,
-                          })
-                        }
-                        value={row.unit}
-                      >
-                        {UNITS.map((unit) => (
-                          <option key={unit} value={unit}>
-                            {STOCK_UNIT_LABELS[unit]}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-3 py-2">
-                      <Input
-                        className="h-10 min-w-[7rem]"
-                        onChange={(event) =>
-                          updateCreateRow(row.key, {
-                            category: event.target.value,
-                          })
-                        }
-                        placeholder="Dairy…"
-                        value={row.category}
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <Input
-                        className="h-10 w-24"
-                        inputMode="decimal"
-                        onChange={(event) =>
-                          updateCreateRow(row.key, {
-                            qtyOnHand: event.target.value,
-                          })
-                        }
-                        value={row.qtyOnHand}
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <Input
-                        className="h-10 w-24"
-                        inputMode="decimal"
-                        onChange={(event) =>
-                          updateCreateRow(row.key, {
-                            lowStockAt: event.target.value,
-                          })
-                        }
-                        placeholder="—"
-                        value={row.lowStockAt}
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <Input
-                        className="h-10 w-24"
-                        inputMode="decimal"
-                        onChange={(event) =>
-                          updateCreateRow(row.key, {
-                            costPerUnit: event.target.value,
-                          })
-                        }
-                        placeholder="—"
-                        value={row.costPerUnit}
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <Input
-                        className="h-10 w-28"
-                        onChange={(event) =>
-                          updateCreateRow(row.key, { sku: event.target.value })
-                        }
-                        placeholder="—"
-                        value={row.sku}
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <Input
-                        className="h-10 min-w-[8rem]"
-                        onChange={(event) =>
-                          updateCreateRow(row.key, {
-                            notes: event.target.value,
-                          })
-                        }
-                        placeholder="—"
-                        value={row.notes}
-                      />
-                    </td>
-                    <td className="px-2 py-2">
-                      <Button
-                        onClick={() =>
-                          setCreateRows((current) =>
-                            current.length <= 1
-                              ? [emptyCreateRow()]
-                              : current.filter((entry) => entry.key !== row.key),
-                          )
-                        }
-                        size="icon"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </td>
+                    </th>
+                    <th className="px-3 py-3 font-semibold">Source</th>
+                    <th className="px-3 py-3 font-semibold">Name</th>
+                    <th className="px-3 py-3 font-semibold">SKU</th>
+                    <th className="px-3 py-3 font-semibold">Category</th>
+                    <th className="px-3 py-3 font-semibold">Unit</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                </thead>
+                <tbody>
+                  {isLoadingImport ? (
+                    <tr>
+                      <td className="px-4 py-10 text-center" colSpan={6}>
+                        <Loader2
+                          className={cn(
+                            "mx-auto h-6 w-6 animate-spin",
+                            secondaryText,
+                          )}
+                        />
+                      </td>
+                    </tr>
+                  ) : importCandidates.length === 0 ? (
+                    <tr>
+                      <td
+                        className={cn("px-4 py-10 text-center", secondaryText)}
+                        colSpan={6}
+                      >
+                        Nothing left to import — everything from the menu is
+                        already in stock, or the menu is empty.
+                      </td>
+                    </tr>
+                  ) : (
+                    importCandidates.map((row) => (
+                      <tr
+                        className="border-b border-zinc-100 dark:border-white/5"
+                        key={row.key}
+                      >
+                        <td className="px-3 py-2">
+                          <input
+                            checked={row.selected}
+                            onChange={(event) =>
+                              updateImportRow(row.key, {
+                                selected: event.target.checked,
+                              })
+                            }
+                            type="checkbox"
+                          />
+                        </td>
+                        <td className={cn("px-3 py-2", secondaryText)}>
+                          {row.source}
+                        </td>
+                        <td className={cn("px-3 py-2 font-medium", primaryText)}>
+                          {row.name}
+                        </td>
+                        <td className="px-3 py-2">
+                          <Input
+                            className="h-10 w-36"
+                            onChange={(event) =>
+                              updateImportRow(row.key, {
+                                sku: event.target.value,
+                              })
+                            }
+                            value={row.sku}
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <Input
+                            className="h-10 min-w-[8rem]"
+                            onChange={(event) =>
+                              updateImportRow(row.key, {
+                                category: event.target.value,
+                              })
+                            }
+                            value={row.category}
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <select
+                            className={cn(
+                              inventorySelectClassName,
+                              "h-10 min-w-[6.5rem]",
+                            )}
+                            onChange={(event) =>
+                              updateImportRow(row.key, {
+                                unit: event.target.value as StockUnit,
+                              })
+                            }
+                            value={row.unit}
+                          >
+                            {UNITS.map((unit) => (
+                              <option key={unit} value={unit}>
+                                {STOCK_UNIT_LABELS[unit]}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h3 className={cn("text-sm font-semibold", primaryText)}>
+                  Add items manually
+                </h3>
+                <p className={cn("text-xs", secondaryText)}>
+                  Name + SKU (+ unit/category). Starts at qty 0 with no cost —
+                  use Receive later for stock and price.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={() =>
+                    setCreateRows((current) => [...current, emptyCreateRow()])
+                  }
+                  type="button"
+                  variant="outline"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add row
+                </Button>
+                <Button
+                  disabled={isSavingCreate || pendingCreateCount === 0}
+                  onClick={() => void handleSaveCreate()}
+                  type="button"
+                >
+                  {isSavingCreate ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Save items
+                  {pendingCreateCount > 0 ? ` (${pendingCreateCount})` : ""}
+                </Button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-2xl border border-zinc-200/60 dark:border-white/10">
+              <table className="min-w-full text-left text-sm">
+                <thead className="border-b border-zinc-200/60 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-900/50">
+                  <tr
+                    className={cn(
+                      "text-xs uppercase tracking-wide",
+                      secondaryText,
+                    )}
+                  >
+                    <th className="px-3 py-3 font-semibold">Name</th>
+                    <th className="px-3 py-3 font-semibold">SKU</th>
+                    <th className="px-3 py-3 font-semibold">Unit</th>
+                    <th className="px-3 py-3 font-semibold">Category</th>
+                    <th className="px-3 py-3 font-semibold">Notes</th>
+                    <th className="px-3 py-3 font-semibold" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {createRows.map((row) => (
+                    <tr
+                      className="border-b border-zinc-100 dark:border-white/5"
+                      key={row.key}
+                    >
+                      <td className="px-3 py-2">
+                        <Input
+                          className="h-10 min-w-[9rem]"
+                          onChange={(event) =>
+                            updateCreateRow(row.key, {
+                              name: event.target.value,
+                            })
+                          }
+                          placeholder="e.g. Mozzarella"
+                          value={row.name}
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <Input
+                          className="h-10 w-32"
+                          onChange={(event) =>
+                            updateCreateRow(row.key, {
+                              sku: event.target.value,
+                            })
+                          }
+                          placeholder="Optional"
+                          value={row.sku}
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          className={cn(
+                            inventorySelectClassName,
+                            "h-10 min-w-[6.5rem]",
+                          )}
+                          onChange={(event) =>
+                            updateCreateRow(row.key, {
+                              unit: event.target.value as StockUnit,
+                            })
+                          }
+                          value={row.unit}
+                        >
+                          {UNITS.map((unit) => (
+                            <option key={unit} value={unit}>
+                              {STOCK_UNIT_LABELS[unit]}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <Input
+                          className="h-10 min-w-[7rem]"
+                          onChange={(event) =>
+                            updateCreateRow(row.key, {
+                              category: event.target.value,
+                            })
+                          }
+                          placeholder="Dairy…"
+                          value={row.category}
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <Input
+                          className="h-10 min-w-[8rem]"
+                          onChange={(event) =>
+                            updateCreateRow(row.key, {
+                              notes: event.target.value,
+                            })
+                          }
+                          placeholder="—"
+                          value={row.notes}
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <Button
+                          onClick={() =>
+                            setCreateRows((current) =>
+                              current.length <= 1
+                                ? [emptyCreateRow()]
+                                : current.filter(
+                                    (entry) => entry.key !== row.key,
+                                  ),
+                            )
+                          }
+                          size="icon"
+                          type="button"
+                          variant="ghost"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
