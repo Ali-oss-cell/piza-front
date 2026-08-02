@@ -24,6 +24,7 @@ export type InventoryTab =
   | "count"
   | "low-stock"
   | "history"
+  | "statistics"
   | "recipes"
   | "suppliers"
   | "purchase-orders";
@@ -36,6 +37,7 @@ export const INVENTORY_TAB_LABELS: Record<InventoryTab, string> = {
   count: "Count",
   "low-stock": "Low stock",
   history: "History",
+  statistics: "Statistics",
   recipes: "Recipes",
   suppliers: "Suppliers",
   "purchase-orders": "Purchase orders",
@@ -268,6 +270,44 @@ export interface UpdatePurchaseOrderPayload {
 export interface ReceivePurchaseOrderPayload {
   lines?: Array<{ lineId: string; qty: number }>;
   receivedAt?: string;
+}
+
+export interface InventoryStatsKpis {
+  soldQty: number;
+  soldCostEst: number;
+  wasteQty: number;
+  wasteCostEst: number;
+  receiveQty: number;
+  receiveCost: number;
+  refundQty: number;
+  netChange: number;
+  lowStockCount: number;
+  ordersTouched: number;
+}
+
+export interface InventoryStatsDailyRow {
+  date: string;
+  soldQty: number;
+  wasteQty: number;
+  receiveQty: number;
+  receiveCost: number;
+}
+
+export interface InventoryStatsSkuRow {
+  stockItemId: string;
+  name: string;
+  qty: number;
+  costEst: number;
+}
+
+export interface InventoryStats {
+  range: { from: string; to: string };
+  previousRange: { from: string; to: string };
+  kpis: InventoryStatsKpis;
+  previousKpis: InventoryStatsKpis;
+  daily: InventoryStatsDailyRow[];
+  topSold: InventoryStatsSkuRow[];
+  topWaste: InventoryStatsSkuRow[];
 }
 
 export const STOCK_UNIT_LABELS: Record<StockUnit, string> = {

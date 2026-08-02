@@ -1045,6 +1045,25 @@ export function fetchInventorySummary(
   });
 }
 
+export function fetchInventoryStats(
+  token: string,
+  brandSlug?: string,
+  options?: { from?: string; to?: string },
+): Promise<import("@/types/inventory").InventoryStats> {
+  const params = new URLSearchParams();
+  if (options?.from) {
+    params.set("from", options.from);
+  }
+  if (options?.to) {
+    params.set("to", options.to);
+  }
+  const query = params.toString();
+  return apiRequest(`/inventory/stats${query ? `?${query}` : ""}`, {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
 export function fetchStockItems(
   token: string,
   brandSlug?: string,

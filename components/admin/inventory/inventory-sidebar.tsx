@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  BarChart3,
   BookOpen,
   ClipboardList,
   History,
@@ -25,6 +26,7 @@ const NAV: { id: InventoryTab; icon: typeof Package }[] = [
   { id: "count", icon: ClipboardList },
   { id: "low-stock", icon: AlertTriangle },
   { id: "history", icon: History },
+  { id: "statistics", icon: BarChart3 },
   { id: "recipes", icon: BookOpen },
   { id: "suppliers", icon: Truck },
   { id: "purchase-orders", icon: ShoppingCart },

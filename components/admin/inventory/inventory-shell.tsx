@@ -9,6 +9,7 @@ import { MovementPanel } from "@/components/admin/inventory/movement-panel";
 import { PurchaseOrdersPanel } from "@/components/admin/inventory/purchase-orders-panel";
 import { ReceivePanel } from "@/components/admin/inventory/receive-panel";
 import { RecipesPanel } from "@/components/admin/inventory/recipes-panel";
+import { StatisticsPanel } from "@/components/admin/inventory/statistics-panel";
 import { StockListPanel } from "@/components/admin/inventory/stock-list-panel";
 import { SuppliersPanel } from "@/components/admin/inventory/suppliers-panel";
 import { BrandLogoMark } from "@/components/brand/brand-logo";
@@ -358,6 +359,9 @@ export function InventoryShell({
                   items={items}
                   token={token}
                 />
+              ) : null}
+              {activeTab === "statistics" ? (
+                <StatisticsPanel brandSlug={brandSlug!} token={token} />
               ) : null}
               {activeTab === "recipes" ? (
                 <RecipesPanel
