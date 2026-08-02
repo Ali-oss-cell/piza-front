@@ -13,7 +13,8 @@ export type StockMovementType =
   | "ADJUST"
   | "WASTE"
   | "COUNT"
-  | "SALE";
+  | "SALE"
+  | "REFUND";
 
 export type InventoryTab =
   | "stock-list"
@@ -88,6 +89,8 @@ export interface StockItem {
 export interface StockMovement {
   id: string;
   stockItemId: string;
+  stockItemName?: string;
+  stockItemUnit?: string;
   brandId: string;
   type: StockMovementType;
   deltaQty: string;
@@ -284,4 +287,5 @@ export const STOCK_MOVEMENT_LABELS: Record<StockMovementType, string> = {
   WASTE: "Waste",
   COUNT: "Count",
   SALE: "Sale",
+  REFUND: "Refund",
 };

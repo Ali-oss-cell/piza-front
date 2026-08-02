@@ -1103,6 +1103,28 @@ export function deactivateStockItem(
   });
 }
 
+export function fetchBrandStockMovements(
+  token: string,
+  brandSlug?: string,
+  options?: { take?: number; type?: string; stockItemId?: string },
+): Promise<import("@/types/inventory").StockMovement[]> {
+  const params = new URLSearchParams();
+  if (options?.take != null) {
+    params.set("take", String(options.take));
+  }
+  if (options?.type) {
+    params.set("type", options.type);
+  }
+  if (options?.stockItemId) {
+    params.set("stockItemId", options.stockItemId);
+  }
+  const query = params.toString();
+  return apiRequest(`/inventory/movements${query ? `?${query}` : ""}`, {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
 export function fetchStockMovements(
   token: string,
   itemId: string,
