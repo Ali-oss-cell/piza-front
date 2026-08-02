@@ -1,5 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+/**
+ * Admin host split (admin.* vs storefront) is disabled until DNS/domains
+ * are ready. Staff use https://marinapizzas.com.au/admin/dashboard on the
+ * same host as the storefront.
+ *
+ * To re-enable later: set NEXT_PUBLIC_ADMIN_HOST_SPLIT=true and rebuild web
+ * with NEXT_PUBLIC_ADMIN_HOST / NEXT_PUBLIC_ADMIN_ORIGIN / NEXT_PUBLIC_WEB_ORIGIN.
+ */
 const DEFAULT_ADMIN_HOST = "admin.marinapizzas.com.au";
 const DEFAULT_WEB_ORIGIN = "https://marinapizzas.com.au";
 const DEFAULT_ADMIN_ORIGIN = "https://admin.marinapizzas.com.au";
@@ -43,7 +51,6 @@ function webOrigin(): string {
   );
 }
 
-/** Paths that belong on the admin host (dashboard + staff login). */
 function isAdminAppPath(pathname: string): boolean {
   return (
     pathname === "/login" ||
@@ -53,11 +60,20 @@ function isAdminAppPath(pathname: string): boolean {
   );
 }
 
+function hostSplitEnabled(): boolean {
+  const raw = (process.env.NEXT_PUBLIC_ADMIN_HOST_SPLIT ?? "").trim().toLowerCase();
+  return raw === "1" || raw === "true" || raw === "yes";
+}
+
 export function middleware(request: NextRequest): NextResponse {
+  // Default: same-origin admin (old domain style).
+  if (!hostSplitEnabled()) {
+    return NextResponse.next();
+  }
+
   const host = hostnameOf(request);
   const { pathname, search } = request.nextUrl;
 
-  // Local dev: keep /admin and /login on the same origin.
   if (!host || isLocalHost(host)) {
     return NextResponse.next();
   }
@@ -72,14 +88,12 @@ export function middleware(request: NextRequest): NextResponse {
     }
 
     if (!isAdminAppPath(pathname)) {
-      // Customer pages don't live on admin.* — send them to the storefront.
       return NextResponse.redirect(new URL(`${pathname}${search}`, webOrigin()));
     }
 
     return NextResponse.next();
   }
 
-  // Storefront host: keep customers here; move staff tools to admin.*.
   if (isAdminAppPath(pathname)) {
     return NextResponse.redirect(
       new URL(`${pathname}${search}`, adminOrigin()),
@@ -91,9 +105,6 @@ export function middleware(request: NextRequest): NextResponse {
 
 export const config = {
   matcher: [
-    /*
-     * Skip Next internals and static assets.
-     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
