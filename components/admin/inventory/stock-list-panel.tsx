@@ -13,7 +13,10 @@ import {
 } from "@/lib/admin-api";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import { cn } from "@/lib/utils";
-import { formatStockQty } from "@/components/admin/inventory/inventory-utils";
+import {
+  formatStockQty,
+  inventorySelectClassName,
+} from "@/components/admin/inventory/inventory-utils";
 import type {
   CreateStockItemPayload,
   InventorySummary,
@@ -367,7 +370,7 @@ export function StockListPanel({
                     Unit
                   </label>
                   <select
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    className={inventorySelectClassName}
                     onChange={(event) =>
                       setItemForm((current) => ({
                         ...current,

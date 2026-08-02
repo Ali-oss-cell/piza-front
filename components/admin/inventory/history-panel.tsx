@@ -2,7 +2,10 @@
 
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { formatStockQty } from "@/components/admin/inventory/inventory-utils";
+import {
+  formatStockQty,
+  inventorySelectClassName,
+} from "@/components/admin/inventory/inventory-utils";
 import { fetchStockMovements } from "@/lib/admin-api";
 import { primaryText, secondaryText } from "@/lib/theme-classes";
 import { cn } from "@/lib/utils";
@@ -85,7 +88,7 @@ export function HistoryPanel({
           Stock item
         </label>
         <select
-          className="flex h-10 w-full max-w-md rounded-md border border-input bg-background px-3 text-sm"
+          className={cn(inventorySelectClassName, "max-w-md")}
           onChange={(event) => setItemId(event.target.value)}
           value={itemId}
         >

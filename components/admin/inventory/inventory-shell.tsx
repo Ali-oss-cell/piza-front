@@ -4,6 +4,7 @@ import { Loader2, Menu, Package } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { HistoryPanel } from "@/components/admin/inventory/history-panel";
 import { InventorySidebar } from "@/components/admin/inventory/inventory-sidebar";
+import { inventorySelectClassName } from "@/components/admin/inventory/inventory-utils";
 import { MovementPanel } from "@/components/admin/inventory/movement-panel";
 import { StockListPanel } from "@/components/admin/inventory/stock-list-panel";
 import { BrandLogoMark } from "@/components/brand/brand-logo";
@@ -233,7 +234,7 @@ export function InventoryShell({
 
           <div className="flex flex-wrap items-center gap-2">
             <select
-              className="flex h-10 max-w-[12rem] rounded-md border border-input bg-background px-3 text-sm"
+              className={cn(inventorySelectClassName, "max-w-[12rem]")}
               onChange={(event) => {
                 const slug = event.target.value;
                 if (slug) {

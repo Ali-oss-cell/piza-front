@@ -2,7 +2,10 @@
 
 import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { formatStockQty } from "@/components/admin/inventory/inventory-utils";
+import {
+  formatStockQty,
+  inventorySelectClassName,
+} from "@/components/admin/inventory/inventory-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -130,7 +133,7 @@ export function MovementPanel({
             Stock item
           </label>
           <select
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className={inventorySelectClassName}
             onChange={(event) => {
               setItemId(event.target.value);
               setSuccess(null);
