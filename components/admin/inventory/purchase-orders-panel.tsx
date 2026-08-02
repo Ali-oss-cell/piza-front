@@ -1,6 +1,5 @@
 "use client";
 
-import * as Dialog from "@radix-ui/react-dialog";
 import {
   ClipboardList,
   Download,
@@ -269,7 +268,13 @@ export function PurchaseOrdersPanel({
     setLineSearch("");
     setLineDrafts(emptyLineDrafts(activeStock));
     setError(null);
+    setSuccess(null);
     setCreateOpen(true);
+  };
+
+  const cancelCreate = (): void => {
+    setCreateOpen(false);
+    setError(null);
   };
 
   const handleCreate = async (): Promise<void> => {
@@ -380,6 +385,207 @@ export function PurchaseOrdersPanel({
     );
   }
 
+  if (createOpen) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className={cn("font-display text-2xl font-bold", primaryText)}>
+              New purchase order
+            </h2>
+            <p className={cn("mt-1 max-w-2xl text-sm", secondaryText)}>
+              Enter qty and unit cost on the items you want to order. Leave
+              blank to skip.
+            </p>
+          </div>
+          <Button onClick={cancelCreate} type="button" variant="outline">
+            Back to list
+          </Button>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-zinc-200/60 bg-white/50 p-4 dark:border-white/10 dark:bg-zinc-900/30">
+          <div className="min-w-[12rem] flex-1">
+            <label className={cn("mb-1 block text-xs font-medium", secondaryText)}>
+              Supplier
+            </label>
+            <select
+              className={inventorySelectClassName}
+              onChange={(event) => setSupplierId(event.target.value)}
+              value={supplierId}
+            >
+              <option value="">Select supplier…</option>
+              {activeSuppliers.map((supplier) => (
+                <option key={supplier.id} value={supplier.id}>
+                  {supplier.name}
+                </option>
+              ))}
+            </select>
+            {activeSuppliers.length === 0 ? (
+              <p className={cn("mt-1 text-xs", secondaryText)}>
+                Add an active supplier on the Suppliers tab first.
+              </p>
+            ) : null}
+          </div>
+          <div>
+            <label className={cn("mb-1 block text-xs font-medium", secondaryText)}>
+              Expected date
+            </label>
+            <Input
+              className="w-44"
+              onChange={(event) => setExpectedAt(event.target.value)}
+              type="date"
+              value={expectedAt}
+            />
+          </div>
+          <div className="min-w-[12rem] flex-1">
+            <label className={cn("mb-1 block text-xs font-medium", secondaryText)}>
+              Notes
+            </label>
+            <Input
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Optional"
+              value={notes}
+            />
+          </div>
+          <div className="min-w-[12rem] flex-1">
+            <label className={cn("mb-1 block text-xs font-medium", secondaryText)}>
+              Search stock
+            </label>
+            <Input
+              onChange={(event) => setLineSearch(event.target.value)}
+              placeholder="Name, category, SKU…"
+              value={lineSearch}
+            />
+          </div>
+          <Button
+            disabled={
+              isSaving ||
+              activeSuppliers.length === 0 ||
+              pendingLines.length === 0
+            }
+            onClick={() => void handleCreate()}
+            type="button"
+          >
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Create draft
+            {pendingLines.length > 0 ? ` (${pendingLines.length})` : ""}
+          </Button>
+        </div>
+
+        {error ? (
+          <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">
+            {error}
+          </p>
+        ) : null}
+
+        <p className={cn("text-sm", secondaryText)}>
+          {pendingLines.length > 0
+            ? `${pendingLines.length} line${pendingLines.length === 1 ? "" : "s"} · ${formatMoney(String(draftTotal))}`
+            : "No lines selected yet"}
+        </p>
+
+        <div className="overflow-x-auto rounded-2xl border border-zinc-200/60 dark:border-white/10">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b border-zinc-200/60 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-900/50">
+              <tr className={cn("text-xs uppercase tracking-wide", secondaryText)}>
+                <th className="px-4 py-3 font-semibold">Stock item</th>
+                <th className="px-4 py-3 font-semibold">Unit</th>
+                <th className="px-4 py-3 font-semibold">On hand</th>
+                <th className="px-4 py-3 font-semibold">Order qty</th>
+                <th className="px-4 py-3 font-semibold">Unit cost</th>
+                <th className="px-4 py-3 font-semibold">Line total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredStock.length === 0 ? (
+                <tr>
+                  <td
+                    className={cn("px-4 py-10 text-center", secondaryText)}
+                    colSpan={6}
+                  >
+                    No stock items yet. Add them on the Stock list tab first.
+                  </td>
+                </tr>
+              ) : (
+                filteredStock.map((item) => {
+                  const draft = lineDrafts[item.id] ?? {
+                    qtyOrdered: "",
+                    unitCost: item.costPerUnit ?? "",
+                  };
+                  const qty = Number(draft.qtyOrdered);
+                  const cost = Number(draft.unitCost);
+                  const hasQty = Number.isFinite(qty) && qty > 0;
+                  const lineTotal =
+                    hasQty && Number.isFinite(cost) && cost >= 0
+                      ? qty * cost
+                      : null;
+
+                  return (
+                    <tr
+                      className="border-b border-zinc-100 dark:border-white/5"
+                      key={item.id}
+                    >
+                      <td className={cn("px-4 py-3 font-medium", primaryText)}>
+                        {item.name}
+                        {item.category ? (
+                          <span
+                            className={cn(
+                              "mt-0.5 block text-xs font-normal",
+                              secondaryText,
+                            )}
+                          >
+                            {item.category}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className={cn("px-4 py-3", secondaryText)}>
+                        {STOCK_UNIT_LABELS[item.unit]}
+                      </td>
+                      <td className={cn("px-4 py-3 tabular-nums", primaryText)}>
+                        {formatStockQty(item.qtyOnHand, item.unit)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Input
+                          className="h-10 w-28"
+                          inputMode="decimal"
+                          onChange={(event) =>
+                            updateLineDraft(item.id, {
+                              qtyOrdered: event.target.value,
+                            })
+                          }
+                          placeholder="0"
+                          value={draft.qtyOrdered}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <Input
+                          className="h-10 w-28"
+                          inputMode="decimal"
+                          onChange={(event) =>
+                            updateLineDraft(item.id, {
+                              unitCost: event.target.value,
+                            })
+                          }
+                          placeholder="0.00"
+                          value={draft.unitCost}
+                        />
+                      </td>
+                      <td className={cn("px-4 py-3 tabular-nums", secondaryText)}>
+                        {lineTotal === null
+                          ? "—"
+                          : formatMoney(String(lineTotal))}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -398,7 +604,7 @@ export function PurchaseOrdersPanel({
         </Button>
       </div>
 
-      {error && !createOpen ? (
+      {error ? (
         <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">
           {error}
         </p>
@@ -668,251 +874,6 @@ export function PurchaseOrdersPanel({
           )}
         </div>
       </div>
-
-      <Dialog.Root onOpenChange={setCreateOpen} open={createOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
-          <Dialog.Content
-            className={cn(
-              "fixed left-1/2 top-1/2 z-50 flex max-h-[92vh] w-[min(96vw,56rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl p-6 shadow-2xl",
-              dashboardGlass,
-            )}
-          >
-            <Dialog.Title
-              className={cn("shrink-0 font-display text-xl font-bold", primaryText)}
-            >
-              New purchase order
-            </Dialog.Title>
-            <p className={cn("mt-1 shrink-0 text-sm", secondaryText)}>
-              Enter qty and unit cost on the items you want to order. Leave
-              blank to skip.
-            </p>
-
-            <div className="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label
-                    className={cn("mb-1 block text-sm font-medium", primaryText)}
-                  >
-                    Supplier
-                  </label>
-                  <select
-                    className={inventorySelectClassName}
-                    onChange={(event) => setSupplierId(event.target.value)}
-                    value={supplierId}
-                  >
-                    <option value="">Select supplier…</option>
-                    {activeSuppliers.map((supplier) => (
-                      <option key={supplier.id} value={supplier.id}>
-                        {supplier.name}
-                      </option>
-                    ))}
-                  </select>
-                  {activeSuppliers.length === 0 ? (
-                    <p className={cn("mt-1 text-xs", secondaryText)}>
-                      Add an active supplier first.
-                    </p>
-                  ) : null}
-                </div>
-                <div>
-                  <label
-                    className={cn("mb-1 block text-sm font-medium", primaryText)}
-                  >
-                    Expected date
-                  </label>
-                  <Input
-                    onChange={(event) => setExpectedAt(event.target.value)}
-                    type="date"
-                    value={expectedAt}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-[1fr_minmax(12rem,16rem)]">
-                <div>
-                  <label
-                    className={cn("mb-1 block text-sm font-medium", primaryText)}
-                  >
-                    Notes
-                  </label>
-                  <Input
-                    onChange={(event) => setNotes(event.target.value)}
-                    placeholder="Optional"
-                    value={notes}
-                  />
-                </div>
-                <div>
-                  <label
-                    className={cn("mb-1 block text-sm font-medium", primaryText)}
-                  >
-                    Search stock
-                  </label>
-                  <Input
-                    onChange={(event) => setLineSearch(event.target.value)}
-                    placeholder="Name, category, SKU…"
-                    value={lineSearch}
-                  />
-                </div>
-              </div>
-
-              <div className="overflow-x-auto rounded-2xl border border-zinc-200/60 dark:border-white/10">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="border-b border-zinc-200/60 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-900/50">
-                    <tr
-                      className={cn(
-                        "text-xs uppercase tracking-wide",
-                        secondaryText,
-                      )}
-                    >
-                      <th className="px-4 py-3 font-semibold">Stock item</th>
-                      <th className="px-4 py-3 font-semibold">Unit</th>
-                      <th className="px-4 py-3 font-semibold">On hand</th>
-                      <th className="px-4 py-3 font-semibold">Order qty</th>
-                      <th className="px-4 py-3 font-semibold">Unit cost</th>
-                      <th className="px-4 py-3 font-semibold">Line total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredStock.length === 0 ? (
-                      <tr>
-                        <td
-                          className={cn("px-4 py-10 text-center", secondaryText)}
-                          colSpan={6}
-                        >
-                          No stock items yet. Add items from Receive or Stock
-                          list first.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredStock.map((item) => {
-                        const draft = lineDrafts[item.id] ?? {
-                          qtyOrdered: "",
-                          unitCost: item.costPerUnit ?? "",
-                        };
-                        const qty = Number(draft.qtyOrdered);
-                        const cost = Number(draft.unitCost);
-                        const hasQty = Number.isFinite(qty) && qty > 0;
-                        const lineTotal =
-                          hasQty && Number.isFinite(cost) && cost >= 0
-                            ? qty * cost
-                            : null;
-
-                        return (
-                          <tr
-                            className="border-b border-zinc-100 dark:border-white/5"
-                            key={item.id}
-                          >
-                            <td
-                              className={cn("px-4 py-3 font-medium", primaryText)}
-                            >
-                              {item.name}
-                              {item.category ? (
-                                <span
-                                  className={cn(
-                                    "mt-0.5 block text-xs font-normal",
-                                    secondaryText,
-                                  )}
-                                >
-                                  {item.category}
-                                </span>
-                              ) : null}
-                            </td>
-                            <td className={cn("px-4 py-3", secondaryText)}>
-                              {STOCK_UNIT_LABELS[item.unit]}
-                            </td>
-                            <td
-                              className={cn(
-                                "px-4 py-3 tabular-nums",
-                                primaryText,
-                              )}
-                            >
-                              {formatStockQty(item.qtyOnHand, item.unit)}
-                            </td>
-                            <td className="px-4 py-3">
-                              <Input
-                                className="h-10 w-28"
-                                inputMode="decimal"
-                                onChange={(event) =>
-                                  updateLineDraft(item.id, {
-                                    qtyOrdered: event.target.value,
-                                  })
-                                }
-                                placeholder="0"
-                                value={draft.qtyOrdered}
-                              />
-                            </td>
-                            <td className="px-4 py-3">
-                              <Input
-                                className="h-10 w-28"
-                                inputMode="decimal"
-                                onChange={(event) =>
-                                  updateLineDraft(item.id, {
-                                    unitCost: event.target.value,
-                                  })
-                                }
-                                placeholder="0.00"
-                                value={draft.unitCost}
-                              />
-                            </td>
-                            <td
-                              className={cn(
-                                "px-4 py-3 tabular-nums",
-                                secondaryText,
-                              )}
-                            >
-                              {lineTotal === null
-                                ? "—"
-                                : formatMoney(String(lineTotal))}
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {error ? (
-                <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">
-                  {error}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="mt-4 flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-zinc-200/60 pt-4 dark:border-white/10">
-              <p className={cn("text-sm", secondaryText)}>
-                {pendingLines.length > 0
-                  ? `${pendingLines.length} line${pendingLines.length === 1 ? "" : "s"} · ${formatMoney(String(draftTotal))}`
-                  : "No lines selected yet"}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setCreateOpen(false)}
-                  type="button"
-                  variant="outline"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  disabled={
-                    isSaving ||
-                    activeSuppliers.length === 0 ||
-                    pendingLines.length === 0
-                  }
-                  onClick={() => void handleCreate()}
-                  type="button"
-                >
-                  {isSaving ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Create draft
-                  {pendingLines.length > 0 ? ` (${pendingLines.length})` : ""}
-                </Button>
-              </div>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
     </div>
   );
 }

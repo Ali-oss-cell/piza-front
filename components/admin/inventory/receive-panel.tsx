@@ -1,29 +1,21 @@
 "use client";
 
-import * as Dialog from "@radix-ui/react-dialog";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  formatStockQty,
-  inventorySelectClassName,
-} from "@/components/admin/inventory/inventory-utils";
+import { formatStockQty } from "@/components/admin/inventory/inventory-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  createStockItem,
   createStockMovement,
   fetchInventorySummary,
 } from "@/lib/admin-api";
-import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import { primaryText, secondaryText } from "@/lib/theme-classes";
 import { cn } from "@/lib/utils";
 import type {
   InventorySummary,
   StockItem,
-  StockUnit,
 } from "@/types/inventory";
 import { STOCK_UNIT_LABELS } from "@/types/inventory";
-
-const UNITS = Object.keys(STOCK_UNIT_LABELS) as StockUnit[];
 
 interface ReceivePanelProps {
   token: string;
@@ -87,14 +79,6 @@ export function ReceivePanel({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  const [newItemOpen, setNewItemOpen] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newUnit, setNewUnit] = useState<StockUnit>("EACH");
-  const [newCategory, setNewCategory] = useState("");
-  const [newQty, setNewQty] = useState("");
-  const [newCost, setNewCost] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     setDrafts((current) => {
@@ -219,74 +203,17 @@ export function ReceivePanel({
     }
   };
 
-  const handleCreateItem = async (): Promise<void> => {
-    if (!newName.trim()) {
-      setError("New item needs a name.");
-      return;
-    }
-    const qty = Number(newQty) || 0;
-    const costRaw = newCost.trim();
-    if (qty > 0 && (costRaw === "" || Number.isNaN(Number(costRaw)))) {
-      setError("Unit cost is required when receiving opening qty.");
-      return;
-    }
-
-    setIsCreating(true);
-    setError(null);
-    try {
-      const created = await createStockItem(
-        token,
-        {
-          name: newName.trim(),
-          unit: newUnit,
-          category: newCategory.trim() || null,
-          qtyOnHand: qty,
-          costPerUnit: costRaw === "" ? null : Number(costRaw),
-        },
-        brandSlug,
-      );
-      onItemsChange([...items, created]);
-      const nextSummary = await fetchInventorySummary(token, brandSlug);
-      onSummaryChange(nextSummary);
-      setDrafts((current) => ({
-        ...current,
-        [created.id]: { qty: "", unitCost: created.costPerUnit ?? "" },
-      }));
-      setNewItemOpen(false);
-      setNewName("");
-      setNewUnit("EACH");
-      setNewCategory("");
-      setNewQty("");
-      setNewCost("");
-      setSuccess(`Added "${created.name}" to stock list.`);
-    } catch (createError) {
-      setError(
-        createError instanceof Error
-          ? createError.message
-          : "Unable to add item.",
-      );
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className={cn("font-display text-2xl font-bold", primaryText)}>
-            Receive
-          </h2>
-          <p className={cn("mt-1 max-w-2xl text-sm", secondaryText)}>
-            Enter how much you are adding for each item. If you have 2 and add
-            1, after save you will have 3. Fractions like 0.5 are allowed (half
-            bottle, etc.).
-          </p>
-        </div>
-        <Button onClick={() => setNewItemOpen(true)} type="button" variant="outline">
-          <Plus className="mr-2 h-4 w-4" />
-          New stock item
-        </Button>
+      <div>
+        <h2 className={cn("font-display text-2xl font-bold", primaryText)}>
+          Receive
+        </h2>
+        <p className={cn("mt-1 max-w-2xl text-sm", secondaryText)}>
+          Enter how much you are adding for each item. If you have 2 and add
+          1, after save you will have 3. Add new catalog items on Stock list
+          first.
+        </p>
       </div>
 
       <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-zinc-200/60 bg-white/50 p-4 dark:border-white/10 dark:bg-zinc-900/30">
@@ -362,7 +289,7 @@ export function ReceivePanel({
                   className={cn("px-4 py-10 text-center", secondaryText)}
                   colSpan={6}
                 >
-                  No stock items yet. Add one with “New stock item”.
+                  No stock items yet. Add them on the Stock list tab first.
                 </td>
               </tr>
             ) : (
@@ -429,105 +356,6 @@ export function ReceivePanel({
           </tbody>
         </table>
       </div>
-
-      <Dialog.Root onOpenChange={setNewItemOpen} open={newItemOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
-          <Dialog.Content
-            className={cn(
-              "fixed left-1/2 top-1/2 z-50 w-[min(96vw,26rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6 shadow-2xl",
-              dashboardGlass,
-            )}
-          >
-            <Dialog.Title className={cn("font-display text-xl font-bold", primaryText)}>
-              New stock item
-            </Dialog.Title>
-            <p className={cn("mt-1 text-sm", secondaryText)}>
-              Add something you are receiving for the first time.
-            </p>
-            <div className="mt-5 space-y-3">
-              <div>
-                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
-                  Name
-                </label>
-                <Input
-                  onChange={(event) => setNewName(event.target.value)}
-                  placeholder="e.g. Flour bag, Green peppers"
-                  value={newName}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
-                    Unit
-                  </label>
-                  <select
-                    className={inventorySelectClassName}
-                    onChange={(event) =>
-                      setNewUnit(event.target.value as StockUnit)
-                    }
-                    value={newUnit}
-                  >
-                    {UNITS.map((unit) => (
-                      <option key={unit} value={unit}>
-                        {STOCK_UNIT_LABELS[unit]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
-                    Category
-                  </label>
-                  <Input
-                    onChange={(event) => setNewCategory(event.target.value)}
-                    placeholder="Optional"
-                    value={newCategory}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
-                    Opening qty
-                  </label>
-                  <Input
-                    inputMode="decimal"
-                    onChange={(event) => setNewQty(event.target.value)}
-                    placeholder="0 or 0.5"
-                    value={newQty}
-                  />
-                </div>
-                <div>
-                  <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
-                    Unit cost (AUD)
-                  </label>
-                  <Input
-                    inputMode="decimal"
-                    onChange={(event) => setNewCost(event.target.value)}
-                    placeholder="If receiving now"
-                    value={newCost}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <Button onClick={() => setNewItemOpen(false)} variant="outline">
-                Cancel
-              </Button>
-              <Button
-                disabled={isCreating || !newName.trim()}
-                onClick={() => void handleCreateItem()}
-              >
-                {isCreating ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Add item
-              </Button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
     </div>
   );
 }

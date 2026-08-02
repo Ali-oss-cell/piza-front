@@ -1,7 +1,6 @@
 "use client";
 
-import * as Dialog from "@radix-ui/react-dialog";
-import { Loader2, Pencil, Plus, Trash2, Truck } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,7 @@ import {
   fetchSuppliers,
   updateSupplier,
 } from "@/lib/admin-api";
-import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import { primaryText, secondaryText } from "@/lib/theme-classes";
 import { cn } from "@/lib/utils";
 import type {
   CreateSupplierPayload,
@@ -66,13 +65,13 @@ export function SuppliersPanel({
   const [showInactive, setShowInactive] = useState(false);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [formMode, setFormMode] = useState<"create" | "edit" | null>("create");
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [form, setForm] = useState<SupplierFormState>(emptyForm);
   const [isSaving, setIsSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -115,20 +114,26 @@ export function SuppliersPanel({
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [suppliers, search, showInactive]);
 
-  const openCreate = (): void => {
-    setModalMode("create");
+  const startCreate = (): void => {
+    setFormMode("create");
     setEditing(null);
     setForm(emptyForm());
     setError(null);
-    setModalOpen(true);
+    setSuccess(null);
   };
 
-  const openEdit = (supplier: Supplier): void => {
-    setModalMode("edit");
+  const startEdit = (supplier: Supplier): void => {
+    setFormMode("edit");
     setEditing(supplier);
     setForm(formFromSupplier(supplier));
     setError(null);
-    setModalOpen(true);
+    setSuccess(null);
+  };
+
+  const cancelForm = (): void => {
+    setFormMode(null);
+    setEditing(null);
+    setForm(emptyForm());
   };
 
   const handleSave = async (): Promise<void> => {
@@ -138,8 +143,9 @@ export function SuppliersPanel({
     }
     setIsSaving(true);
     setError(null);
+    setSuccess(null);
     try {
-      if (modalMode === "create") {
+      if (formMode === "create") {
         const payload: CreateSupplierPayload = {
           name: form.name.trim(),
           phone: form.phone.trim() || null,
@@ -151,7 +157,9 @@ export function SuppliersPanel({
         };
         const created = await createSupplier(token, payload, brandSlug);
         setSuppliers((current) => [...current, created]);
-      } else if (editing) {
+        setForm(emptyForm());
+        setSuccess(`Added "${created.name}".`);
+      } else if (formMode === "edit" && editing) {
         const payload: UpdateSupplierPayload = {
           name: form.name.trim(),
           phone: form.phone.trim() || null,
@@ -170,8 +178,9 @@ export function SuppliersPanel({
         setSuppliers((current) =>
           current.map((entry) => (entry.id === updated.id ? updated : entry)),
         );
+        setSuccess(`Updated "${updated.name}".`);
+        cancelForm();
       }
-      setModalOpen(false);
     } catch (saveError) {
       setError(
         saveError instanceof Error
@@ -198,6 +207,9 @@ export function SuppliersPanel({
       setSuppliers((current) =>
         current.map((entry) => (entry.id === updated.id ? updated : entry)),
       );
+      if (editing?.id === supplier.id) {
+        cancelForm();
+      }
     } catch (deactivateError) {
       setError(
         deactivateError instanceof Error
@@ -219,20 +231,153 @@ export function SuppliersPanel({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className={cn("font-display text-2xl font-bold", primaryText)}>
             Suppliers
           </h2>
           <p className={cn("mt-1 text-sm", secondaryText)}>
-            Vendors for purchase orders — contact details and notes.
+            Vendors for purchase orders — edit inline on this page, no popups.
           </p>
         </div>
-        <Button onClick={openCreate} type="button">
-          <Plus className="mr-2 h-4 w-4" />
-          Add supplier
-        </Button>
+        {formMode !== "create" ? (
+          <Button onClick={startCreate} type="button">
+            <Plus className="mr-2 h-4 w-4" />
+            Add supplier
+          </Button>
+        ) : null}
       </div>
+
+      {formMode ? (
+        <section className="space-y-3 rounded-2xl border border-zinc-200/60 bg-white/50 p-4 dark:border-white/10 dark:bg-zinc-900/30">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className={cn("text-sm font-semibold", primaryText)}>
+              {formMode === "create" ? "Add supplier" : `Edit ${editing?.name}`}
+            </h3>
+            {formMode === "edit" ? (
+              <Button onClick={cancelForm} type="button" variant="ghost">
+                <X className="mr-1 h-4 w-4" />
+                Cancel
+              </Button>
+            ) : null}
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead>
+                <tr className={cn("text-xs uppercase tracking-wide", secondaryText)}>
+                  <th className="px-2 py-2 font-semibold">Name</th>
+                  <th className="px-2 py-2 font-semibold">Phone</th>
+                  <th className="px-2 py-2 font-semibold">Email</th>
+                  <th className="px-2 py-2 font-semibold">ABN</th>
+                  <th className="px-2 py-2 font-semibold">Address</th>
+                  <th className="px-2 py-2 font-semibold">Notes</th>
+                  <th className="px-2 py-2 font-semibold">Active</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="px-2 py-2">
+                    <Input
+                      className="h-10 min-w-[9rem]"
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          name: event.target.value,
+                        }))
+                      }
+                      placeholder="Supplier name"
+                      value={form.name}
+                    />
+                  </td>
+                  <td className="px-2 py-2">
+                    <Input
+                      className="h-10 min-w-[8rem]"
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          phone: event.target.value,
+                        }))
+                      }
+                      value={form.phone}
+                    />
+                  </td>
+                  <td className="px-2 py-2">
+                    <Input
+                      className="h-10 min-w-[10rem]"
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          email: event.target.value,
+                        }))
+                      }
+                      type="email"
+                      value={form.email}
+                    />
+                  </td>
+                  <td className="px-2 py-2">
+                    <Input
+                      className="h-10 w-28"
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          abn: event.target.value,
+                        }))
+                      }
+                      value={form.abn}
+                    />
+                  </td>
+                  <td className="px-2 py-2">
+                    <Input
+                      className="h-10 min-w-[10rem]"
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          address: event.target.value,
+                        }))
+                      }
+                      value={form.address}
+                    />
+                  </td>
+                  <td className="px-2 py-2">
+                    <Input
+                      className="h-10 min-w-[8rem]"
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          notes: event.target.value,
+                        }))
+                      }
+                      value={form.notes}
+                    />
+                  </td>
+                  <td className="px-2 py-2">
+                    <input
+                      checked={form.isActive}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          isActive: event.target.checked,
+                        }))
+                      }
+                      type="checkbox"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              disabled={isSaving || !form.name.trim()}
+              onClick={() => void handleSave()}
+              type="button"
+            >
+              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {formMode === "create" ? "Save supplier" : "Save changes"}
+            </Button>
+          </div>
+        </section>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
         <Input
@@ -251,231 +396,99 @@ export function SuppliersPanel({
         </label>
       </div>
 
-      {error && !modalOpen ? (
+      {error ? (
         <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">
           {error}
         </p>
       ) : null}
+      {success ? (
+        <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+          {success}
+        </p>
+      ) : null}
 
-      <div className="space-y-3">
-        {filtered.length === 0 ? (
-          <div
-            className={cn(
-              "flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-300 px-6 py-12 text-center dark:border-white/15",
-              dashboardGlass,
-            )}
-          >
-            <Truck className={cn("h-8 w-8", secondaryText)} />
-            <p className={cn("text-sm", secondaryText)}>
-              No suppliers yet. Add your flour mill, dairy, packaging vendor…
-            </p>
-          </div>
-        ) : (
-          filtered.map((supplier) => (
-            <div
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-200/60 bg-white/50 px-4 py-3 dark:border-white/10 dark:bg-zinc-900/30"
-              key={supplier.id}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className={cn("font-medium", primaryText)}>
+      <div className="overflow-x-auto rounded-2xl border border-zinc-200/60 dark:border-white/10">
+        <table className="min-w-full text-left text-sm">
+          <thead className="border-b border-zinc-200/60 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-900/50">
+            <tr className={cn("text-xs uppercase tracking-wide", secondaryText)}>
+              <th className="px-4 py-3 font-semibold">Name</th>
+              <th className="px-4 py-3 font-semibold">Phone</th>
+              <th className="px-4 py-3 font-semibold">Email</th>
+              <th className="px-4 py-3 font-semibold">ABN</th>
+              <th className="px-4 py-3 font-semibold">Notes</th>
+              <th className="px-4 py-3 font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td
+                  className={cn("px-4 py-10 text-center", secondaryText)}
+                  colSpan={6}
+                >
+                  No suppliers yet — use the form above to add one.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((supplier) => (
+                <tr
+                  className="border-b border-zinc-100 dark:border-white/5"
+                  key={supplier.id}
+                >
+                  <td className={cn("px-4 py-3 font-medium", primaryText)}>
                     {supplier.name}
-                  </p>
-                  {!supplier.isActive ? (
-                    <span className="rounded-full bg-zinc-500/15 px-2 py-0.5 text-[11px] font-semibold text-zinc-500">
-                      Inactive
-                    </span>
-                  ) : null}
-                </div>
-                <p className={cn("mt-0.5 text-xs", secondaryText)}>
-                  {[supplier.phone, supplier.email, supplier.abn]
-                    .filter(Boolean)
-                    .join(" · ") || "No contact details"}
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Button
-                  onClick={() => openEdit(supplier)}
-                  size="icon"
-                  type="button"
-                  variant="ghost"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                {supplier.isActive ? (
-                  <Button
-                    disabled={busyId === supplier.id}
-                    onClick={() => void handleDeactivate(supplier)}
-                    size="icon"
-                    type="button"
-                    variant="ghost"
+                    {!supplier.isActive ? (
+                      <span className="ml-2 rounded-full bg-zinc-500/15 px-2 py-0.5 text-[11px] font-semibold text-zinc-500">
+                        Inactive
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className={cn("px-4 py-3", secondaryText)}>
+                    {supplier.phone ?? "—"}
+                  </td>
+                  <td className={cn("px-4 py-3", secondaryText)}>
+                    {supplier.email ?? "—"}
+                  </td>
+                  <td className={cn("px-4 py-3", secondaryText)}>
+                    {supplier.abn ?? "—"}
+                  </td>
+                  <td
+                    className={cn(
+                      "max-w-[14rem] truncate px-4 py-3",
+                      secondaryText,
+                    )}
                   >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      <Dialog.Root onOpenChange={setModalOpen} open={modalOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
-          <Dialog.Content
-            className={cn(
-              "fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(96vw,28rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl p-6 shadow-2xl",
-              dashboardGlass,
+                    {supplier.notes ?? "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <Button
+                        onClick={() => startEdit(supplier)}
+                        size="icon"
+                        type="button"
+                        variant="ghost"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      {supplier.isActive ? (
+                        <Button
+                          disabled={busyId === supplier.id}
+                          onClick={() => void handleDeactivate(supplier)}
+                          size="icon"
+                          type="button"
+                          variant="ghost"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      ) : null}
+                    </div>
+                  </td>
+                </tr>
+              ))
             )}
-          >
-            <Dialog.Title
-              className={cn("font-display text-xl font-bold", primaryText)}
-            >
-              {modalMode === "create" ? "Add supplier" : "Edit supplier"}
-            </Dialog.Title>
-            <div className="mt-5 space-y-3">
-              <div>
-                <label
-                  className={cn("mb-1 block text-sm font-medium", primaryText)}
-                >
-                  Name
-                </label>
-                <Input
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      name: event.target.value,
-                    }))
-                  }
-                  value={form.name}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label
-                    className={cn("mb-1 block text-sm font-medium", primaryText)}
-                  >
-                    Phone
-                  </label>
-                  <Input
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        phone: event.target.value,
-                      }))
-                    }
-                    value={form.phone}
-                  />
-                </div>
-                <div>
-                  <label
-                    className={cn("mb-1 block text-sm font-medium", primaryText)}
-                  >
-                    Email
-                  </label>
-                  <Input
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        email: event.target.value,
-                      }))
-                    }
-                    type="email"
-                    value={form.email}
-                  />
-                </div>
-              </div>
-              <div>
-                <label
-                  className={cn("mb-1 block text-sm font-medium", primaryText)}
-                >
-                  ABN
-                </label>
-                <Input
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      abn: event.target.value,
-                    }))
-                  }
-                  value={form.abn}
-                />
-              </div>
-              <div>
-                <label
-                  className={cn("mb-1 block text-sm font-medium", primaryText)}
-                >
-                  Address
-                </label>
-                <Input
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      address: event.target.value,
-                    }))
-                  }
-                  value={form.address}
-                />
-              </div>
-              <div>
-                <label
-                  className={cn("mb-1 block text-sm font-medium", primaryText)}
-                >
-                  Notes
-                </label>
-                <Input
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      notes: event.target.value,
-                    }))
-                  }
-                  value={form.notes}
-                />
-              </div>
-              <label
-                className={cn("flex items-center gap-2 text-sm", secondaryText)}
-              >
-                <input
-                  checked={form.isActive}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      isActive: event.target.checked,
-                    }))
-                  }
-                  type="checkbox"
-                />
-                Active
-              </label>
-              {error ? (
-                <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">
-                  {error}
-                </p>
-              ) : null}
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  onClick={() => setModalOpen(false)}
-                  type="button"
-                  variant="outline"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  disabled={isSaving}
-                  onClick={() => void handleSave()}
-                  type="button"
-                >
-                  {isSaving ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Save
-                </Button>
-              </div>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
