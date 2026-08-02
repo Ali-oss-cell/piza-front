@@ -25,10 +25,18 @@ import { STOCK_MOVEMENT_LABELS } from "@/types/inventory";
 interface MovementPanelProps {
   token: string;
   brandSlug: string;
-  type: Exclude<StockMovementType, never>;
+  type: Exclude<StockMovementType, "SALE">;
   items: StockItem[];
   onItemsChange: (items: StockItem[]) => void;
   onSummaryChange: (summary: InventorySummary) => void;
+}
+
+function todayInputValue(): string {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 export function MovementPanel({
@@ -50,6 +58,8 @@ export function MovementPanel({
   const [itemId, setItemId] = useState("");
   const [qty, setQty] = useState("");
   const [countedQty, setCountedQty] = useState("");
+  const [unitCost, setUnitCost] = useState("");
+  const [receivedAt, setReceivedAt] = useState(todayInputValue);
   const [reason, setReason] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,8 +67,9 @@ export function MovementPanel({
 
   const selected = activeItems.find((item) => item.id === itemId) ?? null;
 
-  const descriptions: Record<StockMovementType, string> = {
-    RECEIVE: "Add stock from a delivery or restock.",
+  const descriptions: Record<Exclude<StockMovementType, "SALE">, string> = {
+    RECEIVE:
+      "Record a purchase delivery — quantity, what you paid per unit this time, and the receive date.",
     WASTE: "Remove stock for spoilage or discard.",
     ADJUST: "Correct on-hand with a signed delta (+/−).",
     COUNT: "Set absolute quantity after a physical count.",
@@ -85,6 +96,13 @@ export function MovementPanel({
       payload.qty = Number(qty);
     }
 
+    if (type === "RECEIVE") {
+      payload.unitCost = Number(unitCost);
+      payload.receivedAt = receivedAt
+        ? new Date(`${receivedAt}T12:00:00`).toISOString()
+        : undefined;
+    }
+
     try {
       const result = await createStockMovement(
         token,
@@ -101,9 +119,16 @@ export function MovementPanel({
       onSummaryChange(nextSummary);
       setQty("");
       setCountedQty("");
+      setUnitCost("");
       setReason("");
+      setReceivedAt(todayInputValue());
+
+      const avg =
+        result.item.costPerUnit != null
+          ? ` Avg cost now $${Number(result.item.costPerUnit).toFixed(2)}.`
+          : "";
       setSuccess(
-        `${STOCK_MOVEMENT_LABELS[type]} recorded. On hand: ${formatStockQty(result.item.qtyOnHand, result.item.unit)}.`,
+        `${STOCK_MOVEMENT_LABELS[type]} recorded. On hand: ${formatStockQty(result.item.qtyOnHand, result.item.unit)}.${avg}`,
       );
     } catch (saveError) {
       setError(
@@ -153,6 +178,9 @@ export function MovementPanel({
         {selected ? (
           <p className={cn("text-xs", secondaryText)}>
             On hand: {formatStockQty(selected.qtyOnHand, selected.unit)}
+            {selected.costPerUnit != null
+              ? ` · avg cost $${Number(selected.costPerUnit).toFixed(2)}`
+              : ""}
           </p>
         ) : null}
 
@@ -181,9 +209,39 @@ export function MovementPanel({
           </div>
         )}
 
+        {type === "RECEIVE" ? (
+          <>
+            <div>
+              <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                Unit cost this delivery (AUD)
+              </label>
+              <Input
+                inputMode="decimal"
+                onChange={(event) => setUnitCost(event.target.value)}
+                placeholder="What you paid per unit this time"
+                value={unitCost}
+              />
+              <p className={cn("mt-1 text-xs", secondaryText)}>
+                Can be higher, lower, or the same as last time — we update the
+                average cost.
+              </p>
+            </div>
+            <div>
+              <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                Receive date
+              </label>
+              <Input
+                onChange={(event) => setReceivedAt(event.target.value)}
+                type="date"
+                value={receivedAt}
+              />
+            </div>
+          </>
+        ) : null}
+
         <div>
           <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
-            Reason
+            {type === "RECEIVE" ? "Note / supplier" : "Reason"}
           </label>
           <Input
             onChange={(event) => setReason(event.target.value)}

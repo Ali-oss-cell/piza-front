@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  BookOpen,
   ClipboardList,
   History,
   Package,
@@ -22,6 +23,7 @@ const NAV: { id: InventoryTab; icon: typeof Package }[] = [
   { id: "count", icon: ClipboardList },
   { id: "low-stock", icon: AlertTriangle },
   { id: "history", icon: History },
+  { id: "recipes", icon: BookOpen },
 ];
 
 interface InventorySidebarProps {

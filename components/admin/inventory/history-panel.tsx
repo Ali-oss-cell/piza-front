@@ -152,6 +152,12 @@ export function HistoryPanel({
                 </div>
                 <p className={cn("mt-0.5 text-xs", secondaryText)}>
                   {new Date(movement.createdAt).toLocaleString()}
+                  {movement.type === "RECEIVE" && movement.receivedAt
+                    ? ` · received ${new Date(movement.receivedAt).toLocaleDateString()}`
+                    : ""}
+                  {movement.type === "RECEIVE" && movement.unitCost != null
+                    ? ` · $${Number(movement.unitCost).toFixed(2)}/unit`
+                    : ""}
                   {movement.createdByName
                     ? ` · ${movement.createdByName}`
                     : ""}

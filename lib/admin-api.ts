@@ -1131,3 +1131,27 @@ export function createStockMovement(
   });
 }
 
+export function fetchInventoryRecipes(
+  token: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").MenuItemRecipe[]> {
+  return apiRequest("/inventory/recipes", {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function replaceInventoryRecipe(
+  token: string,
+  menuItemId: string,
+  payload: import("@/types/inventory").ReplaceRecipePayload,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").MenuItemRecipe> {
+  return apiRequest(`/inventory/recipes/${menuItemId}`, {
+    method: "PUT",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+

@@ -8,7 +8,12 @@ export type StockUnit =
   | "PACK"
   | "BAG";
 
-export type StockMovementType = "RECEIVE" | "ADJUST" | "WASTE" | "COUNT";
+export type StockMovementType =
+  | "RECEIVE"
+  | "ADJUST"
+  | "WASTE"
+  | "COUNT"
+  | "SALE";
 
 export type InventoryTab =
   | "stock-list"
@@ -17,7 +22,8 @@ export type InventoryTab =
   | "adjust"
   | "count"
   | "low-stock"
-  | "history";
+  | "history"
+  | "recipes";
 
 export const INVENTORY_TAB_LABELS: Record<InventoryTab, string> = {
   "stock-list": "Stock list",
@@ -27,6 +33,7 @@ export const INVENTORY_TAB_LABELS: Record<InventoryTab, string> = {
   count: "Count",
   "low-stock": "Low stock",
   history: "History",
+  recipes: "Recipes",
 };
 
 export interface StockItem {
@@ -54,6 +61,9 @@ export interface StockMovement {
   deltaQty: string;
   qtyAfter: string;
   reason: string | null;
+  unitCost: string | null;
+  receivedAt: string | null;
+  orderId: string | null;
   createdById: string | null;
   createdByName: string | null;
   createdAt: string;
@@ -92,7 +102,29 @@ export interface CreateStockMovementPayload {
   type: StockMovementType;
   qty?: number;
   countedQty?: number;
+  unitCost?: number;
+  receivedAt?: string;
   reason?: string | null;
+}
+
+export interface RecipeLine {
+  id: string;
+  stockItemId: string;
+  stockItemName: string;
+  stockItemUnit: string;
+  qtyPerUnit: string;
+}
+
+export interface MenuItemRecipe {
+  menuItemId: string;
+  menuItemName: string;
+  menuItemNumber: number;
+  categorySlug: string;
+  lines: RecipeLine[];
+}
+
+export interface ReplaceRecipePayload {
+  lines: Array<{ stockItemId: string; qtyPerUnit: number }>;
 }
 
 export const STOCK_UNIT_LABELS: Record<StockUnit, string> = {
@@ -111,4 +143,5 @@ export const STOCK_MOVEMENT_LABELS: Record<StockMovementType, string> = {
   ADJUST: "Adjust",
   WASTE: "Waste",
   COUNT: "Count",
+  SALE: "Sale",
 };

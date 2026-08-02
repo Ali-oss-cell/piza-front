@@ -6,6 +6,7 @@ import { HistoryPanel } from "@/components/admin/inventory/history-panel";
 import { InventorySidebar } from "@/components/admin/inventory/inventory-sidebar";
 import { inventorySelectClassName } from "@/components/admin/inventory/inventory-utils";
 import { MovementPanel } from "@/components/admin/inventory/movement-panel";
+import { RecipesPanel } from "@/components/admin/inventory/recipes-panel";
 import { StockListPanel } from "@/components/admin/inventory/stock-list-panel";
 import { BrandLogoMark } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
@@ -353,6 +354,13 @@ export function InventoryShell({
                 <HistoryPanel
                   brandSlug={brandSlug!}
                   items={items}
+                  token={token}
+                />
+              ) : null}
+              {activeTab === "recipes" ? (
+                <RecipesPanel
+                  brandSlug={brandSlug!}
+                  stockItems={items}
                   token={token}
                 />
               ) : null}
