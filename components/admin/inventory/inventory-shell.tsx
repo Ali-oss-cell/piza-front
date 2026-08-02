@@ -6,6 +6,7 @@ import { HistoryPanel } from "@/components/admin/inventory/history-panel";
 import { InventorySidebar } from "@/components/admin/inventory/inventory-sidebar";
 import { inventorySelectClassName } from "@/components/admin/inventory/inventory-utils";
 import { MovementPanel } from "@/components/admin/inventory/movement-panel";
+import { ReceivePanel } from "@/components/admin/inventory/receive-panel";
 import { RecipesPanel } from "@/components/admin/inventory/recipes-panel";
 import { StockListPanel } from "@/components/admin/inventory/stock-list-panel";
 import { BrandLogoMark } from "@/components/brand/brand-logo";
@@ -298,13 +299,12 @@ export function InventoryShell({
                 />
               ) : null}
               {activeTab === "receive" ? (
-                <MovementPanel
+                <ReceivePanel
                   brandSlug={brandSlug!}
                   items={items}
                   onItemsChange={setItems}
                   onSummaryChange={setSummary}
                   token={token}
-                  type="RECEIVE"
                 />
               ) : null}
               {activeTab === "waste" ? (
