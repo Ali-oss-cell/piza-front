@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import {
   createStockItem,
   deactivateStockItem,
-  fetchAdminMenuItems,
-  fetchAdminToppings,
+  fetchCrustRecipes,
+  fetchInventoryRecipes,
   fetchInventorySummary,
+  fetchToppingRecipes,
   updateStockItem,
 } from "@/lib/admin-api";
 import { primaryText, secondaryText } from "@/lib/theme-classes";
@@ -28,6 +29,7 @@ import type {
 import { STOCK_UNIT_LABELS } from "@/types/inventory";
 
 const UNITS = Object.keys(STOCK_UNIT_LABELS) as StockUnit[];
+const DEFAULT_CREATE_ROWS = 10;
 
 interface ItemFormState {
   name: string;
@@ -52,7 +54,7 @@ interface CreateRow {
 
 interface ImportCandidate {
   key: string;
-  source: "Menu item" | "Topping" | "Ingredient";
+  source: "Menu item" | "Topping" | "Crust";
   name: string;
   sku: string;
   category: string;
@@ -69,6 +71,10 @@ function emptyCreateRow(): CreateRow {
     unit: "EACH",
     notes: "",
   };
+}
+
+function makeCreateRows(count: number): CreateRow[] {
+  return Array.from({ length: count }, () => emptyCreateRow());
 }
 
 function emptyItemForm(): ItemFormState {
@@ -115,8 +121,8 @@ function createRowToPayload(row: CreateRow): CreateStockItemPayload | null {
   };
 }
 
-function skuFromName(name: string): string {
-  return name
+function skuFromLabel(label: string): string {
+  return label
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -163,11 +169,9 @@ export function StockListPanel({
 }: StockListPanelProps): React.ReactElement {
   const [search, setSearch] = useState("");
   const [showInactive, setShowInactive] = useState(false);
-  const [createRows, setCreateRows] = useState<CreateRow[]>([
-    emptyCreateRow(),
-    emptyCreateRow(),
-    emptyCreateRow(),
-  ]);
+  const [createRows, setCreateRows] = useState<CreateRow[]>(() =>
+    makeCreateRows(DEFAULT_CREATE_ROWS),
+  );
   const [importCandidates, setImportCandidates] = useState<ImportCandidate[]>(
     [],
   );
@@ -179,6 +183,7 @@ export function StockListPanel({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const existingNameKeys = useMemo(
@@ -200,14 +205,19 @@ export function StockListPanel({
       return;
     }
     setIsLoadingImport(true);
+    setImportError(null);
     try {
-      const [menuItems, toppingGroups] = await Promise.all([
-        fetchAdminMenuItems(token, brandSlug),
-        fetchAdminToppings(token, brandSlug),
+      // Use inventory recipe endpoints (same API path as stock create) so
+      // menu/topping manage routes cannot blank the import table with a fetch error.
+      const [menuResult, toppingResult, crustResult] = await Promise.allSettled([
+        fetchInventoryRecipes(token, brandSlug),
+        fetchToppingRecipes(token, brandSlug),
+        fetchCrustRecipes(token, brandSlug),
       ]);
 
       const next: ImportCandidate[] = [];
       const seenNames = new Set<string>();
+      const failures: string[] = [];
 
       const pushCandidate = (
         candidate: Omit<ImportCandidate, "selected">,
@@ -227,48 +237,49 @@ export function StockListPanel({
         next.push({ ...candidate, selected: false });
       };
 
-      for (const item of menuItems) {
-        if (!item.isActive) {
-          continue;
-        }
-        pushCandidate({
-          key: `menu-${item.id}`,
-          source: "Menu item",
-          name: item.name,
-          sku: `M-${item.number}`,
-          category: item.categorySlug,
-          unit: "EACH",
-        });
-        for (const ingredient of item.ingredients ?? []) {
-          const name = ingredient.trim();
-          if (!name) {
-            continue;
-          }
+      if (menuResult.status === "fulfilled") {
+        for (const item of menuResult.value) {
           pushCandidate({
-            key: `ing-${name.toLowerCase()}`,
-            source: "Ingredient",
-            name,
-            sku: skuFromName(name),
-            category: "Ingredient",
+            key: `menu-${item.menuItemId}`,
+            source: "Menu item",
+            name: item.menuItemName,
+            sku: `M-${item.menuItemNumber}`,
+            category: item.categorySlug,
             unit: "EACH",
           });
         }
+      } else {
+        failures.push("menu items");
       }
 
-      for (const group of toppingGroups) {
-        for (const topping of group.toppings) {
-          if (!topping.isActive) {
-            continue;
-          }
+      if (toppingResult.status === "fulfilled") {
+        for (const topping of toppingResult.value) {
           pushCandidate({
-            key: `top-${topping.id}`,
+            key: `top-${topping.toppingId}`,
             source: "Topping",
-            name: topping.label,
-            sku: topping.slug,
-            category: topping.categoryLabel || group.label || "Topping",
+            name: topping.toppingLabel,
+            sku: skuFromLabel(topping.toppingLabel),
+            category: topping.categorySlug || "Topping",
             unit: "EACH",
           });
         }
+      } else {
+        failures.push("toppings");
+      }
+
+      if (crustResult.status === "fulfilled") {
+        for (const crust of crustResult.value) {
+          pushCandidate({
+            key: `crust-${crust.crustOptionId}`,
+            source: "Crust",
+            name: crust.crustLabel,
+            sku: skuFromLabel(crust.crustLabel) || `crust-${crust.crustOptionId.slice(0, 6)}`,
+            category: "Crust",
+            unit: "EACH",
+          });
+        }
+      } else {
+        failures.push("crusts");
       }
 
       next.sort((a, b) => {
@@ -279,8 +290,18 @@ export function StockListPanel({
         return a.name.localeCompare(b.name);
       });
       setImportCandidates(next);
+
+      if (failures.length > 0 && next.length === 0) {
+        setImportError(
+          `Could not load ${failures.join(", ")} for import. Try Refresh list.`,
+        );
+      } else if (failures.length > 0) {
+        setImportError(
+          `Loaded partial list — could not load ${failures.join(", ")}.`,
+        );
+      }
     } catch (loadError) {
-      setError(
+      setImportError(
         loadError instanceof Error
           ? loadError.message
           : "Unable to load store items for import.",
@@ -288,17 +309,28 @@ export function StockListPanel({
     } finally {
       setIsLoadingImport(false);
     }
-  }, [
-    token,
-    brandSlug,
-    lowStockOnly,
-    existingNameKeys,
-    existingSkuKeys,
-  ]);
+  }, [token, brandSlug, lowStockOnly, existingNameKeys, existingSkuKeys]);
 
   useEffect(() => {
     void loadImportCandidates();
   }, [loadImportCandidates]);
+
+  // Drop candidates that are already in stock after a successful import/create.
+  useEffect(() => {
+    setImportCandidates((current) =>
+      current.filter((row) => {
+        const nameKey = row.name.trim().toLowerCase();
+        const skuKey = row.sku.trim().toLowerCase();
+        if (existingNameKeys.has(nameKey)) {
+          return false;
+        }
+        if (skuKey && existingSkuKeys.has(skuKey)) {
+          return false;
+        }
+        return true;
+      }),
+    );
+  }, [existingNameKeys, existingSkuKeys]);
 
   const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -397,7 +429,7 @@ export function StockListPanel({
 
     try {
       const added = await createMany(payloads);
-      setCreateRows([emptyCreateRow(), emptyCreateRow(), emptyCreateRow()]);
+      setCreateRows(makeCreateRows(DEFAULT_CREATE_ROWS));
       setSuccess(
         `Added ${added} item${added === 1 ? "" : "s"} (qty 0 — receive later).`,
       );
@@ -439,7 +471,7 @@ export function StockListPanel({
       setSuccess(
         `Imported ${added} item${added === 1 ? "" : "s"} from the store menu (qty 0, no cost).`,
       );
-      await loadImportCandidates();
+      // Remaining rows update via the existingNameKeys effect — no fragile reload.
     } catch (saveError) {
       setError(
         saveError instanceof Error
@@ -556,9 +588,9 @@ export function StockListPanel({
                   Import from store menu
                 </h3>
                 <p className={cn("text-xs", secondaryText)}>
-                  Pull menu items, toppings, and ingredients into inventory as
-                  catalog only — no qty or cost. Tick what you need, edit SKU if
-                  you want, then import.
+                  Tick as many rows as you need (menu items, toppings, crusts),
+                  edit SKU if you want, then import. Scroll the table — all
+                  unmatched store items are listed.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -572,6 +604,18 @@ export function StockListPanel({
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
                   Refresh list
+                </Button>
+                <Button
+                  disabled={importCandidates.length === 0}
+                  onClick={() =>
+                    setImportCandidates((current) =>
+                      current.map((row) => ({ ...row, selected: true })),
+                    )
+                  }
+                  type="button"
+                  variant="outline"
+                >
+                  Select all
                 </Button>
                 <Button
                   disabled={
@@ -591,7 +635,13 @@ export function StockListPanel({
               </div>
             </div>
 
-            <div className="overflow-x-auto rounded-2xl border border-zinc-200/60 dark:border-white/10">
+            {importError ? (
+              <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+                {importError}
+              </p>
+            ) : null}
+
+            <div className="max-h-[28rem] overflow-auto rounded-2xl border border-zinc-200/60 dark:border-white/10">
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b border-zinc-200/60 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-900/50">
                   <tr
@@ -732,13 +782,16 @@ export function StockListPanel({
               <div className="flex flex-wrap gap-2">
                 <Button
                   onClick={() =>
-                    setCreateRows((current) => [...current, emptyCreateRow()])
+                    setCreateRows((current) => [
+                      ...current,
+                      ...makeCreateRows(5),
+                    ])
                   }
                   type="button"
                   variant="outline"
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Add row
+                  Add 5 rows
                 </Button>
                 <Button
                   disabled={isSavingCreate || pendingCreateCount === 0}
@@ -754,7 +807,7 @@ export function StockListPanel({
               </div>
             </div>
 
-            <div className="overflow-x-auto rounded-2xl border border-zinc-200/60 dark:border-white/10">
+            <div className="max-h-[22rem] overflow-auto rounded-2xl border border-zinc-200/60 dark:border-white/10">
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b border-zinc-200/60 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-900/50">
                   <tr
