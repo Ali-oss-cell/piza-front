@@ -143,7 +143,6 @@ export type AdminView =
   | "crusts"
   | "deals"
   | "payments"
-  | "inventory"
   | "settings"
   | "hq"
   | "reports"

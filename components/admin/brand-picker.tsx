@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Package, Plus } from "lucide-react";
 import { CreateStoreWizard } from "@/components/admin/create-store-wizard";
 import { BrandLogoMark } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
@@ -78,8 +78,10 @@ function StoreCard({
 
 export function BrandPicker({
   onBackToHq,
+  onOpenInventory,
 }: {
   onBackToHq?: () => void;
+  onOpenInventory?: () => void;
 } = {}): React.ReactElement {
   const { user, token } = useAuth();
   const { brands, isLoading, selectBrand, refreshBrands } = useAdminBrand();
@@ -134,16 +136,29 @@ export function BrandPicker({
               </Button>
             ) : null}
           </div>
-          {token && canCreate ? (
-            <Button
-              className="h-12 shrink-0 rounded-2xl px-6 text-base"
-              onClick={() => setShowCreateWizard(true)}
-              type="button"
-            >
-              <Plus className="mr-2 h-5 w-5" />
-              Create store
-            </Button>
-          ) : null}
+          <div className="flex shrink-0 flex-wrap gap-3">
+            {onOpenInventory ? (
+              <Button
+                className="h-12 rounded-2xl px-6 text-base"
+                onClick={onOpenInventory}
+                type="button"
+                variant="outline"
+              >
+                <Package className="mr-2 h-5 w-5" />
+                Inventory
+              </Button>
+            ) : null}
+            {token && canCreate ? (
+              <Button
+                className="h-12 rounded-2xl px-6 text-base"
+                onClick={() => setShowCreateWizard(true)}
+                type="button"
+              >
+                <Plus className="mr-2 h-5 w-5" />
+                Create store
+              </Button>
+            ) : null}
+          </div>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

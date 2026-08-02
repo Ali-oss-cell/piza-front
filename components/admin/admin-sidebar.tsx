@@ -24,7 +24,6 @@ import {
   Activity as ActivityIcon,
   UsersRound,
   HeartPulse,
-  Package,
 } from "lucide-react";
 import Link from "next/link";
 import type { AdminView } from "@/types/admin";
@@ -41,7 +40,6 @@ const STORE_NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashbo
   { id: "categories", label: "Topping Categories", icon: FolderPlus },
   { id: "crusts", label: "Crusts", icon: CircleDot },
   { id: "deals", label: "Deals", icon: Tag },
-  { id: "inventory", label: "Inventory", icon: Package },
   { id: "payments", label: "Payments", icon: CreditCard },
   { id: "team", label: "Team", icon: UsersRound },
   { id: "locations", label: "Locations", icon: MapPin },

@@ -10,6 +10,25 @@ export type StockUnit =
 
 export type StockMovementType = "RECEIVE" | "ADJUST" | "WASTE" | "COUNT";
 
+export type InventoryTab =
+  | "stock-list"
+  | "receive"
+  | "waste"
+  | "adjust"
+  | "count"
+  | "low-stock"
+  | "history";
+
+export const INVENTORY_TAB_LABELS: Record<InventoryTab, string> = {
+  "stock-list": "Stock list",
+  receive: "Receive",
+  waste: "Waste",
+  adjust: "Adjust",
+  count: "Count",
+  "low-stock": "Low stock",
+  history: "History",
+};
+
 export interface StockItem {
   id: string;
   brandId: string;
