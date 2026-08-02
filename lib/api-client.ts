@@ -70,3 +70,34 @@ export async function apiRequest<T>(
 
   return response.json() as Promise<T>;
 }
+
+/** Binary download (PDF, etc.) — same auth/brand headers as apiRequest. */
+export async function apiRequestBlob(
+  path: string,
+  options: RequestInit & { token?: string; brandSlug?: string } = {},
+): Promise<Blob> {
+  const { token, brandSlug, headers: initHeaders, ...rest } = options;
+  const headers = new Headers(initHeaders);
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  if (brandSlug) {
+    headers.set(BRAND_HEADER, brandSlug);
+  }
+
+  const requestPath = brandSlug ? appendBrandQuery(path, brandSlug) : path;
+
+  const response = await fetch(`${API_BASE}${requestPath}`, {
+    ...rest,
+    headers,
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as ApiErrorBody;
+    throw new ApiError(resolveErrorMessage(body, response.statusText), response.status);
+  }
+
+  return response.blob();
+}

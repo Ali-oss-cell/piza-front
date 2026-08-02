@@ -23,7 +23,9 @@ export type InventoryTab =
   | "count"
   | "low-stock"
   | "history"
-  | "recipes";
+  | "recipes"
+  | "suppliers"
+  | "purchase-orders";
 
 export const INVENTORY_TAB_LABELS: Record<InventoryTab, string> = {
   "stock-list": "Stock list",
@@ -34,7 +36,37 @@ export const INVENTORY_TAB_LABELS: Record<InventoryTab, string> = {
   "low-stock": "Low stock",
   history: "History",
   recipes: "Recipes",
+  suppliers: "Suppliers",
+  "purchase-orders": "Purchase orders",
 };
+
+export type RecipeSizeKey = "" | "small" | "large" | "family";
+
+export const RECIPE_SIZE_KEYS: Array<{
+  key: RecipeSizeKey;
+  label: string;
+}> = [
+  { key: "", label: "Default" },
+  { key: "small", label: "Small" },
+  { key: "large", label: "Large" },
+  { key: "family", label: "Family" },
+];
+
+export type PurchaseOrderStatus =
+  | "DRAFT"
+  | "SENT"
+  | "PARTIAL"
+  | "RECEIVED"
+  | "CANCELLED";
+
+export const PURCHASE_ORDER_STATUS_LABELS: Record<PurchaseOrderStatus, string> =
+  {
+    DRAFT: "Draft",
+    SENT: "Sent",
+    PARTIAL: "Partial",
+    RECEIVED: "Received",
+    CANCELLED: "Cancelled",
+  };
 
 export interface StockItem {
   id: string;
@@ -113,6 +145,7 @@ export interface RecipeLine {
   stockItemName: string;
   stockItemUnit: string;
   qtyPerUnit: string;
+  sizeKey: string;
 }
 
 export interface MenuItemRecipe {
@@ -123,8 +156,115 @@ export interface MenuItemRecipe {
   lines: RecipeLine[];
 }
 
+export interface ToppingRecipe {
+  toppingId: string;
+  toppingLabel: string;
+  categorySlug: string;
+  lines: RecipeLine[];
+}
+
+export interface CrustRecipe {
+  crustOptionId: string;
+  crustLabel: string;
+  lines: RecipeLine[];
+}
+
 export interface ReplaceRecipePayload {
-  lines: Array<{ stockItemId: string; qtyPerUnit: number }>;
+  lines: Array<{
+    stockItemId: string;
+    qtyPerUnit: number;
+    sizeKey?: string;
+  }>;
+}
+
+export interface Supplier {
+  id: string;
+  brandId: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  abn: string | null;
+  address: string | null;
+  notes: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSupplierPayload {
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  abn?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  isActive?: boolean;
+}
+
+export interface UpdateSupplierPayload {
+  name?: string;
+  phone?: string | null;
+  email?: string | null;
+  abn?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  isActive?: boolean;
+}
+
+export interface PurchaseOrderLine {
+  id: string;
+  stockItemId: string;
+  stockItemName: string;
+  stockItemUnit: string;
+  qtyOrdered: string;
+  qtyReceived: string;
+  unitCost: string;
+  lineTotal: string;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  brandId: string;
+  number: number;
+  status: PurchaseOrderStatus;
+  supplierId: string;
+  supplierName: string;
+  orderedAt: string;
+  expectedAt: string | null;
+  receivedAt: string | null;
+  notes: string | null;
+  createdById: string | null;
+  createdAt: string;
+  updatedAt: string;
+  lines: PurchaseOrderLine[];
+  total: string;
+}
+
+export interface CreatePurchaseOrderPayload {
+  supplierId: string;
+  expectedAt?: string | null;
+  notes?: string | null;
+  lines: Array<{
+    stockItemId: string;
+    qtyOrdered: number;
+    unitCost: number;
+  }>;
+}
+
+export interface UpdatePurchaseOrderPayload {
+  supplierId?: string;
+  expectedAt?: string | null;
+  notes?: string | null;
+  lines?: Array<{
+    stockItemId: string;
+    qtyOrdered: number;
+    unitCost: number;
+  }>;
+}
+
+export interface ReceivePurchaseOrderPayload {
+  lines?: Array<{ lineId: string; qty: number }>;
+  receivedAt?: string;
 }
 
 export const STOCK_UNIT_LABELS: Record<StockUnit, string> = {

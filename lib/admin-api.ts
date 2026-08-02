@@ -37,7 +37,7 @@ import type {
   StoreDomain,
   UpdatePaymentSettingsPayload,
 } from "@/types/payments";
-import { apiRequest } from "@/lib/api-client";
+import { apiRequest, apiRequestBlob } from "@/lib/api-client";
 import { getAdminBrandSlug } from "@/lib/brand-storage";
 
 function withBrand(brandSlug?: string): string | undefined {
@@ -1153,5 +1153,211 @@ export function replaceInventoryRecipe(
     brandSlug: withBrand(brandSlug),
     body: JSON.stringify(payload),
   });
+}
+
+export function fetchToppingRecipes(
+  token: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").ToppingRecipe[]> {
+  return apiRequest("/inventory/recipes/toppings", {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function replaceToppingRecipe(
+  token: string,
+  toppingId: string,
+  payload: import("@/types/inventory").ReplaceRecipePayload,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").ToppingRecipe> {
+  return apiRequest(`/inventory/recipes/toppings/${toppingId}`, {
+    method: "PUT",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchCrustRecipes(
+  token: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").CrustRecipe[]> {
+  return apiRequest("/inventory/recipes/crusts", {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function replaceCrustRecipe(
+  token: string,
+  crustOptionId: string,
+  payload: import("@/types/inventory").ReplaceRecipePayload,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").CrustRecipe> {
+  return apiRequest(`/inventory/recipes/crusts/${crustOptionId}`, {
+    method: "PUT",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchSuppliers(
+  token: string,
+  brandSlug?: string,
+  options?: { includeInactive?: boolean },
+): Promise<import("@/types/inventory").Supplier[]> {
+  const params = new URLSearchParams();
+  if (options?.includeInactive) {
+    params.set("includeInactive", "true");
+  }
+  const query = params.toString();
+  return apiRequest(`/inventory/suppliers${query ? `?${query}` : ""}`, {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function createSupplier(
+  token: string,
+  payload: import("@/types/inventory").CreateSupplierPayload,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").Supplier> {
+  return apiRequest("/inventory/suppliers", {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateSupplier(
+  token: string,
+  id: string,
+  payload: import("@/types/inventory").UpdateSupplierPayload,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").Supplier> {
+  return apiRequest(`/inventory/suppliers/${id}`, {
+    method: "PATCH",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Soft-deactivate supplier (API has no hard DELETE; mirrors stock-item deactivate). */
+export function deleteSupplier(
+  token: string,
+  id: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").Supplier> {
+  return updateSupplier(token, id, { isActive: false }, brandSlug);
+}
+
+export function fetchPurchaseOrders(
+  token: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").PurchaseOrder[]> {
+  return apiRequest("/inventory/purchase-orders", {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function fetchPurchaseOrder(
+  token: string,
+  id: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").PurchaseOrder> {
+  return apiRequest(`/inventory/purchase-orders/${id}`, {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function createPurchaseOrder(
+  token: string,
+  payload: import("@/types/inventory").CreatePurchaseOrderPayload,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").PurchaseOrder> {
+  return apiRequest("/inventory/purchase-orders", {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updatePurchaseOrder(
+  token: string,
+  id: string,
+  payload: import("@/types/inventory").UpdatePurchaseOrderPayload,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").PurchaseOrder> {
+  return apiRequest(`/inventory/purchase-orders/${id}`, {
+    method: "PATCH",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function sendPurchaseOrder(
+  token: string,
+  id: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").PurchaseOrder> {
+  return apiRequest(`/inventory/purchase-orders/${id}/send`, {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function cancelPurchaseOrder(
+  token: string,
+  id: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").PurchaseOrder> {
+  return apiRequest(`/inventory/purchase-orders/${id}/cancel`, {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function receivePurchaseOrder(
+  token: string,
+  id: string,
+  payload: import("@/types/inventory").ReceivePurchaseOrderPayload = {},
+  brandSlug?: string,
+): Promise<import("@/types/inventory").PurchaseOrder> {
+  return apiRequest(`/inventory/purchase-orders/${id}/receive`, {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function downloadPurchaseOrderPdf(
+  token: string,
+  id: string,
+  brandSlug?: string,
+  filename?: string,
+): Promise<void> {
+  const blob = await apiRequestBlob(`/inventory/purchase-orders/${id}/pdf`, {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename ?? `purchase-order-${id}.pdf`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }
 

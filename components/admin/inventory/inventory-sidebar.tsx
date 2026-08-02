@@ -8,7 +8,9 @@ import {
   Package,
   PackageMinus,
   PackagePlus,
+  ShoppingCart,
   SlidersHorizontal,
+  Truck,
 } from "lucide-react";
 import type { InventoryTab } from "@/types/inventory";
 import { INVENTORY_TAB_LABELS } from "@/types/inventory";
@@ -24,6 +26,8 @@ const NAV: { id: InventoryTab; icon: typeof Package }[] = [
   { id: "low-stock", icon: AlertTriangle },
   { id: "history", icon: History },
   { id: "recipes", icon: BookOpen },
+  { id: "suppliers", icon: Truck },
+  { id: "purchase-orders", icon: ShoppingCart },
 ];
 
 interface InventorySidebarProps {

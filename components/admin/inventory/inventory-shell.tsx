@@ -6,9 +6,11 @@ import { HistoryPanel } from "@/components/admin/inventory/history-panel";
 import { InventorySidebar } from "@/components/admin/inventory/inventory-sidebar";
 import { inventorySelectClassName } from "@/components/admin/inventory/inventory-utils";
 import { MovementPanel } from "@/components/admin/inventory/movement-panel";
+import { PurchaseOrdersPanel } from "@/components/admin/inventory/purchase-orders-panel";
 import { ReceivePanel } from "@/components/admin/inventory/receive-panel";
 import { RecipesPanel } from "@/components/admin/inventory/recipes-panel";
 import { StockListPanel } from "@/components/admin/inventory/stock-list-panel";
+import { SuppliersPanel } from "@/components/admin/inventory/suppliers-panel";
 import { BrandLogoMark } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -360,6 +362,17 @@ export function InventoryShell({
               {activeTab === "recipes" ? (
                 <RecipesPanel
                   brandSlug={brandSlug!}
+                  stockItems={items}
+                  token={token}
+                />
+              ) : null}
+              {activeTab === "suppliers" ? (
+                <SuppliersPanel brandSlug={brandSlug!} token={token} />
+              ) : null}
+              {activeTab === "purchase-orders" ? (
+                <PurchaseOrdersPanel
+                  brandSlug={brandSlug!}
+                  onStockRefresh={() => void load()}
                   stockItems={items}
                   token={token}
                 />
