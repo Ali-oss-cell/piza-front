@@ -280,9 +280,16 @@ export function InventoryShell({
 
         <main className="p-4 md:p-6">
           {error ? (
-            <p className="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">
-              {error}
-            </p>
+            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">
+              <p className="min-w-0 flex-1">{error}</p>
+              <Button
+                onClick={() => void load()}
+                type="button"
+                variant="outline"
+              >
+                Retry
+              </Button>
+            </div>
           ) : null}
 
           {isLoading ? (
