@@ -7,7 +7,6 @@ import {
   Loader2,
   Plus,
   Send,
-  Trash2,
   XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -46,20 +45,20 @@ interface PurchaseOrdersPanelProps {
   onStockRefresh?: () => void;
 }
 
-interface DraftLine {
-  key: string;
-  stockItemId: string;
+type LineDraft = {
   qtyOrdered: string;
   unitCost: string;
-}
+};
 
-function emptyLine(): DraftLine {
-  return {
-    key: `new-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    stockItemId: "",
-    qtyOrdered: "",
-    unitCost: "",
-  };
+function emptyLineDrafts(items: StockItem[]): Record<string, LineDraft> {
+  const next: Record<string, LineDraft> = {};
+  for (const item of items) {
+    next[item.id] = {
+      qtyOrdered: "",
+      unitCost: item.costPerUnit ?? "",
+    };
+  }
+  return next;
 }
 
 function statusBadgeClass(status: PurchaseOrder["status"]): string {
@@ -115,7 +114,8 @@ export function PurchaseOrdersPanel({
   const [supplierId, setSupplierId] = useState("");
   const [expectedAt, setExpectedAt] = useState("");
   const [notes, setNotes] = useState("");
-  const [draftLines, setDraftLines] = useState<DraftLine[]>([emptyLine()]);
+  const [lineSearch, setLineSearch] = useState("");
+  const [lineDrafts, setLineDrafts] = useState<Record<string, LineDraft>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -123,9 +123,15 @@ export function PurchaseOrdersPanel({
 
   const activeStock = useMemo(
     () =>
-      stockItems
+      [...stockItems]
         .filter((item) => item.isActive)
-        .sort((a, b) => a.name.localeCompare(b.name)),
+        .sort((a, b) => {
+          const cat = (a.category ?? "").localeCompare(b.category ?? "");
+          if (cat !== 0) {
+            return cat;
+          }
+          return a.name.localeCompare(b.name);
+        }),
     [stockItems],
   );
 
@@ -170,6 +176,79 @@ export function PurchaseOrdersPanel({
     void load();
   }, [load]);
 
+  useEffect(() => {
+    setLineDrafts((current) => {
+      const next = { ...current };
+      for (const item of activeStock) {
+        if (!next[item.id]) {
+          next[item.id] = {
+            qtyOrdered: "",
+            unitCost: item.costPerUnit ?? "",
+          };
+        }
+      }
+      return next;
+    });
+  }, [activeStock]);
+
+  const filteredStock = useMemo(() => {
+    const query = lineSearch.trim().toLowerCase();
+    if (!query) {
+      return activeStock;
+    }
+    return activeStock.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query) ||
+        (item.category?.toLowerCase().includes(query) ?? false) ||
+        (item.sku?.toLowerCase().includes(query) ?? false),
+    );
+  }, [activeStock, lineSearch]);
+
+  const pendingLines = useMemo(() => {
+    return activeStock
+      .map((item) => {
+        const draft = lineDrafts[item.id];
+        const qty = Number(draft?.qtyOrdered ?? "");
+        if (!draft || !Number.isFinite(qty) || qty <= 0) {
+          return null;
+        }
+        return {
+          item,
+          qtyOrdered: qty,
+          unitCost: draft.unitCost,
+        };
+      })
+      .filter(Boolean) as Array<{
+      item: StockItem;
+      qtyOrdered: number;
+      unitCost: string;
+    }>;
+  }, [activeStock, lineDrafts]);
+
+  const draftTotal = useMemo(() => {
+    return pendingLines.reduce((sum, row) => {
+      const cost = Number(row.unitCost);
+      if (!Number.isFinite(cost) || cost < 0) {
+        return sum;
+      }
+      return sum + row.qtyOrdered * cost;
+    }, 0);
+  }, [pendingLines]);
+
+  const updateLineDraft = (
+    id: string,
+    patch: Partial<LineDraft>,
+  ): void => {
+    setLineDrafts((current) => ({
+      ...current,
+      [id]: {
+        qtyOrdered: current[id]?.qtyOrdered ?? "",
+        unitCost: current[id]?.unitCost ?? "",
+        ...patch,
+      },
+    }));
+  };
+
   const upsertOrder = (updated: PurchaseOrder): void => {
     setOrders((current) => {
       const exists = current.some((order) => order.id === updated.id);
@@ -187,7 +266,8 @@ export function PurchaseOrdersPanel({
     setSupplierId(activeSuppliers[0]?.id ?? "");
     setExpectedAt("");
     setNotes("");
-    setDraftLines([emptyLine()]);
+    setLineSearch("");
+    setLineDrafts(emptyLineDrafts(activeStock));
     setError(null);
     setCreateOpen(true);
   };
@@ -197,22 +277,26 @@ export function PurchaseOrdersPanel({
       setError("Select a supplier.");
       return;
     }
-    const lines = draftLines
-      .filter(
-        (line) =>
-          line.stockItemId &&
-          Number(line.qtyOrdered) > 0 &&
-          Number(line.unitCost) >= 0,
-      )
-      .map((line) => ({
-        stockItemId: line.stockItemId,
-        qtyOrdered: Number(line.qtyOrdered),
-        unitCost: Number(line.unitCost),
-      }));
-    if (lines.length === 0) {
-      setError("Add at least one stock line with quantity.");
+    if (pendingLines.length === 0) {
+      setError("Enter a quantity on at least one stock item.");
       return;
     }
+    for (const row of pendingLines) {
+      if (
+        row.unitCost.trim() === "" ||
+        Number.isNaN(Number(row.unitCost)) ||
+        Number(row.unitCost) < 0
+      ) {
+        setError(`Enter unit cost (AUD) for "${row.item.name}".`);
+        return;
+      }
+    }
+
+    const lines = pendingLines.map((row) => ({
+      stockItemId: row.item.id,
+      qtyOrdered: row.qtyOrdered,
+      unitCost: Number(row.unitCost),
+    }));
 
     setIsSaving(true);
     setError(null);
@@ -590,41 +674,46 @@ export function PurchaseOrdersPanel({
           <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
           <Dialog.Content
             className={cn(
-              "fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(96vw,36rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl p-6 shadow-2xl",
+              "fixed left-1/2 top-1/2 z-50 flex max-h-[92vh] w-[min(96vw,56rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl p-6 shadow-2xl",
               dashboardGlass,
             )}
           >
             <Dialog.Title
-              className={cn("font-display text-xl font-bold", primaryText)}
+              className={cn("shrink-0 font-display text-xl font-bold", primaryText)}
             >
               New purchase order
             </Dialog.Title>
-            <div className="mt-5 space-y-4">
-              <div>
-                <label
-                  className={cn("mb-1 block text-sm font-medium", primaryText)}
-                >
-                  Supplier
-                </label>
-                <select
-                  className={inventorySelectClassName}
-                  onChange={(event) => setSupplierId(event.target.value)}
-                  value={supplierId}
-                >
-                  <option value="">Select supplier…</option>
-                  {activeSuppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
-                {activeSuppliers.length === 0 ? (
-                  <p className={cn("mt-1 text-xs", secondaryText)}>
-                    Add an active supplier first.
-                  </p>
-                ) : null}
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+            <p className={cn("mt-1 shrink-0 text-sm", secondaryText)}>
+              Enter qty and unit cost on the items you want to order. Leave
+              blank to skip.
+            </p>
+
+            <div className="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label
+                    className={cn("mb-1 block text-sm font-medium", primaryText)}
+                  >
+                    Supplier
+                  </label>
+                  <select
+                    className={inventorySelectClassName}
+                    onChange={(event) => setSupplierId(event.target.value)}
+                    value={supplierId}
+                  >
+                    <option value="">Select supplier…</option>
+                    {activeSuppliers.map((supplier) => (
+                      <option key={supplier.id} value={supplier.id}>
+                        {supplier.name}
+                      </option>
+                    ))}
+                  </select>
+                  {activeSuppliers.length === 0 ? (
+                    <p className={cn("mt-1 text-xs", secondaryText)}>
+                      Add an active supplier first.
+                    </p>
+                  ) : null}
+                </div>
                 <div>
                   <label
                     className={cn("mb-1 block text-sm font-medium", primaryText)}
@@ -637,6 +726,9 @@ export function PurchaseOrdersPanel({
                     value={expectedAt}
                   />
                 </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-[1fr_minmax(12rem,16rem)]">
                 <div>
                   <label
                     className={cn("mb-1 block text-sm font-medium", primaryText)}
@@ -645,132 +737,139 @@ export function PurchaseOrdersPanel({
                   </label>
                   <Input
                     onChange={(event) => setNotes(event.target.value)}
+                    placeholder="Optional"
                     value={notes}
+                  />
+                </div>
+                <div>
+                  <label
+                    className={cn("mb-1 block text-sm font-medium", primaryText)}
+                  >
+                    Search stock
+                  </label>
+                  <Input
+                    onChange={(event) => setLineSearch(event.target.value)}
+                    placeholder="Name, category, SKU…"
+                    value={lineSearch}
                   />
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <p className={cn("text-sm font-medium", primaryText)}>Lines</p>
-                {draftLines.map((line, index) => {
-                  const stock = activeStock.find(
-                    (item) => item.id === line.stockItemId,
-                  );
-                  return (
-                    <div
-                      className="flex flex-wrap items-end gap-2"
-                      key={line.key}
+              <div className="overflow-x-auto rounded-2xl border border-zinc-200/60 dark:border-white/10">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="border-b border-zinc-200/60 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-900/50">
+                    <tr
+                      className={cn(
+                        "text-xs uppercase tracking-wide",
+                        secondaryText,
+                      )}
                     >
-                      <div className="min-w-[10rem] flex-1">
-                        <label
-                          className={cn("mb-1 block text-xs", secondaryText)}
+                      <th className="px-4 py-3 font-semibold">Stock item</th>
+                      <th className="px-4 py-3 font-semibold">Unit</th>
+                      <th className="px-4 py-3 font-semibold">On hand</th>
+                      <th className="px-4 py-3 font-semibold">Order qty</th>
+                      <th className="px-4 py-3 font-semibold">Unit cost</th>
+                      <th className="px-4 py-3 font-semibold">Line total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredStock.length === 0 ? (
+                      <tr>
+                        <td
+                          className={cn("px-4 py-10 text-center", secondaryText)}
+                          colSpan={6}
                         >
-                          Stock item
-                        </label>
-                        <select
-                          className={inventorySelectClassName}
-                          onChange={(event) =>
-                            setDraftLines((current) =>
-                              current.map((entry, i) =>
-                                i === index
-                                  ? {
-                                      ...entry,
-                                      stockItemId: event.target.value,
-                                      unitCost:
-                                        entry.unitCost ||
-                                        activeStock.find(
-                                          (item) =>
-                                            item.id === event.target.value,
-                                        )?.costPerUnit ||
-                                        "",
-                                    }
-                                  : entry,
-                              ),
-                            )
-                          }
-                          value={line.stockItemId}
-                        >
-                          <option value="">Select…</option>
-                          {activeStock.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name} ({STOCK_UNIT_LABELS[item.unit]})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="w-24">
-                        <label
-                          className={cn("mb-1 block text-xs", secondaryText)}
-                        >
-                          Qty
-                          {stock
-                            ? ` (${STOCK_UNIT_LABELS[stock.unit]})`
-                            : ""}
-                        </label>
-                        <Input
-                          inputMode="decimal"
-                          onChange={(event) =>
-                            setDraftLines((current) =>
-                              current.map((entry, i) =>
-                                i === index
-                                  ? {
-                                      ...entry,
-                                      qtyOrdered: event.target.value,
-                                    }
-                                  : entry,
-                              ),
-                            )
-                          }
-                          value={line.qtyOrdered}
-                        />
-                      </div>
-                      <div className="w-28">
-                        <label
-                          className={cn("mb-1 block text-xs", secondaryText)}
-                        >
-                          Unit cost
-                        </label>
-                        <Input
-                          inputMode="decimal"
-                          onChange={(event) =>
-                            setDraftLines((current) =>
-                              current.map((entry, i) =>
-                                i === index
-                                  ? { ...entry, unitCost: event.target.value }
-                                  : entry,
-                              ),
-                            )
-                          }
-                          value={line.unitCost}
-                        />
-                      </div>
-                      <Button
-                        onClick={() =>
-                          setDraftLines((current) =>
-                            current.length <= 1
-                              ? [emptyLine()]
-                              : current.filter((_, i) => i !== index),
-                          )
-                        }
-                        size="icon"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  );
-                })}
-                <Button
-                  onClick={() =>
-                    setDraftLines((current) => [...current, emptyLine()])
-                  }
-                  type="button"
-                  variant="outline"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add line
-                </Button>
+                          No stock items yet. Add items from Receive or Stock
+                          list first.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredStock.map((item) => {
+                        const draft = lineDrafts[item.id] ?? {
+                          qtyOrdered: "",
+                          unitCost: item.costPerUnit ?? "",
+                        };
+                        const qty = Number(draft.qtyOrdered);
+                        const cost = Number(draft.unitCost);
+                        const hasQty = Number.isFinite(qty) && qty > 0;
+                        const lineTotal =
+                          hasQty && Number.isFinite(cost) && cost >= 0
+                            ? qty * cost
+                            : null;
+
+                        return (
+                          <tr
+                            className="border-b border-zinc-100 dark:border-white/5"
+                            key={item.id}
+                          >
+                            <td
+                              className={cn("px-4 py-3 font-medium", primaryText)}
+                            >
+                              {item.name}
+                              {item.category ? (
+                                <span
+                                  className={cn(
+                                    "mt-0.5 block text-xs font-normal",
+                                    secondaryText,
+                                  )}
+                                >
+                                  {item.category}
+                                </span>
+                              ) : null}
+                            </td>
+                            <td className={cn("px-4 py-3", secondaryText)}>
+                              {STOCK_UNIT_LABELS[item.unit]}
+                            </td>
+                            <td
+                              className={cn(
+                                "px-4 py-3 tabular-nums",
+                                primaryText,
+                              )}
+                            >
+                              {formatStockQty(item.qtyOnHand, item.unit)}
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input
+                                className="h-10 w-28"
+                                inputMode="decimal"
+                                onChange={(event) =>
+                                  updateLineDraft(item.id, {
+                                    qtyOrdered: event.target.value,
+                                  })
+                                }
+                                placeholder="0"
+                                value={draft.qtyOrdered}
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input
+                                className="h-10 w-28"
+                                inputMode="decimal"
+                                onChange={(event) =>
+                                  updateLineDraft(item.id, {
+                                    unitCost: event.target.value,
+                                  })
+                                }
+                                placeholder="0.00"
+                                value={draft.unitCost}
+                              />
+                            </td>
+                            <td
+                              className={cn(
+                                "px-4 py-3 tabular-nums",
+                                secondaryText,
+                              )}
+                            >
+                              {lineTotal === null
+                                ? "—"
+                                : formatMoney(String(lineTotal))}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
 
               {error ? (
@@ -778,8 +877,15 @@ export function PurchaseOrdersPanel({
                   {error}
                 </p>
               ) : null}
+            </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+            <div className="mt-4 flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-zinc-200/60 pt-4 dark:border-white/10">
+              <p className={cn("text-sm", secondaryText)}>
+                {pendingLines.length > 0
+                  ? `${pendingLines.length} line${pendingLines.length === 1 ? "" : "s"} · ${formatMoney(String(draftTotal))}`
+                  : "No lines selected yet"}
+              </p>
+              <div className="flex gap-2">
                 <Button
                   onClick={() => setCreateOpen(false)}
                   type="button"
@@ -788,7 +894,11 @@ export function PurchaseOrdersPanel({
                   Cancel
                 </Button>
                 <Button
-                  disabled={isSaving || activeSuppliers.length === 0}
+                  disabled={
+                    isSaving ||
+                    activeSuppliers.length === 0 ||
+                    pendingLines.length === 0
+                  }
                   onClick={() => void handleCreate()}
                   type="button"
                 >
@@ -796,6 +906,7 @@ export function PurchaseOrdersPanel({
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
                   Create draft
+                  {pendingLines.length > 0 ? ` (${pendingLines.length})` : ""}
                 </Button>
               </div>
             </div>
