@@ -29,6 +29,7 @@ import { PeopleView } from "@/components/admin/views/people-view";
 import { HqDealsView } from "@/components/admin/views/hq-deals-view";
 import { StoreHealthView } from "@/components/admin/views/store-health-view";
 import { ActivityView } from "@/components/admin/views/activity-view";
+import { InventoryView } from "@/components/admin/views/inventory-view";
 import {
   fetchAdminCrusts,
   fetchAdminDeals,
@@ -393,6 +394,9 @@ export function AdminDashboardContent(): React.ReactElement {
                     onDealsChange={setDeals}
                     token={token!}
                   />
+                ) : null}
+                {activeView === "inventory" ? (
+                  <InventoryView brandSlug={brandSlug!} token={token!} />
                 ) : null}
                 {activeView === "team" ? (
                   <TeamView brandSlug={brandSlug!} token={token!} />

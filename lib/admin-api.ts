@@ -1033,3 +1033,101 @@ export function updateAdminLocation(
   });
 }
 
+/* ── Inventory ─────────────────────────────────────────────────── */
+
+export function fetchInventorySummary(
+  token: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").InventorySummary> {
+  return apiRequest("/inventory/summary", {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function fetchStockItems(
+  token: string,
+  brandSlug?: string,
+  options?: { lowStock?: boolean; includeInactive?: boolean },
+): Promise<import("@/types/inventory").StockItem[]> {
+  const params = new URLSearchParams();
+  if (options?.lowStock) {
+    params.set("lowStock", "true");
+  }
+  if (options?.includeInactive) {
+    params.set("includeInactive", "true");
+  }
+  const query = params.toString();
+  return apiRequest(`/inventory/items${query ? `?${query}` : ""}`, {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function createStockItem(
+  token: string,
+  payload: import("@/types/inventory").CreateStockItemPayload,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").StockItem> {
+  return apiRequest("/inventory/items", {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateStockItem(
+  token: string,
+  id: string,
+  payload: import("@/types/inventory").UpdateStockItemPayload,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").StockItem> {
+  return apiRequest(`/inventory/items/${id}`, {
+    method: "PATCH",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deactivateStockItem(
+  token: string,
+  id: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").StockItem> {
+  return apiRequest(`/inventory/items/${id}`, {
+    method: "DELETE",
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function fetchStockMovements(
+  token: string,
+  itemId: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").StockMovement[]> {
+  return apiRequest(`/inventory/items/${itemId}/movements`, {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function createStockMovement(
+  token: string,
+  itemId: string,
+  payload: import("@/types/inventory").CreateStockMovementPayload,
+  brandSlug?: string,
+): Promise<{
+  item: import("@/types/inventory").StockItem;
+  movement: import("@/types/inventory").StockMovement;
+}> {
+  return apiRequest(`/inventory/items/${itemId}/movements`, {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
