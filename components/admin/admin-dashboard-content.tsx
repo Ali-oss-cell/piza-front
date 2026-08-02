@@ -7,7 +7,6 @@ import { useCallback, useEffect, useState } from "react";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { BrandPicker } from "@/components/admin/brand-picker";
-import { InventoryShell } from "@/components/admin/inventory/inventory-shell";
 import { MenuView } from "@/components/admin/views/menu-view";
 import { CategoriesView } from "@/components/admin/views/categories-view";
 import { CrustsView } from "@/components/admin/views/crusts-view";
@@ -71,7 +70,6 @@ export function AdminDashboardContent(): React.ReactElement {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showStoreGallery, setShowStoreGallery] = useState(true);
-  const [showInventory, setShowInventory] = useState(false);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [menuItems, setMenuItems] = useState<AdminMenuItem[]>([]);
   const [toppingCatalog, setToppingCatalog] = useState<ToppingCategoryGroup[]>([]);
@@ -104,14 +102,7 @@ export function AdminDashboardContent(): React.ReactElement {
 
   const goToAllStores = useCallback((): void => {
     clearBrand();
-    setShowInventory(false);
     setShowStoreGallery(true);
-  }, [clearBrand]);
-
-  const openInventory = useCallback((): void => {
-    clearBrand();
-    setShowInventory(true);
-    setShowStoreGallery(false);
   }, [clearBrand]);
 
   const loadData = useCallback(async (): Promise<void> => {
@@ -225,24 +216,10 @@ export function AdminDashboardContent(): React.ReactElement {
     );
   }
 
-  if (showInventory) {
-    return (
-      <InventoryShell
-        brands={brands}
-        onBackToStores={goToAllStores}
-        onClearBrand={clearBrand}
-        onSelectBrand={selectBrand}
-        selectedBrand={selectedBrand}
-        token={token!}
-      />
-    );
-  }
-
   if (!selectedBrand && (!platformAdmin || showStoreGallery)) {
     return (
       <BrandPicker
         onBackToHq={platformAdmin ? () => setShowStoreGallery(false) : undefined}
-        onOpenInventory={openInventory}
       />
     );
   }

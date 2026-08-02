@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  createStockItem,
+  bulkCreateStockItems,
   deactivateStockItem,
   fetchCrustRecipes,
   fetchInventoryRecipes,
@@ -398,19 +398,37 @@ export function StockListPanel({
 
   const createMany = async (
     payloads: CreateStockItemPayload[],
-  ): Promise<number> => {
-    let nextItems = [...items];
+  ): Promise<{ added: number; skipped: number }> => {
+    const uniquePayloads: CreateStockItemPayload[] = [];
+    const seen = new Set<string>();
     for (const payload of payloads) {
-      if (alreadyInStock(nextItems, payload.name, payload.sku ?? "")) {
+      const nameKey = payload.name.trim().toLowerCase();
+      if (!nameKey || seen.has(nameKey)) {
         continue;
       }
-      const created = await createStockItem(token, payload, brandSlug);
-      nextItems = [...nextItems, created];
+      if (alreadyInStock(items, payload.name, payload.sku ?? "")) {
+        continue;
+      }
+      seen.add(nameKey);
+      uniquePayloads.push(payload);
     }
-    onItemsChange(nextItems);
+
+    if (uniquePayloads.length === 0) {
+      return { added: 0, skipped: payloads.length };
+    }
+
+    const result = await bulkCreateStockItems(
+      token,
+      uniquePayloads,
+      brandSlug,
+    );
+    onItemsChange([...items, ...result.created]);
     const nextSummary = await fetchInventorySummary(token, brandSlug);
     onSummaryChange(nextSummary);
-    return nextItems.length - items.length;
+    return {
+      added: result.created.length,
+      skipped: result.skipped.length + (payloads.length - uniquePayloads.length),
+    };
   };
 
   const handleSaveCreate = async (): Promise<void> => {
@@ -428,10 +446,12 @@ export function StockListPanel({
     setSuccess(null);
 
     try {
-      const added = await createMany(payloads);
+      const { added, skipped } = await createMany(payloads);
       setCreateRows(makeCreateRows(DEFAULT_CREATE_ROWS));
       setSuccess(
-        `Added ${added} item${added === 1 ? "" : "s"} (qty 0 — receive later).`,
+        skipped > 0
+          ? `Added ${added} item${added === 1 ? "" : "s"} (skipped ${skipped}). Qty 0 — receive later.`
+          : `Added ${added} item${added === 1 ? "" : "s"} (qty 0 — receive later).`,
       );
     } catch (saveError) {
       setError(
@@ -467,11 +487,12 @@ export function StockListPanel({
     setSuccess(null);
 
     try {
-      const added = await createMany(payloads);
+      const { added, skipped } = await createMany(payloads);
       setSuccess(
-        `Imported ${added} item${added === 1 ? "" : "s"} from the store menu (qty 0, no cost).`,
+        skipped > 0
+          ? `Imported ${added} item${added === 1 ? "" : "s"} (skipped ${skipped}). Qty 0, no cost.`
+          : `Imported ${added} item${added === 1 ? "" : "s"} from the store menu (qty 0, no cost).`,
       );
-      // Remaining rows update via the existingNameKeys effect — no fragile reload.
     } catch (saveError) {
       setError(
         saveError instanceof Error

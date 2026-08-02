@@ -1077,6 +1077,22 @@ export function createStockItem(
   });
 }
 
+export function bulkCreateStockItems(
+  token: string,
+  items: import("@/types/inventory").CreateStockItemPayload[],
+  brandSlug?: string,
+): Promise<{
+  created: import("@/types/inventory").StockItem[];
+  skipped: Array<{ name: string; reason: string }>;
+}> {
+  return apiRequest("/inventory/items/bulk", {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify({ items }),
+  });
+}
+
 export function updateStockItem(
   token: string,
   id: string,
