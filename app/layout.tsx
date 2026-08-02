@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { ChunkLoadRecovery } from "@/components/chunk-load-recovery";
 import { AppShell } from "@/components/layout/app-shell";
 import { CartProvider } from "@/lib/cart-context";
 import { montserrat } from "@/lib/fonts";
@@ -79,6 +80,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <CartProvider deliveryFee={deliveryFee}>
+              <ChunkLoadRecovery />
               <AppShell initialBranding={initialBranding}>{children}</AppShell>
             </CartProvider>
           </AuthProvider>
