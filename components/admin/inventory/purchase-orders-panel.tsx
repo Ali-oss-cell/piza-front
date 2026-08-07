@@ -119,6 +119,9 @@ export function PurchaseOrdersPanel({
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [receiveQtyDrafts, setReceiveQtyDrafts] = useState<
+    Record<string, string>
+  >({});
 
   const activeStock = useMemo(
     () =>
@@ -143,6 +146,24 @@ export function PurchaseOrdersPanel({
   );
 
   const selected = orders.find((order) => order.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (!selected) {
+      setReceiveQtyDrafts({});
+      return;
+    }
+    if (selected.status !== "SENT" && selected.status !== "PARTIAL") {
+      setReceiveQtyDrafts({});
+      return;
+    }
+    const next: Record<string, string> = {};
+    for (const line of selected.lines) {
+      const remaining = Number(line.qtyOrdered) - Number(line.qtyReceived);
+      next[line.id] =
+        Number.isFinite(remaining) && remaining > 0 ? String(remaining) : "";
+    }
+    setReceiveQtyDrafts(next);
+  }, [selected]);
 
   const load = useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -715,39 +736,72 @@ export function PurchaseOrdersPanel({
                       <th className="pb-2 pr-3 font-medium">Item</th>
                       <th className="pb-2 pr-3 font-medium">Ordered</th>
                       <th className="pb-2 pr-3 font-medium">Received</th>
+                      {selected.status === "SENT" ||
+                      selected.status === "PARTIAL" ? (
+                        <th className="pb-2 pr-3 font-medium">Receive now</th>
+                      ) : null}
                       <th className="pb-2 pr-3 font-medium">Unit cost</th>
                       <th className="pb-2 font-medium">Line</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {selected.lines.map((line) => (
-                      <tr
-                        className="border-b border-zinc-100 dark:border-white/5"
-                        key={line.id}
-                      >
-                        <td className={cn("py-2 pr-3", primaryText)}>
-                          {line.stockItemName}
-                        </td>
-                        <td className={cn("py-2 pr-3", secondaryText)}>
-                          {formatStockQty(
-                            line.qtyOrdered,
-                            line.stockItemUnit as StockUnit,
-                          )}
-                        </td>
-                        <td className={cn("py-2 pr-3", secondaryText)}>
-                          {formatStockQty(
-                            line.qtyReceived,
-                            line.stockItemUnit as StockUnit,
-                          )}
-                        </td>
-                        <td className={cn("py-2 pr-3", secondaryText)}>
-                          {formatMoney(line.unitCost)}
-                        </td>
-                        <td className={cn("py-2", primaryText)}>
-                          {formatMoney(line.lineTotal)}
-                        </td>
-                      </tr>
-                    ))}
+                    {selected.lines.map((line) => {
+                      const remaining =
+                        Number(line.qtyOrdered) - Number(line.qtyReceived);
+                      const canReceive =
+                        (selected.status === "SENT" ||
+                          selected.status === "PARTIAL") &&
+                        Number.isFinite(remaining) &&
+                        remaining > 0;
+                      return (
+                        <tr
+                          className="border-b border-zinc-100 dark:border-white/5"
+                          key={line.id}
+                        >
+                          <td className={cn("py-2 pr-3", primaryText)}>
+                            {line.stockItemName}
+                          </td>
+                          <td className={cn("py-2 pr-3", secondaryText)}>
+                            {formatStockQty(
+                              line.qtyOrdered,
+                              line.stockItemUnit as StockUnit,
+                            )}
+                          </td>
+                          <td className={cn("py-2 pr-3", secondaryText)}>
+                            {formatStockQty(
+                              line.qtyReceived,
+                              line.stockItemUnit as StockUnit,
+                            )}
+                          </td>
+                          {selected.status === "SENT" ||
+                          selected.status === "PARTIAL" ? (
+                            <td className="py-2 pr-3">
+                              {canReceive ? (
+                                <Input
+                                  className="h-9 w-24"
+                                  inputMode="decimal"
+                                  onChange={(event) =>
+                                    setReceiveQtyDrafts((current) => ({
+                                      ...current,
+                                      [line.id]: event.target.value,
+                                    }))
+                                  }
+                                  value={receiveQtyDrafts[line.id] ?? ""}
+                                />
+                              ) : (
+                                <span className={secondaryText}>—</span>
+                              )}
+                            </td>
+                          ) : null}
+                          <td className={cn("py-2 pr-3", secondaryText)}>
+                            {formatMoney(line.unitCost)}
+                          </td>
+                          <td className={cn("py-2", primaryText)}>
+                            {formatMoney(line.lineTotal)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -760,14 +814,29 @@ export function PurchaseOrdersPanel({
                 {selected.status === "DRAFT" ? (
                   <Button
                     disabled={busyAction === `send-${selected.id}`}
-                    onClick={() =>
+                    onClick={() => {
+                      const supplier = suppliers.find(
+                        (entry) => entry.id === selected.supplierId,
+                      );
+                      if (!supplier?.email?.trim()) {
+                        setError(
+                          "Add an email on this supplier (Suppliers tab) before sending.",
+                        );
+                        return;
+                      }
                       void runAction(
                         `send-${selected.id}`,
-                        () =>
-                          sendPurchaseOrder(token, selected.id, brandSlug),
-                        `PO #${selected.number} marked as sent.`,
-                      )
-                    }
+                        async () => {
+                          const updated = await sendPurchaseOrder(
+                            token,
+                            selected.id,
+                            brandSlug,
+                          );
+                          return updated;
+                        },
+                        `PO #${selected.number} emailed to ${supplier.email.trim()}.`,
+                      );
+                    }}
                     type="button"
                   >
                     {busyAction === `send-${selected.id}` ? (
@@ -775,7 +844,7 @@ export function PurchaseOrdersPanel({
                     ) : (
                       <Send className="mr-2 h-4 w-4" />
                     )}
-                    Send
+                    Email to supplier
                   </Button>
                 ) : null}
 
@@ -795,35 +864,78 @@ export function PurchaseOrdersPanel({
 
                 {selected.status === "SENT" ||
                 selected.status === "PARTIAL" ? (
-                  <Button
-                    disabled={busyAction === `receive-${selected.id}`}
-                    onClick={() => {
-                      if (
-                        !window.confirm(
-                          `Receive all remaining quantities on PO #${selected.number}?`,
-                        )
-                      ) {
-                        return;
-                      }
-                      void runAction(
-                        `receive-${selected.id}`,
-                        () =>
-                          receivePurchaseOrder(
-                            token,
-                            selected.id,
-                            {},
-                            brandSlug,
-                          ),
-                        `Received remaining stock for PO #${selected.number}.`,
-                      );
-                    }}
-                    type="button"
-                  >
-                    {busyAction === `receive-${selected.id}` ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Receive remaining
-                  </Button>
+                  <>
+                    <Button
+                      disabled={busyAction === `receive-${selected.id}`}
+                      onClick={() => {
+                        const lines = selected.lines
+                          .map((line) => {
+                            const qty = Number(receiveQtyDrafts[line.id] ?? "");
+                            if (!Number.isFinite(qty) || qty <= 0) {
+                              return null;
+                            }
+                            return { lineId: line.id, qty };
+                          })
+                          .filter(Boolean) as Array<{
+                          lineId: string;
+                          qty: number;
+                        }>;
+                        if (lines.length === 0) {
+                          setError(
+                            "Enter a receive quantity on at least one line.",
+                          );
+                          return;
+                        }
+                        void runAction(
+                          `receive-${selected.id}`,
+                          () =>
+                            receivePurchaseOrder(
+                              token,
+                              selected.id,
+                              { lines },
+                              brandSlug,
+                            ),
+                          `Received stock for PO #${selected.number}.`,
+                        );
+                      }}
+                      type="button"
+                    >
+                      {busyAction === `receive-${selected.id}` ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : null}
+                      Receive entered qty
+                    </Button>
+                    <Button
+                      disabled={busyAction === `receive-all-${selected.id}`}
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            `Receive all remaining quantities on PO #${selected.number}?`,
+                          )
+                        ) {
+                          return;
+                        }
+                        void runAction(
+                          `receive-all-${selected.id}`,
+                          () =>
+                            receivePurchaseOrder(
+                              token,
+                              selected.id,
+                              {},
+                              brandSlug,
+                            ),
+                          `Received remaining stock for PO #${selected.number}.`,
+                        );
+                      }}
+                      type="button"
+                      variant="outline"
+                    >
+                      {busyAction === `receive-all-${selected.id}` ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : null}
+                      Receive remaining
+                    </Button>
+                  </>
                 ) : null}
 
                 {selected.status === "DRAFT" ||

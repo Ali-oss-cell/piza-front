@@ -1045,6 +1045,26 @@ export function fetchInventorySummary(
   });
 }
 
+export function sendLowStockAlerts(
+  token: string,
+  brandSlug?: string,
+): Promise<{
+  sent: number;
+  skipped: number;
+  details: Array<{
+    brand: string;
+    to: string | null;
+    count: number;
+    status: string;
+  }>;
+}> {
+  return apiRequest("/inventory/alerts/low-stock", {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
 export function fetchInventoryStats(
   token: string,
   brandSlug?: string,
@@ -1364,7 +1384,9 @@ export function sendPurchaseOrder(
   token: string,
   id: string,
   brandSlug?: string,
-): Promise<import("@/types/inventory").PurchaseOrder> {
+): Promise<
+  import("@/types/inventory").PurchaseOrder & { emailedTo?: string }
+> {
   return apiRequest(`/inventory/purchase-orders/${id}/send`, {
     method: "POST",
     token,

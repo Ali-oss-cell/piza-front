@@ -267,7 +267,12 @@ export function SuppliersPanel({
                 <tr className={cn("text-xs uppercase tracking-wide", secondaryText)}>
                   <th className="px-2 py-2 font-semibold">Name</th>
                   <th className="px-2 py-2 font-semibold">Phone</th>
-                  <th className="px-2 py-2 font-semibold">Email</th>
+                  <th className="px-2 py-2 font-semibold">
+                    Email
+                    <span className="mt-0.5 block normal-case tracking-normal font-normal opacity-70">
+                      Optional — needed to email POs
+                    </span>
+                  </th>
                   <th className="px-2 py-2 font-semibold">ABN</th>
                   <th className="px-2 py-2 font-semibold">Address</th>
                   <th className="px-2 py-2 font-semibold">Notes</th>
@@ -310,6 +315,7 @@ export function SuppliersPanel({
                           email: event.target.value,
                         }))
                       }
+                      placeholder="orders@supplier.com"
                       type="email"
                       value={form.email}
                     />

@@ -11,6 +11,7 @@ import {
   fetchInventoryRecipes,
   fetchInventorySummary,
   fetchToppingRecipes,
+  sendLowStockAlerts,
   updateStockItem,
 } from "@/lib/admin-api";
 import { primaryText, secondaryText } from "@/lib/theme-classes";
@@ -185,6 +186,7 @@ export function StockListPanel({
   const [error, setError] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isSendingAlert, setIsSendingAlert] = useState(false);
 
   const existingNameKeys = useMemo(
     () => new Set(items.map((item) => item.name.trim().toLowerCase())),
@@ -597,7 +599,63 @@ export function StockListPanel({
               {summary.activeItems} active · {summary.lowStockCount} low stock
             </p>
           ) : null}
+          {lowStockOnly ? (
+            <p className={cn("mt-1 text-xs", secondaryText)}>
+              Daily email at 8:00 Melbourne time goes to the store contact email
+              in Settings. You can also send now.
+            </p>
+          ) : null}
         </div>
+        {lowStockOnly ? (
+          <Button
+            disabled={isSendingAlert}
+            onClick={() => {
+              void (async () => {
+                setIsSendingAlert(true);
+                setError(null);
+                setSuccess(null);
+                try {
+                  const result = await sendLowStockAlerts(token, brandSlug);
+                  const detail = result.details[0];
+                  if (detail?.status === "sent") {
+                    setSuccess(
+                      `Low-stock alert emailed to ${detail.to} (${detail.count} items).`,
+                    );
+                  } else if (detail?.status === "no_low_stock") {
+                    setSuccess("Nothing to alert — no low-stock items.");
+                  } else if (detail?.status === "missing_contact_email") {
+                    setError(
+                      "Set the store contact email in Settings before sending alerts.",
+                    );
+                  } else if (detail?.status === "mail_not_configured") {
+                    setError(
+                      "Email is not configured on the server (MAIL_FROM + Resend or SMTP).",
+                    );
+                  } else {
+                    setSuccess(
+                      `Alert run finished (${result.sent} sent, ${result.skipped} skipped).`,
+                    );
+                  }
+                } catch (alertError) {
+                  setError(
+                    alertError instanceof Error
+                      ? alertError.message
+                      : "Unable to send low-stock alert.",
+                  );
+                } finally {
+                  setIsSendingAlert(false);
+                }
+              })();
+            }}
+            type="button"
+            variant="outline"
+          >
+            {isSendingAlert ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            Email alert now
+          </Button>
+        ) : null}
       </div>
 
       {!lowStockOnly ? (
