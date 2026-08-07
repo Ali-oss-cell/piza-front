@@ -4,7 +4,14 @@ import { ChunkLoadRecovery } from "@/components/chunk-load-recovery";
 import { AppShell } from "@/components/layout/app-shell";
 import { CartProvider } from "@/lib/cart-context";
 import { montserrat } from "@/lib/fonts";
-import { fetchStoreSettings } from "@/lib/menu-api";
+import {
+  fetchStoreSettings,
+  resolveStoreByHost,
+} from "@/lib/menu-api";
+import {
+  getRequestHost,
+  isPrimaryWebHost,
+} from "@/lib/request-host";
 import { AuthProvider } from "@/providers/auth-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { DEFAULT_BRAND_SLUG } from "@/types/brand";
@@ -15,7 +22,7 @@ const DEFAULT_DELIVERY_FEE = 5;
 const bodyFont = montserrat;
 
 export const metadata: Metadata = {
-  title: "Leovorno | Pizza & Pasta Refined",
+  title: "Marina Pizzas",
   description: "Premium pizza and pasta ordering experience",
 };
 
@@ -23,12 +30,12 @@ export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>): Promise<React.ReactElement> {
   let deliveryFee = DEFAULT_DELIVERY_FEE;
-  // Bundled fallbacks so Leovorno shows logos on marinapizzas.com.au before admin upload.
   const defaultLogoUrl = "/leovorno-logo-light.png";
   const defaultLogoDarkUrl = "/leovorno-logo-dark.png";
 
+  let brandSlug = DEFAULT_BRAND_SLUG;
   let initialBranding = {
     brandSlug: DEFAULT_BRAND_SLUG,
     brandName: "Leovorno",
@@ -42,19 +49,42 @@ export default async function RootLayout({
   };
 
   try {
-    // marinapizzas.com.au hosts Leovorno for now
-    const settings = await fetchStoreSettings(DEFAULT_BRAND_SLUG);
+    const host = await getRequestHost();
+    if (host && !isPrimaryWebHost(host)) {
+      try {
+        const store = await resolveStoreByHost(host);
+        brandSlug = store.slug;
+        initialBranding = {
+          brandSlug: store.slug,
+          brandName: store.name,
+          logoUrl: store.logoUrl ?? null,
+          logoDarkUrl: store.logoDarkUrl ?? null,
+          tagline: store.tagline ?? null,
+          address: null,
+          openingHours: null,
+          primaryColor: store.primaryColor ?? "#d81b60",
+          secondaryColor: store.secondaryColor ?? "#111827",
+        };
+      } catch {
+        // Unknown custom host — fall through to primary brand settings.
+      }
+    }
+
+    const settings = await fetchStoreSettings(brandSlug);
     deliveryFee = Number(settings.deliveryFee) || DEFAULT_DELIVERY_FEE;
     initialBranding = {
-      brandSlug: DEFAULT_BRAND_SLUG,
-      brandName: settings.storeName || "Leovorno",
-      logoUrl: settings.logoUrl || defaultLogoUrl,
-      logoDarkUrl: settings.logoDarkUrl || defaultLogoDarkUrl,
-      tagline: settings.tagline ?? null,
+      brandSlug,
+      brandName: settings.storeName || initialBranding.brandName,
+      logoUrl: settings.logoUrl || initialBranding.logoUrl || defaultLogoUrl,
+      logoDarkUrl:
+        settings.logoDarkUrl ||
+        initialBranding.logoDarkUrl ||
+        defaultLogoDarkUrl,
+      tagline: settings.tagline ?? initialBranding.tagline,
       address: settings.address ?? null,
       openingHours: settings.openingHours ?? null,
-      primaryColor: settings.primaryColor ?? "#d81b60",
-      secondaryColor: settings.secondaryColor ?? "#111827",
+      primaryColor: settings.primaryColor ?? initialBranding.primaryColor,
+      secondaryColor: settings.secondaryColor ?? initialBranding.secondaryColor,
     };
   } catch {
     // keep defaults with bundled logos

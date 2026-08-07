@@ -5,7 +5,7 @@ import { Globe, Loader2, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fetchHqDomains, createHqDomain, updateHqDomain } from "@/lib/admin-api";
+import { fetchHqDomains, createHqDomain, updateHqDomain, syncHqTraefikDomains } from "@/lib/admin-api";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import type { HqDomain } from "@/types/hq";
 import type { Brand } from "@/types/brand";
@@ -40,6 +40,8 @@ export function DomainsView({ token, brands }: DomainsViewProps): React.ReactEle
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<DomainFormState>(() => emptyForm(brands));
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const loadDomains = async (): Promise<void> => {
     setIsLoading(true);
@@ -100,6 +102,28 @@ export function DomainsView({ token, brands }: DomainsViewProps): React.ReactEle
     }
   };
 
+  const handleSyncTraefik = async (): Promise<void> => {
+    setIsSyncing(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const result = await syncHqTraefikDomains(token);
+      setSuccess(
+        result.hosts.length === 0
+          ? "Traefik synced — no custom hosts yet."
+          : `Traefik synced ${result.hosts.length} host(s): ${result.hosts.join(", ")}`,
+      );
+    } catch (syncError) {
+      setError(
+        syncError instanceof Error
+          ? syncError.message
+          : "Unable to sync Traefik domains.",
+      );
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
@@ -114,14 +138,33 @@ export function DomainsView({ token, brands }: DomainsViewProps): React.ReactEle
         <div>
           <h2 className={cn("font-display text-2xl font-bold", primaryText)}>Domains</h2>
           <p className={cn("mt-1 text-sm", secondaryText)}>
-            Path and host routing for storefronts
+            Custom domains for each storefront (one shared website container).
+            Point each domain’s A/AAAA record to this server, then Sync Traefik.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Domain
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            disabled={isSyncing}
+            onClick={() => void handleSyncTraefik()}
+            type="button"
+            variant="outline"
+          >
+            {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Sync Traefik
+          </Button>
+          <Button onClick={() => setIsModalOpen(true)} type="button">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Domain
+          </Button>
+        </div>
       </div>
+
+      {error ? <p className="text-sm text-red-500">{error}</p> : null}
+      {success ? (
+        <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+          {success}
+        </p>
+      ) : null}
 
       <div className="space-y-3">
         {domains.length === 0 ? (
@@ -223,14 +266,20 @@ export function DomainsView({ token, brands }: DomainsViewProps): React.ReactEle
                 />
               </div>
               <div>
-                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>Host</label>
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                  Custom domain (host)
+                </label>
                 <Input
                   onChange={(event) =>
                     setForm((current) => ({ ...current, host: event.target.value }))
                   }
-                  placeholder="e.g. example.com (optional)"
+                  placeholder="e.g. bunnyboys.com.au"
                   value={form.host}
                 />
+                <p className={cn("mt-1 text-xs", secondaryText)}>
+                  At your registrar, set A/AAAA for this domain to the Droplet IP,
+                  then use Sync Traefik (also runs automatically on save).
+                </p>
               </div>
               <label className="flex items-center gap-2 text-sm">
                 <input

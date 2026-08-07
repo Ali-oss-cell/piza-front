@@ -1,27 +1,46 @@
 import { SiteBrandInit } from "@/components/layout/site-brand-init";
-import { fetchMenuCategories, fetchMenuItems, fetchStoreSettings } from "@/lib/menu-api";
+import { fetchMenuCategories, fetchMenuItems, fetchStoreSettings, resolveStoreByHost } from "@/lib/menu-api";
 import { mapApiMenuCategories, mapApiMenuItem } from "@/lib/menu-mappers";
 import { HomePage } from "@/components/features/home-page";
+import {
+  getRequestHost,
+  isPrimaryWebHost,
+} from "@/lib/request-host";
 import { DEFAULT_BRAND_SLUG } from "@/types/brand";
 
 export const dynamic = "force-dynamic";
 
+async function resolveHomeBrandSlug(): Promise<string> {
+  const host = await getRequestHost();
+  if (!host || isPrimaryWebHost(host)) {
+    return DEFAULT_BRAND_SLUG;
+  }
+  try {
+    const store = await resolveStoreByHost(host);
+    return store.slug;
+  } catch {
+    return DEFAULT_BRAND_SLUG;
+  }
+}
+
 export default async function Home(): Promise<React.ReactElement> {
+  const brandSlug = await resolveHomeBrandSlug();
+
   try {
     const [apiItems, apiCategories, settings] = await Promise.all([
-      fetchMenuItems(),
-      fetchMenuCategories(),
-      fetchStoreSettings(DEFAULT_BRAND_SLUG),
+      fetchMenuItems(brandSlug),
+      fetchMenuCategories(brandSlug),
+      fetchStoreSettings(brandSlug),
     ]);
     const menuItems = apiItems.map(mapApiMenuItem);
     const categories = mapApiMenuCategories(apiCategories);
 
     return (
       <>
-        <SiteBrandInit brandSlug={DEFAULT_BRAND_SLUG} />
+        <SiteBrandInit brandSlug={brandSlug} />
         <HomePage
           brandName={settings.storeName}
-          brandSlug={DEFAULT_BRAND_SLUG}
+          brandSlug={brandSlug}
           categories={categories}
           heroImageUrl={settings.heroImageUrl}
           menuItems={menuItems}
@@ -34,8 +53,8 @@ export default async function Home(): Promise<React.ReactElement> {
   } catch {
     return (
       <>
-        <SiteBrandInit brandSlug={DEFAULT_BRAND_SLUG} />
-        <HomePage categories={[]} menuItems={[]} />
+        <SiteBrandInit brandSlug={brandSlug} />
+        <HomePage brandSlug={brandSlug} categories={[]} menuItems={[]} />
       </>
     );
   }

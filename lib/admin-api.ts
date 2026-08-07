@@ -678,6 +678,15 @@ export function updateHqDomain(
   });
 }
 
+export function syncHqTraefikDomains(
+  token: string,
+): Promise<{ hosts: string[]; path: string }> {
+  return apiRequest("/hq/domains/sync-traefik", {
+    method: "POST",
+    token,
+  });
+}
+
 export function fetchMenuTemplates(
   token: string,
 ): Promise<import("@/types/hq").HqMenuTemplate[]> {
