@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test:e2e": "playwright test",
     "test:e2e:inventory": "playwright test e2e/inventory.spec.ts",
+    "test:e2e:dashboard": "playwright test e2e/dashboard.spec.ts",
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
