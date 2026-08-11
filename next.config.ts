@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -13,4 +14,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Error capture works with DSN alone; source maps need SENTRY_AUTH_TOKEN later.
+  silent: true,
+  sourcemaps: {
+    disable: true,
+  },
+  widenClientFileUpload: false,
+});
