@@ -1,0 +1,47 @@
+name: Deploy Web
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-droplet
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Next build on a small Droplet is slow; keep headroom.
+    timeout-minutes: 90
+    steps:
+      - name: Deploy piza-front (web) on Droplet
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          port: ${{ secrets.DROPLET_SSH_PORT || 22 }}
+          script_stop: true
+          command_timeout: 80m
+          script: |
+            set -euo pipefail
+            cd ~/piza/piza-front
+            git fetch origin main
+            git checkout main
+            git pull --ff-only origin main
+
+            cd ~/piza/piza-api
+            export COMPOSE_BAKE=false
+
+            # Free RAM/CPU during Next build (POS offline briefly).
+            docker compose -f docker-compose.prod.yml stop pos || true
+
+            docker compose -f docker-compose.prod.yml build web
+            docker compose -f docker-compose.prod.yml up -d web
+
+            docker compose -f docker-compose.prod.yml start pos || \
+              docker compose -f docker-compose.prod.yml up -d pos
+
+            docker compose -f docker-compose.prod.yml ps web pos
+            echo "Web deploy OK"
