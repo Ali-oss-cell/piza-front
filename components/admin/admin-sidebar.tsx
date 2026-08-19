@@ -44,6 +44,7 @@ const STORE_NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashbo
   { id: "team", label: "Team", icon: UsersRound },
   { id: "locations", label: "Locations", icon: MapPin },
   { id: "settings", label: "System Settings", icon: Settings },
+  { id: "advanced-settings", label: "Advanced Settings", icon: Globe },
 ];
 
 const HQ_NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashboard }[] = [

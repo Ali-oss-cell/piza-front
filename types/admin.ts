@@ -153,7 +153,8 @@ export type AdminView =
   | "customers"
   | "people"
   | "health"
-  | "activity";
+  | "activity"
+  | "advanced-settings";
 
 export interface CreateMenuItemPayload {
   slug: string;

@@ -29,6 +29,7 @@ import { PeopleView } from "@/components/admin/views/people-view";
 import { HqDealsView } from "@/components/admin/views/hq-deals-view";
 import { StoreHealthView } from "@/components/admin/views/store-health-view";
 import { ActivityView } from "@/components/admin/views/activity-view";
+import { AdvancedSettingsView } from "@/components/admin/views/advanced-settings-view";
 import {
   fetchAdminCrusts,
   fetchAdminDeals,
@@ -422,6 +423,15 @@ export function AdminDashboardContent(): React.ReactElement {
                       void refreshBrands();
                     }}
                     settings={storeSettings}
+                    token={token!}
+                  />
+                ) : null}
+                {activeView === "advanced-settings" && paymentSettings ? (
+                  <AdvancedSettingsView
+                    brandSlug={brandSlug!}
+                    brands={brands}
+                    onPaymentSettingsChange={setPaymentSettings}
+                    paymentSettings={paymentSettings}
                     token={token!}
                   />
                 ) : null}
