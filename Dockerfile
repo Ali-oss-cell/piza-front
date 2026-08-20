@@ -35,6 +35,10 @@ ENV SENTRY_DSN=$SENTRY_DSN
 ARG SENTRY_ENVIRONMENT=production
 ENV SENTRY_ENVIRONMENT=$SENTRY_ENVIRONMENT
 
+# Cap Node heap so Next build is less likely to SIGKILL on small Droplets.
+ENV NODE_OPTIONS=--max-old-space-size=1536
+ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN npm run build
 
 FROM base AS runner
