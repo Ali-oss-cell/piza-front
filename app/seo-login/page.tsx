@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { ApiError } from "@/lib/api-client";
 import { loginRequest } from "@/lib/admin-api";
 import { persistAuthSession, getStoredToken, getStoredUser } from "@/lib/auth-storage";
+import {
+  dashboardGlass,
+  pageShell,
+  primaryText,
+  secondaryText,
+} from "@/lib/theme-classes";
+import { cn } from "@/lib/utils";
 import { canAccessSeoDashboard } from "@/types/auth";
 
 export default function SeoLoginPage(): React.ReactElement {
@@ -52,28 +59,27 @@ export default function SeoLoginPage(): React.ReactElement {
 
   if (checking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className={cn("flex min-h-screen items-center justify-center", pageShell)}>
+        <Loader2 className={cn("h-8 w-8 animate-spin", secondaryText)} />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 text-white">
-      <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl">
-        <h1 className="text-2xl font-semibold">SEO Portal</h1>
-        <p className="mt-2 text-sm text-zinc-400">
-          Manage page content, images, and blog posts per store and domain.
+    <div className={cn("flex min-h-screen items-center justify-center px-4", pageShell)}>
+      <div className={cn(dashboardGlass, "w-full max-w-md p-8 shadow-xl")}>
+        <h1 className={cn("text-2xl font-semibold", primaryText)}>SEO Portal</h1>
+        <p className={cn("mt-2 text-sm", secondaryText)}>
+          Manage page content, images, and blog posts per store.
         </p>
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="mb-1 block text-sm text-zinc-300" htmlFor="seo-email">
+            <label className={cn("mb-1 block text-sm", secondaryText)} htmlFor="seo-email">
               Email
             </label>
             <Input
               autoComplete="email"
-              className="border-zinc-700 bg-zinc-800 text-white"
               id="seo-email"
               onChange={(event) => setEmail(event.target.value)}
               required
@@ -82,12 +88,11 @@ export default function SeoLoginPage(): React.ReactElement {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm text-zinc-300" htmlFor="seo-password">
+            <label className={cn("mb-1 block text-sm", secondaryText)} htmlFor="seo-password">
               Password
             </label>
             <Input
               autoComplete="current-password"
-              className="border-zinc-700 bg-zinc-800 text-white"
               id="seo-password"
               onChange={(event) => setPassword(event.target.value)}
               required
@@ -95,7 +100,9 @@ export default function SeoLoginPage(): React.ReactElement {
               value={password}
             />
           </div>
-          {error ? <p className="text-sm text-red-400">{error}</p> : null}
+          {error ? (
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          ) : null}
           <Button className="w-full bg-[#d81b60] hover:brightness-110" disabled={loading} type="submit">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
           </Button>

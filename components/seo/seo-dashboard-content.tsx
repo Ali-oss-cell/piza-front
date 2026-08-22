@@ -9,6 +9,7 @@ import {
   Newspaper,
   Save,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RichTextEditor } from "@/components/seo/RichTextEditor";
@@ -36,7 +37,27 @@ import {
   type SeoImageRecord,
 } from "@/lib/seo-api";
 import { getSeoBrandSlug, setSeoBrandSlug } from "@/lib/seo-storage";
+import {
+  brandAccentBg,
+  dashboardGlass,
+  headerShell,
+  pageShell,
+  primaryText,
+  secondaryText,
+} from "@/lib/theme-classes";
+import { cn } from "@/lib/utils";
 import { canAccessSeoDashboard, type AuthStore } from "@/types/auth";
+
+const ThemeToggle = dynamic(
+  () => import("@/components/ui/theme-toggle").then((mod) => mod.ThemeToggle),
+  {
+    ssr: false,
+    loading: () => <div aria-hidden className="h-10 w-10 shrink-0 rounded-full" />,
+  },
+);
+
+const fieldClass =
+  "w-full rounded-xl border border-zinc-200/70 bg-white/80 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-[#d81b60] focus:ring-2 focus:ring-[#d81b60]/20 dark:border-white/10 dark:bg-zinc-950/60 dark:text-zinc-50";
 
 type Tab = "dashboard" | "pages" | "images" | "blog";
 
@@ -355,25 +376,25 @@ export function SeoDashboardContent(): React.ReactElement {
   };
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className={cn("flex min-h-screen items-center justify-center", pageShell)}>
+        <Loader2 className={cn("h-8 w-8 animate-spin", secondaryText)} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
-      <header className="border-b border-zinc-800 bg-zinc-900 px-6 py-4">
+    <div className={cn("min-h-screen", pageShell)}>
+      <header className={cn(headerShell, "px-6 py-4")}>
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl font-semibold">SEO Dashboard</h1>
-            <p className="text-sm text-zinc-400">
+            <h1 className={cn("text-xl font-semibold", primaryText)}>SEO Dashboard</h1>
+            <p className={cn("text-sm", secondaryText)}>
               {selectedStore ? storeOptionLabel(selectedStore) : brandSlug}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <select
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm"
+              className={fieldClass}
               onChange={(event) => handleBrandChange(event.target.value)}
               value={brandSlug}
             >
@@ -383,6 +404,7 @@ export function SeoDashboardContent(): React.ReactElement {
                 </option>
               ))}
             </select>
+            <ThemeToggle />
             <Button
               onClick={() => {
                 clearAuthSession();
@@ -398,7 +420,7 @@ export function SeoDashboardContent(): React.ReactElement {
       </header>
 
       <div className="mx-auto grid max-w-6xl gap-6 px-6 py-6 md:grid-cols-[220px_1fr]">
-        <nav className="space-y-1">
+        <nav className={cn(dashboardGlass, "space-y-1 p-3")}>
           {(
             [
               ["dashboard", "Dashboard", LayoutDashboard],
@@ -408,9 +430,12 @@ export function SeoDashboardContent(): React.ReactElement {
             ] as const
           ).map(([key, label, Icon]) => (
             <button
-              className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm ${
-                tab === key ? "bg-pink-600 text-white" : "text-zinc-300 hover:bg-zinc-800"
-              }`}
+              className={cn(
+                "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                tab === key
+                  ? cn(brandAccentBg, "text-white")
+                  : cn(secondaryText, "hover:bg-zinc-100 dark:hover:bg-white/10"),
+              )}
               key={key}
               onClick={() => setTab(key)}
               type="button"
@@ -421,17 +446,21 @@ export function SeoDashboardContent(): React.ReactElement {
           ))}
         </nav>
 
-        <main className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-          {message ? <p className="mb-4 text-sm text-green-400">{message}</p> : null}
-          {error ? <p className="mb-4 text-sm text-red-400">{error}</p> : null}
+        <main className={cn(dashboardGlass, "p-6")}>
+          {message ? (
+            <p className="mb-4 text-sm text-emerald-600 dark:text-emerald-400">{message}</p>
+          ) : null}
+          {error ? (
+            <p className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</p>
+          ) : null}
 
           {tab === "dashboard" ? (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-medium">Launch checklist</h2>
-                <p className="mt-1 text-sm text-zinc-400">
+                <h2 className={cn("text-lg font-medium", primaryText)}>Launch checklist</h2>
+                <p className={cn("mt-1 text-sm", secondaryText)}>
                   Editing{" "}
-                  <strong className="text-white">
+                  <strong className={primaryText}>
                     {selectedStore ? storeOptionLabel(selectedStore) : brandSlug}
                   </strong>
                   .
@@ -439,20 +468,35 @@ export function SeoDashboardContent(): React.ReactElement {
               </div>
 
               {checklist ? (
-                <div className="space-y-3 rounded-xl border border-zinc-800 p-4 text-sm">
+                <div
+                  className={cn(
+                    "space-y-3 rounded-xl border border-zinc-200/70 p-4 text-sm dark:border-white/10",
+                    primaryText,
+                  )}
+                >
                   <p>
                     Sitemap:{" "}
-                    <a className="text-pink-400 underline" href={checklist.sitemapUrl} rel="noreferrer" target="_blank">
+                    <a
+                      className="text-[#d81b60] underline"
+                      href={checklist.sitemapUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
                       {checklist.sitemapUrl}
                     </a>
                   </p>
                   <p>
                     Robots:{" "}
-                    <a className="text-pink-400 underline" href={checklist.robotsUrl} rel="noreferrer" target="_blank">
+                    <a
+                      className="text-[#d81b60] underline"
+                      href={checklist.robotsUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
                       {checklist.robotsUrl}
                     </a>
                   </p>
-                  <ul className="space-y-1 text-zinc-300">
+                  <ul className={cn("space-y-1", secondaryText)}>
                     <li>{checklist.hasAddress ? "✓" : "○"} Store address set</li>
                     <li>{checklist.hasPhone ? "✓" : "○"} Store phone set</li>
                     <li>
@@ -462,13 +506,14 @@ export function SeoDashboardContent(): React.ReactElement {
                         : " — set in Admin → System Settings"}
                     </li>
                     <li>
-                      {checklist.seoContentCount > 0 ? "✓" : "○"} SEO content rows ({checklist.seoContentCount})
+                      {checklist.seoContentCount > 0 ? "✓" : "○"} SEO content rows (
+                      {checklist.seoContentCount})
                     </li>
                     <li>
                       {checklist.blogPostCount > 0 ? "✓" : "○"} Blog posts ({checklist.blogPostCount})
                     </li>
                   </ul>
-                  <ol className="list-decimal space-y-1 pl-5 text-zinc-400">
+                  <ol className={cn("list-decimal space-y-1 pl-5", secondaryText)}>
                     {checklist.gscSteps.map((step) => (
                       <li key={step}>{step}</li>
                     ))}
@@ -488,11 +533,14 @@ export function SeoDashboardContent(): React.ReactElement {
                 </Button>
               </div>
 
-              <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-300">
+              <ul className={cn("list-disc space-y-1 pl-5 text-sm", secondaryText)}>
                 <li>Use Pages to edit hero text and meta tags per page.</li>
                 <li>Use Images to upload and assign hero backgrounds.</li>
                 <li>Use Blog for posts (meta, thumbnail, author, category).</li>
-                <li>Each custom domain needs its own Google Search Console property + that host&apos;s sitemap.xml.</li>
+                <li>
+                  Each custom domain needs its own Google Search Console property + that host&apos;s
+                  sitemap.xml.
+                </li>
                 <li>SEO is per store (not per domain override).</li>
               </ul>
             </div>
@@ -503,9 +551,12 @@ export function SeoDashboardContent(): React.ReactElement {
               <div className="flex flex-wrap gap-2">
                 {SEO_PAGES.map((page) => (
                   <button
-                    className={`rounded-full px-3 py-1 text-sm ${
-                      pageFilter === page ? "bg-pink-600" : "bg-zinc-800 text-zinc-300"
-                    }`}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-sm transition-colors",
+                      pageFilter === page
+                        ? cn(brandAccentBg, "text-white")
+                        : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700",
+                    )}
                     key={page}
                     onClick={() => setPageFilter(page)}
                     type="button"
@@ -519,20 +570,19 @@ export function SeoDashboardContent(): React.ReactElement {
                 .filter((section) => !["page_title", "hero_image"].includes(section))
                 .map((section) => (
                   <div key={section}>
-                    <label className="mb-1 block text-sm capitalize text-zinc-300">
+                    <label className={cn("mb-1 block text-sm capitalize", secondaryText)}>
                       {section.replace(/_/g, " ")}
                     </label>
                     {section === "hero_body" ? (
-                      <textarea
-                        className="min-h-[100px] w-full rounded-lg border border-zinc-700 bg-zinc-800 p-3 text-sm"
-                        onChange={(event) =>
-                          setDraft((prev) => ({ ...prev, [section]: event.target.value }))
+                      <RichTextEditor
+                        height={220}
+                        onChange={(content) =>
+                          setDraft((prev) => ({ ...prev, [section]: content }))
                         }
                         value={draft[section] ?? ""}
                       />
                     ) : (
                       <Input
-                        className="border-zinc-700 bg-zinc-800"
                         onChange={(event) =>
                           setDraft((prev) => ({ ...prev, [section]: event.target.value }))
                         }
@@ -543,14 +593,13 @@ export function SeoDashboardContent(): React.ReactElement {
                 ))}
 
               {PAGE_SECTIONS[pageFilter]?.includes("page_title") ? (
-                <div className="space-y-3 rounded-xl border border-zinc-800 p-4">
-                  <h3 className="font-medium">Meta tags</h3>
+                <div className="space-y-3 rounded-xl border border-zinc-200/70 p-4 dark:border-white/10">
+                  <h3 className={cn("font-medium", primaryText)}>Meta tags</h3>
                   <div>
-                    <label className="text-sm text-zinc-400">
+                    <label className={cn("text-sm", secondaryText)}>
                       Title ({metaDraft.metaTitle.length}/60)
                     </label>
                     <Input
-                      className="border-zinc-700 bg-zinc-800"
                       onChange={(event) =>
                         setMetaDraft((prev) => ({ ...prev, metaTitle: event.target.value }))
                       }
@@ -558,11 +607,11 @@ export function SeoDashboardContent(): React.ReactElement {
                     />
                   </div>
                   <div>
-                    <label className="text-sm text-zinc-400">
+                    <label className={cn("text-sm", secondaryText)}>
                       Description ({metaDraft.metaDescription.length}/160)
                     </label>
                     <textarea
-                      className="min-h-[80px] w-full rounded-lg border border-zinc-700 bg-zinc-800 p-3 text-sm"
+                      className={cn(fieldClass, "min-h-[80px]")}
                       onChange={(event) =>
                         setMetaDraft((prev) => ({
                           ...prev,
@@ -573,9 +622,8 @@ export function SeoDashboardContent(): React.ReactElement {
                     />
                   </div>
                   <div>
-                    <label className="text-sm text-zinc-400">Keywords</label>
+                    <label className={cn("text-sm", secondaryText)}>Keywords</label>
                     <Input
-                      className="border-zinc-700 bg-zinc-800"
                       onChange={(event) =>
                         setMetaDraft((prev) => ({ ...prev, metaKeywords: event.target.value }))
                       }
@@ -583,16 +631,15 @@ export function SeoDashboardContent(): React.ReactElement {
                     />
                   </div>
                   <div>
-                    <label className="text-sm text-zinc-400">OG image URL</label>
+                    <label className={cn("text-sm", secondaryText)}>OG image URL</label>
                     <Input
-                      className="border-zinc-700 bg-zinc-800"
                       onChange={(event) =>
                         setMetaDraft((prev) => ({ ...prev, ogImageUrl: event.target.value }))
                       }
                       value={metaDraft.ogImageUrl}
                     />
                   </div>
-                  <label className="flex items-center gap-2 text-sm">
+                  <label className={cn("flex items-center gap-2 text-sm", primaryText)}>
                     <input
                       checked={metaDraft.robotsIndex}
                       onChange={(event) =>
@@ -623,7 +670,9 @@ export function SeoDashboardContent(): React.ReactElement {
           {tab === "images" ? (
             <div className="space-y-6">
               <div>
-                <label className="mb-2 block text-sm">Upload image (max 5MB)</label>
+                <label className={cn("mb-2 block text-sm", secondaryText)}>
+                  Upload image (max 5MB)
+                </label>
                 <input
                   accept="image/jpeg,image/png,image/webp,image/gif"
                   onChange={(event) => {
@@ -635,25 +684,28 @@ export function SeoDashboardContent(): React.ReactElement {
               </div>
 
               {missingImages.length > 0 ? (
-                <p className="text-sm text-amber-400">
+                <p className="text-sm text-amber-600 dark:text-amber-400">
                   {missingImages.length} image(s) missing from disk.
                 </p>
               ) : null}
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {images.map((image) => (
-                  <div className="rounded-xl border border-zinc-800 p-3" key={image.id}>
+                  <div
+                    className="rounded-xl border border-zinc-200/70 p-3 dark:border-white/10"
+                    key={image.id}
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       alt={image.altText ?? image.label ?? "SEO image"}
                       className="mb-2 h-32 w-full rounded-lg object-cover"
                       src={resolveMediaUrl(image.filePath) ?? image.filePath}
                     />
-                    <p className="truncate text-xs text-zinc-400">{image.filename}</p>
+                    <p className={cn("truncate text-xs", secondaryText)}>{image.filename}</p>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {IMAGE_SLOTS.map((slot) => (
                         <button
-                          className="rounded bg-zinc-800 px-2 py-1 text-xs hover:bg-zinc-700"
+                          className="rounded bg-zinc-100 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                           key={`${slot.page}-${slot.section}`}
                           onClick={() => void handleAssignImage(image, slot)}
                           type="button"
@@ -662,7 +714,7 @@ export function SeoDashboardContent(): React.ReactElement {
                         </button>
                       ))}
                       <button
-                        className="rounded bg-red-900/50 px-2 py-1 text-xs hover:bg-red-900"
+                        className="rounded bg-red-100 px-2 py-1 text-xs text-red-700 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-200 dark:hover:bg-red-900"
                         onClick={async () => {
                           if (!token) return;
                           await deleteSeoImage(token, image.id, brandSlug);
@@ -699,12 +751,12 @@ export function SeoDashboardContent(): React.ReactElement {
                   <div className="space-y-3">
                     {posts.map((post) => (
                       <div
-                        className="flex items-center justify-between rounded-xl border border-zinc-800 p-4"
+                        className="flex items-center justify-between rounded-xl border border-zinc-200/70 p-4 dark:border-white/10"
                         key={post.id}
                       >
                         <div>
-                          <p className="font-medium">{post.title}</p>
-                          <p className="text-xs text-zinc-400">
+                          <p className={cn("font-medium", primaryText)}>{post.title}</p>
+                          <p className={cn("text-xs", secondaryText)}>
                             /{post.slug} · {post.status}
                           </p>
                         </div>
@@ -730,7 +782,6 @@ export function SeoDashboardContent(): React.ReactElement {
               ) : (
                 <div className="space-y-4">
                   <Input
-                    className="border-zinc-700 bg-zinc-800"
                     onChange={(event) =>
                       setEditingPost((prev) => ({ ...prev, title: event.target.value }))
                     }
@@ -738,7 +789,6 @@ export function SeoDashboardContent(): React.ReactElement {
                     value={editingPost.title ?? ""}
                   />
                   <Input
-                    className="border-zinc-700 bg-zinc-800"
                     onChange={(event) =>
                       setEditingPost((prev) => ({ ...prev, slug: event.target.value }))
                     }
@@ -746,7 +796,7 @@ export function SeoDashboardContent(): React.ReactElement {
                     value={editingPost.slug ?? ""}
                   />
                   <textarea
-                    className="min-h-[80px] w-full rounded-lg border border-zinc-700 bg-zinc-800 p-3 text-sm"
+                    className={cn(fieldClass, "min-h-[80px]")}
                     onChange={(event) =>
                       setEditingPost((prev) => ({ ...prev, excerpt: event.target.value }))
                     }
@@ -761,7 +811,6 @@ export function SeoDashboardContent(): React.ReactElement {
                   />
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Input
-                      className="border-zinc-700 bg-zinc-800"
                       onChange={(event) =>
                         setEditingPost((prev) => ({ ...prev, author: event.target.value }))
                       }
@@ -769,7 +818,6 @@ export function SeoDashboardContent(): React.ReactElement {
                       value={editingPost.author ?? ""}
                     />
                     <Input
-                      className="border-zinc-700 bg-zinc-800"
                       onChange={(event) =>
                         setEditingPost((prev) => ({ ...prev, category: event.target.value }))
                       }
@@ -777,10 +825,9 @@ export function SeoDashboardContent(): React.ReactElement {
                       value={editingPost.category ?? ""}
                     />
                   </div>
-                  <div className="space-y-3 rounded-xl border border-zinc-800 p-4">
-                    <h3 className="font-medium">Post SEO</h3>
+                  <div className="space-y-3 rounded-xl border border-zinc-200/70 p-4 dark:border-white/10">
+                    <h3 className={cn("font-medium", primaryText)}>Post SEO</h3>
                     <Input
-                      className="border-zinc-700 bg-zinc-800"
                       onChange={(event) =>
                         setEditingPost((prev) => ({ ...prev, metaTitle: event.target.value }))
                       }
@@ -788,7 +835,7 @@ export function SeoDashboardContent(): React.ReactElement {
                       value={editingPost.metaTitle ?? ""}
                     />
                     <textarea
-                      className="min-h-[70px] w-full rounded-lg border border-zinc-700 bg-zinc-800 p-3 text-sm"
+                      className={cn(fieldClass, "min-h-[70px]")}
                       onChange={(event) =>
                         setEditingPost((prev) => ({
                           ...prev,
@@ -799,7 +846,6 @@ export function SeoDashboardContent(): React.ReactElement {
                       value={editingPost.metaDescription ?? ""}
                     />
                     <Input
-                      className="border-zinc-700 bg-zinc-800"
                       onChange={(event) =>
                         setEditingPost((prev) => ({ ...prev, metaKeywords: event.target.value }))
                       }
@@ -807,9 +853,9 @@ export function SeoDashboardContent(): React.ReactElement {
                       value={editingPost.metaKeywords ?? ""}
                     />
                     <div>
-                      <label className="mb-1 block text-sm text-zinc-400">Thumbnail</label>
+                      <label className={cn("mb-1 block text-sm", secondaryText)}>Thumbnail</label>
                       <select
-                        className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm"
+                        className={fieldClass}
                         onChange={(event) =>
                           setEditingPost((prev) => ({
                             ...prev,
@@ -828,13 +874,13 @@ export function SeoDashboardContent(): React.ReactElement {
                           </option>
                         ))}
                       </select>
-                      <p className="mt-1 text-xs text-zinc-500">
+                      <p className={cn("mt-1 text-xs", secondaryText)}>
                         Upload images in the Images tab first, then select here.
                       </p>
                     </div>
                   </div>
                   <select
-                    className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm"
+                    className={fieldClass}
                     onChange={(event) =>
                       setEditingPost((prev) => ({
                         ...prev,
