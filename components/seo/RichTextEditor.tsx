@@ -203,6 +203,8 @@ export function RichTextEditor({
           key={`${isDark ? "dark" : "light"}-${retryKey}`}
           licenseKey="gpl"
           onEditorChange={onChange}
+          // Self-hosted — do not load Tiny Cloud (that path requires an API key).
+          tinymceScriptSrc="/tinymce/tinymce.min.js"
           value={value}
         />
       </div>
