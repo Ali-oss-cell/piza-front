@@ -166,9 +166,14 @@ export function AppShell({
 
   useEffect(() => {
     const root = document.documentElement;
+    if (isStandaloneRoute(pathname)) {
+      root.style.setProperty("--brand-primary", DEFAULT_PRIMARY);
+      root.style.setProperty("--brand-secondary", DEFAULT_SECONDARY);
+      return;
+    }
     root.style.setProperty("--brand-primary", primaryColor);
     root.style.setProperty("--brand-secondary", secondaryColor);
-  }, [primaryColor, secondaryColor]);
+  }, [primaryColor, secondaryColor, pathname]);
 
   if (isStandaloneRoute(pathname)) {
     return <>{children}</>;

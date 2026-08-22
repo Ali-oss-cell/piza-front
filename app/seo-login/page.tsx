@@ -96,7 +96,7 @@ export default function SeoLoginPage(): React.ReactElement {
             />
           </div>
           {error ? <p className="text-sm text-red-400">{error}</p> : null}
-          <Button className="w-full" disabled={loading} type="submit">
+          <Button className="w-full bg-[#d81b60] hover:brightness-110" disabled={loading} type="submit">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
           </Button>
         </form>

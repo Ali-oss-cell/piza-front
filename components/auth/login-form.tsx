@@ -149,7 +149,11 @@ export function LoginForm(): React.ReactElement {
           </p>
         ) : null}
 
-        <Button className="w-full rounded-xl py-6" disabled={isSubmitting} type="submit">
+        <Button
+          className="w-full rounded-xl bg-[#d81b60] py-6 hover:brightness-110"
+          disabled={isSubmitting}
+          type="submit"
+        >
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

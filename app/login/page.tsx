@@ -11,6 +11,7 @@ export default function LoginPage(): React.ReactElement {
         "flex min-h-screen items-center justify-center px-4 py-16",
         pageShell
       )}
+      style={{ "--brand-primary": "#d81b60" } as React.CSSProperties}
     >
       <LoginForm />
     </main>
