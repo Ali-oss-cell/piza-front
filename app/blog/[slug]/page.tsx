@@ -16,7 +16,7 @@ export async function generateMetadata({
   const { brandSlug, host } = await resolveBrandSlugForRequest();
 
   try {
-    const post = await fetchBlogPost(slug, brandSlug);
+    const post = await fetchBlogPost(slug, brandSlug, null, undefined, host);
     return buildSeoMetadata(
       {
         sections: {},
@@ -40,8 +40,10 @@ export default async function BlogPostPage({
   params,
 }: BlogPostPageProps): Promise<React.ReactElement> {
   const { slug } = await params;
-  const { host } = await resolveBrandSlugForRequest();
+  const { brandSlug, host } = await resolveBrandSlugForRequest();
   const baseUrl = siteOriginFromHost(host);
 
-  return <BlogPostClient baseUrl={baseUrl} slug={slug} />;
+  return (
+    <BlogPostClient baseUrl={baseUrl} brandSlug={brandSlug} host={host} slug={slug} />
+  );
 }

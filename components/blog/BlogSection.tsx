@@ -3,18 +3,23 @@
 import Link from "next/link";
 import { useSeoContent } from "@/hooks/useSeoContent";
 import { fetchBlogPosts, type BlogPostRecord } from "@/lib/seo-api";
-import { getSiteBrandSlug } from "@/lib/brand-storage";
 import { resolveMediaUrl } from "@/lib/media-url";
 import { useEffect, useState } from "react";
 
-export function BlogSection(): React.ReactElement {
+interface BlogSectionProps {
+  brandSlug: string;
+  host?: string;
+}
+
+export function BlogSection({ brandSlug, host }: BlogSectionProps): React.ReactElement {
   const { sections } = useSeoContent("blog");
   const [posts, setPosts] = useState<BlogPostRecord[]>([]);
 
   useEffect(() => {
-    const slug = getSiteBrandSlug() ?? "leovorno";
-    void fetchBlogPosts(undefined, slug).then(setPosts).catch(() => setPosts([]));
-  }, []);
+    void fetchBlogPosts(undefined, brandSlug, null, host)
+      .then(setPosts)
+      .catch(() => setPosts([]));
+  }, [brandSlug, host]);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-16 md:px-8">

@@ -36,6 +36,7 @@ interface SettingsFormState {
   heroImageUrl: string;
   heroImageDarkUrl: string;
   darkModeEnabled: boolean;
+  googleSiteVerification: string;
   deliveryFee: string;
   minOrderAmount: string;
   contactEmail: string;
@@ -56,6 +57,7 @@ function formFromSettings(settings: StoreSettings): SettingsFormState {
     heroImageUrl: settings.heroImageUrl ?? "",
     heroImageDarkUrl: settings.heroImageDarkUrl ?? "",
     darkModeEnabled: settings.darkModeEnabled !== false,
+    googleSiteVerification: settings.googleSiteVerification ?? "",
     deliveryFee: String(settings.deliveryFee),
     minOrderAmount: String(settings.minOrderAmount),
     contactEmail: settings.contactEmail ?? "",
@@ -123,6 +125,7 @@ export function SettingsView({
       heroImageUrl: form.heroImageUrl.trim() || null,
       heroImageDarkUrl: form.heroImageDarkUrl.trim() || null,
       darkModeEnabled: form.darkModeEnabled,
+      googleSiteVerification: form.googleSiteVerification.trim() || null,
       deliveryFee: Number(form.deliveryFee),
       minOrderAmount: Number(form.minOrderAmount),
       contactEmail: form.contactEmail.trim(),
@@ -449,6 +452,25 @@ export function SettingsView({
             ))}
           </ul>
         )}
+      </div>
+
+      <div className={cn("max-w-2xl space-y-4 rounded-2xl border p-6", dashboardGlass)}>
+        <h3 className={cn("font-display text-lg font-bold", primaryText)}>Search Console</h3>
+        <p className={cn("text-sm", secondaryText)}>
+          Paste the Google Search Console HTML-tag token (content value only). Emitted as{" "}
+          <code className="text-xs">google-site-verification</code> on the storefront. Each custom
+          domain needs its own GSC property and that host&apos;s <code className="text-xs">/sitemap.xml</code>.
+        </p>
+        <Input
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              googleSiteVerification: event.target.value,
+            }))
+          }
+          placeholder="google-site-verification token"
+          value={form.googleSiteVerification}
+        />
       </div>
 
       {isPlatformAdmin ? (

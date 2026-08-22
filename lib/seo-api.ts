@@ -229,9 +229,11 @@ export function fetchBlogPosts(
   token: string | undefined,
   brandSlug: string,
   domainId?: string | null,
+  host?: string,
 ): Promise<BlogPostRecord[]> {
   const params = new URLSearchParams({ brand: brandSlug });
   if (domainId) params.set("domainId", domainId);
+  if (host) params.set("host", host);
   return apiRequest<BlogPostRecord[]>(`/seo/blog?${params.toString()}`, {
     token,
     brandSlug,
@@ -243,10 +245,64 @@ export function fetchBlogPost(
   brandSlug: string,
   domainId?: string | null,
   token?: string,
+  host?: string,
 ): Promise<BlogPostRecord> {
   const params = new URLSearchParams({ brand: brandSlug });
   if (domainId) params.set("domainId", domainId);
+  if (host) params.set("host", host);
   return apiRequest<BlogPostRecord>(`/seo/blog/${slug}?${params.toString()}`, {
+    token,
+    brandSlug,
+  });
+}
+
+export function fillSeoFromStore(
+  token: string,
+  brandSlug: string,
+  domainId: string | null,
+  overwrite = false,
+): Promise<{ updated: number }> {
+  return apiRequest("/seo/fill-from-store", {
+    method: "POST",
+    token,
+    brandSlug,
+    body: JSON.stringify({ domainId, overwrite }),
+  });
+}
+
+export function ensureStarterBlog(
+  token: string,
+  brandSlug: string,
+  domainId: string | null,
+): Promise<{ created: boolean; post: BlogPostRecord }> {
+  return apiRequest("/seo/starter-blog", {
+    method: "POST",
+    token,
+    brandSlug,
+    body: JSON.stringify({ domainId }),
+  });
+}
+
+export function fetchSeoLaunchChecklist(
+  token: string,
+  brandSlug: string,
+  domainId: string | null,
+): Promise<{
+  brandSlug: string;
+  storeName: string;
+  googleSiteVerification: string | null;
+  hasVerification: boolean;
+  hasAddress: boolean;
+  hasPhone: boolean;
+  seoContentCount: number;
+  blogPostCount: number;
+  sitemapUrl: string;
+  robotsUrl: string;
+  publicHomeUrl: string;
+  gscSteps: string[];
+  domain: { id: string; host: string | null; pathPrefix: string | null } | null;
+}> {
+  return apiRequest(withDomainQuery("/seo/launch-checklist", domainId), {
     token,
     brandSlug,
   });

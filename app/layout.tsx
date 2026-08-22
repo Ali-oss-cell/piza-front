@@ -49,6 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
         description: settings.tagline ?? `Order from ${settings.storeName}`,
       },
       siteOriginFromHost(host),
+      { googleSiteVerification: settings.googleSiteVerification },
     );
   } catch {
     return {
@@ -81,6 +82,7 @@ export default async function RootLayout({
     backgroundLightColor: DEFAULT_BG_LIGHT as string | null,
     backgroundDarkColor: DEFAULT_BG_DARK as string | null,
     darkModeEnabled: true,
+    contactPhone: null as string | null,
   };
 
   try {
@@ -102,6 +104,7 @@ export default async function RootLayout({
           backgroundLightColor: store.backgroundLightColor ?? DEFAULT_BG_LIGHT,
           backgroundDarkColor: store.backgroundDarkColor ?? DEFAULT_BG_DARK,
           darkModeEnabled: store.darkModeEnabled !== false,
+          contactPhone: null,
         };
       } catch {
         // Unknown custom host — fall through to primary brand settings.
@@ -128,6 +131,7 @@ export default async function RootLayout({
       backgroundDarkColor:
         settings.backgroundDarkColor ?? initialBranding.backgroundDarkColor,
       darkModeEnabled: settings.darkModeEnabled !== false,
+      contactPhone: settings.contactPhone ?? null,
     };
   } catch {
     // keep defaults with bundled logos
@@ -152,6 +156,7 @@ export default async function RootLayout({
         <LocalBusinessJsonLd
           address={initialBranding.address}
           name={initialBranding.brandName}
+          telephone={initialBranding.contactPhone}
           url={siteOriginFromHost(await getRequestHost())}
         />
         <Script

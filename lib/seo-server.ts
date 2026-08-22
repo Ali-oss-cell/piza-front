@@ -46,6 +46,7 @@ export function buildSeoMetadata(
   seo: SeoContentResponse,
   fallback: { title: string; description: string },
   baseUrl?: string,
+  extras?: { googleSiteVerification?: string | null },
 ): Metadata {
   const title = seo.meta.title || fallback.title;
   const description = seo.meta.description || fallback.description;
@@ -56,6 +57,9 @@ export function buildSeoMetadata(
     description,
     keywords: seo.meta.keywords ?? undefined,
     robots: seo.meta.robotsIndex ? { index: true, follow: true } : { index: false, follow: false },
+    verification: extras?.googleSiteVerification
+      ? { google: extras.googleSiteVerification }
+      : undefined,
     openGraph: {
       title,
       description,

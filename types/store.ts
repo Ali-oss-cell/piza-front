@@ -13,6 +13,7 @@ export interface StoreSettings {
   heroImageUrl?: string | null;
   heroImageDarkUrl?: string | null;
   darkModeEnabled?: boolean;
+  googleSiteVerification?: string | null;
   deliveryFee: string | number;
   minOrderAmount: string | number;
   contactEmail?: string | null;
@@ -58,5 +59,6 @@ export interface UpdateStoreSettingsPayload {
   contactEmail?: string;
   contactPhone?: string;
   address?: string;
+  googleSiteVerification?: string | null;
   openingHours?: OpeningHoursConfig | null;
 }

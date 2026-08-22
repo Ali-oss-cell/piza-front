@@ -20,10 +20,13 @@ import {
   bulkUpsertSeoContent,
   deleteBlogPost,
   deleteSeoImage,
+  ensureStarterBlog,
   fetchBlogPosts,
   fetchSeoContentAdmin,
   fetchSeoDomains,
   fetchSeoImages,
+  fetchSeoLaunchChecklist,
+  fillSeoFromStore,
   IMAGE_SLOTS,
   saveBlogPost,
   SEO_PAGES,
@@ -44,7 +47,7 @@ const PAGE_SECTIONS: Record<string, string[]> = {
   about: ["hero_h1", "hero_body", "hero_image", "page_title"],
   deals: ["hero_h1", "hero_body", "hero_image", "page_title"],
   locations: ["hero_h1", "hero_body", "hero_image", "page_title"],
-  blog: ["hero_h1", "hero_body", "hero_image"],
+  blog: ["hero_h1", "hero_body", "hero_image", "page_title"],
 };
 
 function domainLabel(domain: SeoDomain): string {
@@ -79,6 +82,9 @@ export function SeoDashboardContent(): React.ReactElement {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [checklist, setChecklist] = useState<Awaited<
+    ReturnType<typeof fetchSeoLaunchChecklist>
+  > | null>(null);
 
   useEffect(() => {
     const storedToken = getStoredToken();
@@ -150,10 +156,20 @@ export function SeoDashboardContent(): React.ReactElement {
     setMissingImages(verify.missing);
   }, [token, brandSlug, domainId]);
 
-  const loadPosts = useCallback(async () => {
+  const loadPosts = useCallback(async (): Promise<void> => {
     if (!token) return;
     const list = await fetchBlogPosts(token, brandSlug, domainId);
     setPosts(list);
+  }, [token, brandSlug, domainId]);
+
+  const loadChecklist = useCallback(async (): Promise<void> => {
+    if (!token) return;
+    try {
+      const next = await fetchSeoLaunchChecklist(token, brandSlug, domainId);
+      setChecklist(next);
+    } catch {
+      setChecklist(null);
+    }
   }, [token, brandSlug, domainId]);
 
   useEffect(() => {
@@ -166,7 +182,8 @@ export function SeoDashboardContent(): React.ReactElement {
     if (tab === "pages") void loadContent();
     if (tab === "images") void loadImages();
     if (tab === "blog") void loadPosts();
-  }, [token, tab, loadContent, loadImages, loadPosts]);
+    if (tab === "dashboard") void loadChecklist();
+  }, [token, tab, loadContent, loadImages, loadPosts, loadChecklist]);
 
   useEffect(() => {
     if (!token || tab !== "pages") return;
@@ -291,6 +308,48 @@ export function SeoDashboardContent(): React.ReactElement {
     }
   };
 
+  const handleFillFromStore = async (overwrite: boolean): Promise<void> => {
+    if (!token) return;
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await fillSeoFromStore(token, brandSlug, domainId, overwrite);
+      setMessage(
+        overwrite
+          ? `Overwrote SEO from store settings (${result.updated} fields).`
+          : `Filled empty SEO fields from store (${result.updated} updated).`,
+      );
+      if (tab === "pages") await loadContent();
+      await loadChecklist();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Fill from store failed.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleStarterBlog = async (): Promise<void> => {
+    if (!token) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const result = await ensureStarterBlog(token, brandSlug, domainId);
+      setMessage(
+        result.created
+          ? "Starter blog draft created — edit and publish when ready."
+          : "A blog post already exists for this store/domain.",
+      );
+      setTab("blog");
+      await loadPosts();
+      await loadChecklist();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create starter blog.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const scopeLabel = useMemo(() => {
     if (!domainId) return "Store default (all domains)";
     const domain = domains.find((item) => item.id === domainId);
@@ -380,16 +439,69 @@ export function SeoDashboardContent(): React.ReactElement {
           {error ? <p className="mb-4 text-sm text-red-400">{error}</p> : null}
 
           {tab === "dashboard" ? (
-            <div className="space-y-4">
-              <h2 className="text-lg font-medium">Session overview</h2>
-              <p className="text-sm text-zinc-400">
-                Editing <strong className="text-white">{brandSlug}</strong> — {scopeLabel}.
-              </p>
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-medium">Launch checklist</h2>
+                <p className="mt-1 text-sm text-zinc-400">
+                  Editing <strong className="text-white">{brandSlug}</strong> — {scopeLabel}.
+                </p>
+              </div>
+
+              {checklist ? (
+                <div className="space-y-3 rounded-xl border border-zinc-800 p-4 text-sm">
+                  <p>
+                    Sitemap:{" "}
+                    <a className="text-pink-400 underline" href={checklist.sitemapUrl} rel="noreferrer" target="_blank">
+                      {checklist.sitemapUrl}
+                    </a>
+                  </p>
+                  <p>
+                    Robots:{" "}
+                    <a className="text-pink-400 underline" href={checklist.robotsUrl} rel="noreferrer" target="_blank">
+                      {checklist.robotsUrl}
+                    </a>
+                  </p>
+                  <ul className="space-y-1 text-zinc-300">
+                    <li>{checklist.hasAddress ? "✓" : "○"} Store address set</li>
+                    <li>{checklist.hasPhone ? "✓" : "○"} Store phone set</li>
+                    <li>
+                      {checklist.hasVerification ? "✓" : "○"} Google site verification token
+                      {checklist.googleSiteVerification
+                        ? ` (${checklist.googleSiteVerification.slice(0, 12)}…)`
+                        : " — set in Admin → System Settings"}
+                    </li>
+                    <li>
+                      {checklist.seoContentCount > 0 ? "✓" : "○"} SEO content rows ({checklist.seoContentCount})
+                    </li>
+                    <li>
+                      {checklist.blogPostCount > 0 ? "✓" : "○"} Blog posts ({checklist.blogPostCount})
+                    </li>
+                  </ul>
+                  <ol className="list-decimal space-y-1 pl-5 text-zinc-400">
+                    {checklist.gscSteps.map((step) => (
+                      <li key={step}>{step}</li>
+                    ))}
+                  </ol>
+                </div>
+              ) : null}
+
+              <div className="flex flex-wrap gap-2">
+                <Button disabled={saving} onClick={() => void handleFillFromStore(false)} variant="outline">
+                  Fill empty SEO from store
+                </Button>
+                <Button disabled={saving} onClick={() => void handleFillFromStore(true)} variant="outline">
+                  Overwrite SEO from store
+                </Button>
+                <Button disabled={saving} onClick={() => void handleStarterBlog()}>
+                  Create starter blog draft
+                </Button>
+              </div>
+
               <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-300">
                 <li>Use Pages to edit hero text and meta tags per page.</li>
                 <li>Use Images to upload and assign hero backgrounds.</li>
-                <li>Use Blog to create and publish posts with the rich editor.</li>
-                <li>Domain overrides replace store defaults for that host/path only.</li>
+                <li>Use Blog for posts (meta, thumbnail, author, category).</li>
+                <li>Each custom domain needs its own Google Search Console property + that host&apos;s sitemap.xml.</li>
               </ul>
             </div>
           ) : null}
@@ -504,6 +616,14 @@ export function SeoDashboardContent(): React.ReactElement {
               <Button disabled={saving} onClick={() => void handleSavePages()}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 Save page
+              </Button>
+              <Button
+                className="ml-2"
+                disabled={saving}
+                onClick={() => void handleFillFromStore(false)}
+                variant="outline"
+              >
+                Fill empty from store
               </Button>
             </div>
           ) : null}
@@ -647,6 +767,80 @@ export function SeoDashboardContent(): React.ReactElement {
                     }
                     value={editingPost.content ?? ""}
                   />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Input
+                      className="border-zinc-700 bg-zinc-800"
+                      onChange={(event) =>
+                        setEditingPost((prev) => ({ ...prev, author: event.target.value }))
+                      }
+                      placeholder="Author"
+                      value={editingPost.author ?? ""}
+                    />
+                    <Input
+                      className="border-zinc-700 bg-zinc-800"
+                      onChange={(event) =>
+                        setEditingPost((prev) => ({ ...prev, category: event.target.value }))
+                      }
+                      placeholder="Category"
+                      value={editingPost.category ?? ""}
+                    />
+                  </div>
+                  <div className="space-y-3 rounded-xl border border-zinc-800 p-4">
+                    <h3 className="font-medium">Post SEO</h3>
+                    <Input
+                      className="border-zinc-700 bg-zinc-800"
+                      onChange={(event) =>
+                        setEditingPost((prev) => ({ ...prev, metaTitle: event.target.value }))
+                      }
+                      placeholder="Meta title"
+                      value={editingPost.metaTitle ?? ""}
+                    />
+                    <textarea
+                      className="min-h-[70px] w-full rounded-lg border border-zinc-700 bg-zinc-800 p-3 text-sm"
+                      onChange={(event) =>
+                        setEditingPost((prev) => ({
+                          ...prev,
+                          metaDescription: event.target.value,
+                        }))
+                      }
+                      placeholder="Meta description"
+                      value={editingPost.metaDescription ?? ""}
+                    />
+                    <Input
+                      className="border-zinc-700 bg-zinc-800"
+                      onChange={(event) =>
+                        setEditingPost((prev) => ({ ...prev, metaKeywords: event.target.value }))
+                      }
+                      placeholder="Meta keywords"
+                      value={editingPost.metaKeywords ?? ""}
+                    />
+                    <div>
+                      <label className="mb-1 block text-sm text-zinc-400">Thumbnail</label>
+                      <select
+                        className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm"
+                        onChange={(event) =>
+                          setEditingPost((prev) => ({
+                            ...prev,
+                            thumbnailImageId: event.target.value || null,
+                          }))
+                        }
+                        onFocus={() => {
+                          if (token && images.length === 0) void loadImages();
+                        }}
+                        value={editingPost.thumbnailImageId ?? ""}
+                      >
+                        <option value="">No thumbnail</option>
+                        {images.map((image) => (
+                          <option key={image.id} value={image.id}>
+                            {image.label || image.filename}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-xs text-zinc-500">
+                        Upload images in the Images tab first, then select here.
+                      </p>
+                    </div>
+                  </div>
                   <select
                     className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm"
                     onChange={(event) =>

@@ -22,17 +22,18 @@ export async function generateMetadata(): Promise<Metadata> {
       description: `News and updates from ${settings.storeName}`,
     },
     siteOriginFromHost(host),
+    { googleSiteVerification: settings.googleSiteVerification },
   );
 }
 
 export default async function BlogPage(): Promise<React.ReactElement> {
-  const { brandSlug } = await resolveBrandSlugForRequest();
+  const { brandSlug, host } = await resolveBrandSlugForRequest();
   const settings = await fetchStoreSettings(brandSlug);
 
   return (
     <>
       <SeoMetaClient fallbackTitle={`Blog | ${settings.storeName}`} pageKey="blog" />
-      <BlogSection />
+      <BlogSection brandSlug={brandSlug} host={host} />
     </>
   );
 }
