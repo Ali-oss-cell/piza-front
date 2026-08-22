@@ -80,6 +80,7 @@ export function SettingsView({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [readiness, setReadiness] = useState<HqReadiness | null>(null);
+  const [storeIsActive, setStoreIsActive] = useState(true);
 
   useEffect(() => {
     setForm(formFromSettings(settings));
@@ -91,6 +92,9 @@ export function SettingsView({
       .then((next) => {
         if (!cancelled) {
           setReadiness(next);
+          if (typeof next.brand?.isActive === "boolean") {
+            setStoreIsActive(next.brand.isActive);
+          }
         }
       })
       .catch(() => {
@@ -451,34 +455,70 @@ export function SettingsView({
         <div className={cn("max-w-2xl space-y-3 rounded-2xl border border-[#d81b60]/30 p-6", dashboardGlass)}>
           <h3 className={cn("font-display text-lg font-bold", primaryText)}>Platform controls</h3>
           <p className={cn("text-sm", secondaryText)}>
-            Suspend this store to hide it from customers, POS brand lists, and admin pickers.
+            Soft-delete hides this store from customers, POS brand lists, and admin pickers.
+            Data is kept and you can reactivate later.
           </p>
-          <Button
-            disabled={isSuspending}
-            onClick={() => {
-              void (async () => {
-                setIsSuspending(true);
-                setError(null);
-                try {
-                  await updateStoreStatus(token, brandSlug, false);
-                  onStoreSuspended?.();
-                } catch (suspendError) {
-                  setError(
-                    suspendError instanceof Error
-                      ? suspendError.message
-                      : "Unable to suspend store.",
-                  );
-                } finally {
-                  setIsSuspending(false);
+          {storeIsActive ? (
+            <Button
+              disabled={isSuspending}
+              onClick={() => {
+                const confirmed = window.confirm(
+                  `Delete store "${settings.storeName}"?\n\nThis is a soft delete: the store is hidden but data is kept. You can reactivate it later.`,
+                );
+                if (!confirmed) {
+                  return;
                 }
-              })();
-            }}
-            type="button"
-            variant="outline"
-          >
-            {isSuspending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Suspend store
-          </Button>
+                void (async () => {
+                  setIsSuspending(true);
+                  setError(null);
+                  try {
+                    await updateStoreStatus(token, brandSlug, false);
+                    setStoreIsActive(false);
+                    onStoreSuspended?.();
+                  } catch (suspendError) {
+                    setError(
+                      suspendError instanceof Error
+                        ? suspendError.message
+                        : "Unable to delete store.",
+                    );
+                  } finally {
+                    setIsSuspending(false);
+                  }
+                })();
+              }}
+              type="button"
+              variant="outline"
+            >
+              {isSuspending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Delete store
+            </Button>
+          ) : (
+            <Button
+              disabled={isSuspending}
+              onClick={() => {
+                void (async () => {
+                  setIsSuspending(true);
+                  setError(null);
+                  try {
+                    await updateStoreStatus(token, brandSlug, true);
+                    setStoreIsActive(true);
+                  } catch (reactivateError) {
+                    setError(
+                      reactivateError instanceof Error
+                        ? reactivateError.message
+                        : "Unable to reactivate store.",
+                    );
+                  } finally {
+                    setIsSuspending(false);
+                  }
+                })();
+              }}
+              type="button"
+            >
+              {isSuspending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Reactivate store
+            </Button>
+          )}
         </div>
       ) : null}
     </div>

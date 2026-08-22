@@ -24,11 +24,14 @@ import {
   Activity as ActivityIcon,
   UsersRound,
   HeartPulse,
+  KeyRound,
 } from "lucide-react";
 import Link from "next/link";
 import type { AdminView } from "@/types/admin";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import { cn } from "@/lib/utils";
+
+const PLATFORM_ONLY_STORE_VIEWS = new Set<AdminView>(["payments", "advanced-settings"]);
 
 const STORE_NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -44,7 +47,7 @@ const STORE_NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashbo
   { id: "team", label: "Team", icon: UsersRound },
   { id: "locations", label: "Locations", icon: MapPin },
   { id: "settings", label: "System Settings", icon: Settings },
-  { id: "advanced-settings", label: "Advanced Settings", icon: Globe },
+  { id: "advanced-settings", label: "Infrastructure", icon: Globe },
 ];
 
 const HQ_NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashboard }[] = [
@@ -57,6 +60,7 @@ const HQ_NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashboard
   { id: "customers", label: "Customers", icon: Users },
   { id: "people", label: "People", icon: UsersRound },
   { id: "activity", label: "Activity", icon: ActivityIcon },
+  { id: "platform-secrets", label: "Platform secrets", icon: KeyRound },
 ];
 
 interface AdminSidebarProps {
@@ -74,10 +78,16 @@ export function AdminSidebar({
   collapsed,
   mobileOpen,
   mode = "store",
+  isPlatformAdmin = false,
   onSelectView,
   onCloseMobile,
 }: AdminSidebarProps): React.ReactElement {
-  const navItems = mode === "hq" ? HQ_NAV_ITEMS : STORE_NAV_ITEMS;
+  const navItems =
+    mode === "hq"
+      ? HQ_NAV_ITEMS
+      : STORE_NAV_ITEMS.filter(
+          (item) => isPlatformAdmin || !PLATFORM_ONLY_STORE_VIEWS.has(item.id),
+        );
   const title = mode === "hq" ? "Franchise HQ" : "Admin Console";
 
   const sidebarContent = (

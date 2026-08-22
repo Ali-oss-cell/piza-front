@@ -211,6 +211,19 @@ export interface HqStoreHealth {
   stores: HqStoreHealthRow[];
 }
 
+export type PlatformSecretKey =
+  | "STRIPE_SECRET_KEY"
+  | "STRIPE_WEBHOOK_SECRET"
+  | "LINKLY_ENV";
+
+export interface PlatformSecretRow {
+  key: PlatformSecretKey;
+  configured: boolean;
+  maskedValue: string | null;
+  fromDatabase: boolean;
+  source: "database" | "env" | "none";
+}
+
 export interface AdminLocation {
   id: string;
   slug: string;

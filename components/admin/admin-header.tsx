@@ -41,7 +41,8 @@ const VIEW_LABELS: Record<AdminView, string> = {
   people: "People",
   health: "Store Health",
   activity: "Activity",
-  "advanced-settings": "Advanced Settings",
+  "advanced-settings": "Infrastructure",
+  "platform-secrets": "Platform Secrets",
 };
 
 interface AdminHeaderProps {

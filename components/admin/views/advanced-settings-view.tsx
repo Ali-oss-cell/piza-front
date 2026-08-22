@@ -135,11 +135,11 @@ export function AdvancedSettingsView({
       {/* header */}
       <div>
         <h2 className={cn("font-display text-2xl font-bold", primaryText)}>
-          Advanced Settings
+          Infrastructure
         </h2>
         <p className={cn("mt-1 text-sm", secondaryText)}>
-          Domain routing and payment gateway configuration for this store.
-          Secrets are stored encrypted on the server — never in the browser.
+          Platform (Marina HQ) only. Domain routing and payment gateways for this store.
+          Credentials are stored per store in the database — not in server .env.
         </p>
       </div>
 

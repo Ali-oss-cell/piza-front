@@ -30,6 +30,7 @@ import { HqDealsView } from "@/components/admin/views/hq-deals-view";
 import { StoreHealthView } from "@/components/admin/views/store-health-view";
 import { ActivityView } from "@/components/admin/views/activity-view";
 import { AdvancedSettingsView } from "@/components/admin/views/advanced-settings-view";
+import { PlatformSecretsView } from "@/components/admin/views/platform-secrets-view";
 import {
   fetchAdminCrusts,
   fetchAdminDeals,
@@ -92,14 +93,34 @@ export function AdminDashboardContent(): React.ReactElement {
   useEffect(() => {
     if (platformAdmin && !selectedBrand && !showStoreGallery) {
       setActiveView((current) =>
-        ["hq", "reports", "health", "domains", "templates", "deals", "customers", "people", "activity"].includes(
-          current,
-        )
+        [
+          "hq",
+          "reports",
+          "health",
+          "domains",
+          "templates",
+          "deals",
+          "customers",
+          "people",
+          "activity",
+          "platform-secrets",
+        ].includes(current)
           ? current
           : "hq",
       );
     }
   }, [platformAdmin, selectedBrand, showStoreGallery]);
+
+  useEffect(() => {
+    if (
+      !platformAdmin &&
+      (activeView === "payments" ||
+        activeView === "advanced-settings" ||
+        activeView === "platform-secrets")
+    ) {
+      setActiveView("overview");
+    }
+  }, [platformAdmin, activeView]);
 
   const goToAllStores = useCallback((): void => {
     clearBrand();
@@ -126,7 +147,6 @@ export function AdminDashboardContent(): React.ReactElement {
         nextCrusts,
         nextDeals,
         nextSettings,
-        nextPayments,
         nextDomains,
       ] = await Promise.all([
         fetchOrders(token, brandSlug),
@@ -139,9 +159,13 @@ export function AdminDashboardContent(): React.ReactElement {
         fetchAdminCrusts(token, brandSlug),
         fetchAdminDeals(token, brandSlug),
         fetchStoreSettings(token, brandSlug),
-        fetchPaymentSettings(token, brandSlug),
         fetchStoreDomains(token, brandSlug),
       ]);
+
+      const nextPayments = platformAdmin
+        ? await fetchPaymentSettings(token, brandSlug)
+        : null;
+
       setOrders(nextOrders);
       setMenuItems(nextMenu);
       setToppingCatalog(nextToppings);
@@ -163,7 +187,7 @@ export function AdminDashboardContent(): React.ReactElement {
     } finally {
       setIsLoading(false);
     }
-  }, [token, brandSlug]);
+  }, [token, brandSlug, platformAdmin]);
 
   useEffect(() => {
     if (!isAuthReady) {
@@ -233,6 +257,7 @@ export function AdminDashboardContent(): React.ReactElement {
           collapsed={collapsed}
           mobileOpen={mobileOpen}
           mode="hq"
+          isPlatformAdmin={true}
           onCloseMobile={() => setMobileOpen(false)}
           onSelectView={setActiveView}
         />
@@ -288,6 +313,9 @@ export function AdminDashboardContent(): React.ReactElement {
                 ) : null}
                 {activeView === "people" ? <PeopleView brands={brands} token={token!} /> : null}
                 {activeView === "activity" ? <ActivityView token={token!} /> : null}
+                {activeView === "platform-secrets" ? (
+                  <PlatformSecretsView token={token!} />
+                ) : null}
               </motion.div>
             </AnimatePresence>
           </main>

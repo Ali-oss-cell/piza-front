@@ -897,6 +897,23 @@ export function fetchHqStoreHealth(
   return apiRequest("/hq/health", { token });
 }
 
+export function fetchPlatformSecrets(
+  token: string,
+): Promise<import("@/types/hq").PlatformSecretRow[]> {
+  return apiRequest("/hq/platform-secrets", { token });
+}
+
+export function updatePlatformSecrets(
+  token: string,
+  secrets: Array<{ key: string; value: string | null }>,
+): Promise<import("@/types/hq").PlatformSecretRow[]> {
+  return apiRequest("/hq/platform-secrets", {
+    method: "PUT",
+    token,
+    body: JSON.stringify({ secrets }),
+  });
+}
+
 export function fetchHqMemberships(
   token: string,
   brand?: string,

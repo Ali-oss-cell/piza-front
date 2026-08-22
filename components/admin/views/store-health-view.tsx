@@ -3,7 +3,7 @@
 import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { fetchHqStoreHealth } from "@/lib/admin-api";
+import { fetchHqStoreHealth, updateStoreStatus } from "@/lib/admin-api";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import type { HqStoreHealth, HqStoreHealthRow } from "@/types/hq";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ export function StoreHealthView({
   const [filter, setFilter] = useState<Filter>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [busySlug, setBusySlug] = useState<string | null>(null);
 
   const load = async (): Promise<void> => {
     setIsLoading(true);
@@ -48,6 +49,34 @@ export function StoreHealthView({
     return rows.filter((row) => row.severity === filter);
   }, [data, filter]);
 
+  const handleStatus = async (store: HqStoreHealthRow, isActive: boolean): Promise<void> => {
+    if (!isActive) {
+      const confirmed = window.confirm(
+        `Delete store "${store.name}"?\n\nSoft delete: hidden from customers/POS, data kept. You can reactivate later.`,
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    setBusySlug(store.slug);
+    setError(null);
+    try {
+      await updateStoreStatus(token, store.slug, isActive);
+      await load();
+    } catch (statusError) {
+      setError(
+        statusError instanceof Error
+          ? statusError.message
+          : isActive
+            ? "Unable to reactivate store."
+            : "Unable to delete store.",
+      );
+    } finally {
+      setBusySlug(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -61,6 +90,12 @@ export function StoreHealthView({
           Refresh
         </Button>
       </div>
+
+      {error ? (
+        <div className="rounded-xl border border-[#d81b60]/30 bg-[#d81b60]/10 px-4 py-3 text-sm text-[#d81b60]">
+          {error}
+        </div>
+      ) : null}
 
       {data ? (
         <div className="grid gap-3 sm:grid-cols-4">
@@ -84,17 +119,15 @@ export function StoreHealthView({
               type="button"
             >
               <p className={cn("text-xs uppercase tracking-wide", secondaryText)}>{card.label}</p>
-              <p className={cn("mt-1 text-2xl font-bold", primaryText)}>{card.value}</p>
+              <p className={cn("mt-1 font-display text-2xl font-bold", primaryText)}>{card.value}</p>
             </button>
           ))}
         </div>
       ) : null}
 
-      {error ? <p className="text-sm text-red-500">{error}</p> : null}
-
       {isLoading ? (
         <div className="flex min-h-[20vh] items-center justify-center">
-          <Loader2 className="h-7 w-7 animate-spin text-[#d81b60]" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#d81b60]" />
         </div>
       ) : (
         <div className="space-y-3">
@@ -103,7 +136,16 @@ export function StoreHealthView({
               <p className={cn("text-sm", secondaryText)}>No stores match this filter.</p>
             </div>
           ) : (
-            stores.map((store) => <HealthRow key={store.id} onOpenStore={onOpenStore} store={store} />)
+            stores.map((store) => (
+              <HealthRow
+                busy={busySlug === store.slug}
+                key={store.id}
+                onDelete={() => void handleStatus(store, false)}
+                onOpenStore={onOpenStore}
+                onReactivate={() => void handleStatus(store, true)}
+                store={store}
+              />
+            ))
           )}
         </div>
       )}
@@ -114,9 +156,15 @@ export function StoreHealthView({
 function HealthRow({
   store,
   onOpenStore,
+  onDelete,
+  onReactivate,
+  busy,
 }: {
   store: HqStoreHealthRow;
   onOpenStore?: (slug: string) => void;
+  onDelete: () => void;
+  onReactivate: () => void;
+  busy: boolean;
 }): React.ReactElement {
   const tone =
     store.severity === "critical"
@@ -146,14 +194,27 @@ function HealthRow({
           </div>
           <p className={cn("mt-1 text-xs", secondaryText)}>
             {store.status}
-            {!store.isActive ? " · suspended" : ""}
+            {!store.isActive ? " · deleted (soft)" : ""}
           </p>
         </div>
-        {onOpenStore ? (
-          <Button onClick={() => onOpenStore(store.slug)} type="button" variant="outline">
-            Open store
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap gap-2">
+          {onOpenStore ? (
+            <Button onClick={() => onOpenStore(store.slug)} type="button" variant="outline">
+              Open store
+            </Button>
+          ) : null}
+          {store.isActive ? (
+            <Button disabled={busy} onClick={onDelete} type="button" variant="outline">
+              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Delete store
+            </Button>
+          ) : (
+            <Button disabled={busy} onClick={onReactivate} type="button">
+              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Reactivate
+            </Button>
+          )}
+        </div>
       </div>
 
       {store.alerts.length === 0 ? (
