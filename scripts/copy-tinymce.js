@@ -7,11 +7,6 @@ const source = path.join(__dirname, "..", "node_modules", "tinymce");
 const target = path.join(__dirname, "..", "public", "tinymce");
 
 function copyRecursive(src, dest) {
-  if (!fs.existsSync(src)) {
-    console.warn(`TinyMCE source not found at ${src}. Run npm install tinymce first.`);
-    return;
-  }
-
   fs.mkdirSync(dest, { recursive: true });
 
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
@@ -26,5 +21,15 @@ function copyRecursive(src, dest) {
   }
 }
 
-copyRecursive(source, target);
-console.log("Copied TinyMCE assets to public/tinymce");
+if (!fs.existsSync(source)) {
+  console.warn(`TinyMCE source not found at ${source}. Skipping copy (run npm install tinymce first).`);
+  process.exit(0);
+}
+
+try {
+  copyRecursive(source, target);
+  console.log("Copied TinyMCE assets to public/tinymce");
+} catch (error) {
+  console.error("Failed to copy TinyMCE assets:", error);
+  process.exit(1);
+}
