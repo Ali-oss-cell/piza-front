@@ -22,7 +22,6 @@ jobs:
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           port: ${{ secrets.DROPLET_SSH_PORT || 22 }}
-          script_stop: true
           command_timeout: 80m
           script: |
             set -euo pipefail
