@@ -32,7 +32,7 @@ export function ToppingsGrid({
                   className={cn(
                     "flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all",
                     isActive
-                      ? "border-[#d81b60] bg-[#d81b60]/15 text-zinc-950 dark:text-white"
+                      ? "border-[color:var(--brand-accent,#d81b60)] bg-[color:var(--brand-accent,#d81b60)]/15 text-zinc-950 dark:text-white"
                       : "border-zinc-200/60 bg-zinc-100 text-zinc-950 hover:border-zinc-300/80 hover:bg-zinc-200 dark:border-white/10 dark:bg-zinc-800 dark:text-white dark:hover:border-white/20 dark:hover:bg-zinc-700"
                   )}
                   key={topping.id}
@@ -49,7 +49,7 @@ export function ToppingsGrid({
                     className={cn(
                       "flex h-6 w-6 items-center justify-center rounded-md border",
                       isActive
-                        ? "border-[#d81b60] bg-[#d81b60] text-white"
+                        ? "border-[color:var(--brand-accent,#d81b60)] bg-[color:var(--brand-accent,#d81b60)] text-white"
                         : "border-zinc-300/60 bg-transparent text-transparent dark:border-white/20"
                     )}
                   >

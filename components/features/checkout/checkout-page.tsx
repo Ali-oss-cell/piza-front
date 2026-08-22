@@ -238,7 +238,7 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
         <div className="space-y-5">
           <section className={cn("p-6", cardShell)}>
             <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#d81b60]/10 text-[#d81b60]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--brand-accent,#d81b60)]/10 text-[color:var(--brand-accent,#d81b60)]">
                 <User className="h-5 w-5" />
               </div>
               <div>
@@ -296,7 +296,7 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
 
           <section className={cn("p-6", cardShell)}>
             <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#d81b60]/10 text-[#d81b60]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--brand-accent,#d81b60)]/10 text-[color:var(--brand-accent,#d81b60)]">
                 <CalendarClock className="h-5 w-5" />
               </div>
               <div>
@@ -339,7 +339,7 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
           {deliveryMode === "delivery" ? (
             <section className={cn("p-6", cardShell)}>
               <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#d81b60]/10 text-[#d81b60]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--brand-accent,#d81b60)]/10 text-[color:var(--brand-accent,#d81b60)]">
                   <MapPin className="h-5 w-5" />
                 </div>
                 <div>
@@ -440,7 +440,7 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
         <aside className={cn("h-fit p-6 lg:sticky lg:top-28", cardShell)}>
           <div className="mb-5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5 text-[#d81b60]" />
+              <ShoppingBag className="h-5 w-5 text-[color:var(--brand-accent,#d81b60)]" />
               <h2 className={cn("font-semibold", primaryText)}>
                 Order summary ({items.length})
               </h2>

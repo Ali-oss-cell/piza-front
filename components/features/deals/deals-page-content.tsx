@@ -21,7 +21,7 @@ export function DealsPageContent({ deals }: DealsPageContentProps): React.ReactE
     <main className={cn("min-h-screen pt-24", pageShell)}>
       <section className="mx-auto max-w-container-max px-margin-mobile pb-16 pt-10 md:px-margin-desktop">
         <div className="max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#d81b60]">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[color:var(--brand-accent,#d81b60)]">
             Exclusive Offers
           </p>
           <h1 className="mt-4 font-display text-4xl font-bold md:text-5xl">Deals & Promotions</h1>
@@ -85,7 +85,7 @@ function DealCard({
   return (
     <article
       className={cn(
-        "group overflow-hidden rounded-2xl border border-zinc-200/70 bg-white/80 backdrop-blur-md transition-all duration-150 hover:border-[#d81b60]/30 hover:shadow-xl hover:shadow-[#d81b60]/10 dark:border-white/10 dark:bg-zinc-900/40",
+        "group overflow-hidden rounded-2xl border border-zinc-200/70 bg-white/80 backdrop-blur-md transition-all duration-150 hover:border-[color:var(--brand-accent,#d81b60)]/30 hover:shadow-xl hover:shadow-[color:var(--brand-accent,#d81b60)]/10 dark:border-white/10 dark:bg-zinc-900/40",
         featured ? "lg:flex lg:min-h-[280px]" : ""
       )}
     >
@@ -97,7 +97,7 @@ function DealCard({
           sizes={featured ? "40vw" : "33vw"}
           src={imageUrl}
         />
-        <span className="absolute left-4 top-4 rounded-full bg-[#d81b60] px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+        <span className="absolute left-4 top-4 rounded-full bg-[color:var(--brand-accent,#d81b60)] px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
           {formatDealBadge(deal)}
         </span>
       </div>
@@ -107,10 +107,10 @@ function DealCard({
         <p className={cn("mt-3 flex-1 text-sm leading-relaxed", secondaryText)}>{deal.description}</p>
 
         {deal.promoCode ? (
-          <div className="mt-4 inline-flex items-center gap-2 rounded-lg border border-dashed border-[#d81b60]/40 bg-[#d81b60]/5 px-3 py-2 text-sm">
-            <Tag className="h-4 w-4 text-[#d81b60]" />
+          <div className="mt-4 inline-flex items-center gap-2 rounded-lg border border-dashed border-[color:var(--brand-accent,#d81b60)]/40 bg-[color:var(--brand-accent,#d81b60)]/5 px-3 py-2 text-sm">
+            <Tag className="h-4 w-4 text-[color:var(--brand-accent,#d81b60)]" />
             <span className={secondaryText}>Code:</span>
-            <span className="font-mono font-bold text-[#d81b60]">{deal.promoCode}</span>
+            <span className="font-mono font-bold text-[color:var(--brand-accent,#d81b60)]">{deal.promoCode}</span>
           </div>
         ) : null}
 

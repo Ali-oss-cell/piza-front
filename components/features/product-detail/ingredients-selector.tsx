@@ -25,7 +25,7 @@ export function IngredientsSelector({
               "flex items-center justify-between rounded-lg border px-4 py-3 text-left text-sm transition-all",
               isRemoved
                 ? "border-zinc-200/40 bg-zinc-100/50 text-zinc-400 line-through dark:border-white/5 dark:bg-zinc-950/40 dark:text-zinc-500"
-                : "border-zinc-200/60 bg-zinc-50/80 text-zinc-700 hover:border-[#d81b60]/30 hover:bg-[#d81b60]/5 dark:border-white/5 dark:bg-zinc-950/80 dark:text-zinc-300 dark:hover:border-[#d81b60]/30"
+                : "border-zinc-200/60 bg-zinc-50/80 text-zinc-700 hover:border-[color:var(--brand-accent,#d81b60)]/30 hover:bg-[color:var(--brand-accent,#d81b60)]/5 dark:border-white/5 dark:bg-zinc-950/80 dark:text-zinc-300 dark:hover:border-[color:var(--brand-accent,#d81b60)]/30"
             )}
             key={ingredient}
             onClick={() => onToggle(ingredient)}
@@ -37,7 +37,7 @@ export function IngredientsSelector({
                 "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border",
                 isRemoved
                   ? "border-zinc-300/60 text-zinc-500 dark:border-white/10 dark:text-zinc-400"
-                  : "border-[#d81b60]/40 bg-[#d81b60]/10 text-[#d81b60]"
+                  : "border-[color:var(--brand-accent,#d81b60)]/40 bg-[color:var(--brand-accent,#d81b60)]/10 text-[color:var(--brand-accent,#d81b60)]"
               )}
             >
               {isRemoved ? <Plus className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}

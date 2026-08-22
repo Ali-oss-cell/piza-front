@@ -23,7 +23,7 @@ export function LocationCard({
       className={cn(
         "rounded-2xl border bg-white/70 p-6 backdrop-blur-md transition-all duration-150 ease-out hover:scale-[1.01] dark:bg-zinc-900/40",
         isActive
-          ? "border-[#d81b60] shadow-lg shadow-[#d81b60]/15"
+          ? "border-[color:var(--brand-accent,#d81b60)] shadow-lg shadow-[color:var(--brand-accent,#d81b60)]/15"
           : "border-zinc-200/60 hover:border-zinc-300/80 dark:border-white/10 dark:hover:border-white/20"
       )}
     >
@@ -41,15 +41,15 @@ export function LocationCard({
 
         <div className="space-y-3 text-sm text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400">
           <p className="flex items-start gap-3">
-            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#d81b60]" />
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--brand-accent,#d81b60)]" />
             {location.address}
           </p>
           <p className="flex items-center gap-3">
-            <Phone className="h-4 w-4 shrink-0 text-[#d81b60]" />
+            <Phone className="h-4 w-4 shrink-0 text-[color:var(--brand-accent,#d81b60)]" />
             {location.phone}
           </p>
           <p className="flex items-center gap-3">
-            <Mail className="h-4 w-4 shrink-0 text-[#d81b60]" />
+            <Mail className="h-4 w-4 shrink-0 text-[color:var(--brand-accent,#d81b60)]" />
             {location.email}
           </p>
         </div>
@@ -76,7 +76,7 @@ export function LocationCard({
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           <Button
             asChild
-            className="flex-1 rounded-xl bg-[#d81b60] py-5 uppercase tracking-widest hover:bg-[#c2185b]"
+            className="flex-1 rounded-xl bg-[color:var(--brand-accent,#d81b60)] py-5 uppercase tracking-widest hover:brightness-110"
           >
             <Link href="/">Order from this Store</Link>
           </Button>

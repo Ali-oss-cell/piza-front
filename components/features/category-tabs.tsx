@@ -22,7 +22,7 @@ export function CategoryTabs({
               className={cn(
                 "font-label-md uppercase tracking-widest transition-colors duration-150 ease-out",
                 activeCategory === category.value
-                  ? "font-bold text-[#d81b60]"
+                  ? "font-bold text-[color:var(--brand-accent,#d81b60)]"
                   : "font-medium text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
               )}
               key={category.value}

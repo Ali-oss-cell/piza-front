@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { resolveMediaUrl } from "@/lib/media-url";
+import { PLATFORM_ACCENT } from "@/lib/store-theme";
 
 const DEFAULT_HERO =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuBvLbch0jQ5PYw35jNjOwWrBuRd7eU_GlrTVGHvtPk_llIBerZFSgY2-RGO1dkxZpRa0FX5hKSYfkpRZWQRQksuFZZNgBNXgziC80aEEXAonKXkXEUYm4mwhAe2yXLjnYzXeQco1l4G3bHIp2nG1Qx7a-toviugVlrlrKmuQ3TJCB6mWpuKtKNdc6U62q70HyfIP3rarjnJI9-VWRee5BI3XwPb_CVeEzmfQrbaLax7OCoHPN4g82XSYhXqCFl6xZSnspMSAzb2QnU";
@@ -11,8 +15,10 @@ interface HeroSectionProps {
   brandSlug?: string;
   tagline?: string;
   heroImageUrl?: string | null;
+  heroImageDarkUrl?: string | null;
   primaryColor?: string | null;
-  secondaryColor?: string | null;
+  backgroundLightColor?: string | null;
+  backgroundDarkColor?: string | null;
 }
 
 export function HeroSection({
@@ -21,16 +27,34 @@ export function HeroSection({
   brandSlug,
   tagline,
   heroImageUrl,
+  heroImageDarkUrl,
   primaryColor,
+  backgroundLightColor,
+  backgroundDarkColor,
 }: HeroSectionProps): React.ReactElement {
+  const { resolvedTheme } = useTheme();
   const slug = brandSlug?.toLowerCase() ?? "";
   const isBennyBoys =
     slug.includes("bunny") ||
     slug.includes("benny") ||
     (brandName?.toLowerCase().includes("benny") ?? false);
-  const brandPrimary = primaryColor?.trim() || "#d81b60";
-  const heroSrc = resolveMediaUrl(heroImageUrl) ?? DEFAULT_HERO;
-  const heroStyle = { "--brand-primary": brandPrimary } as React.CSSProperties;
+
+  const brandPrimary = primaryColor?.trim() || PLATFORM_ACCENT;
+  const bgLight = backgroundLightColor?.trim() || "#ffffff";
+  const bgDark = backgroundDarkColor?.trim() || "#000000";
+
+  const lightHero = resolveMediaUrl(heroImageUrl) ?? DEFAULT_HERO;
+  const darkHero =
+    resolveMediaUrl(heroImageDarkUrl) ?? resolveMediaUrl(heroImageUrl) ?? DEFAULT_HERO;
+  const isDark = resolvedTheme === "dark";
+  const heroSrc = isDark ? darkHero : lightHero;
+
+  const heroStyle = {
+    "--brand-primary": brandPrimary,
+    "--brand-accent": brandPrimary,
+    "--brand-bg-light": bgLight,
+    "--brand-bg-dark": bgDark,
+  } as React.CSSProperties;
 
   return (
     <section
@@ -44,7 +68,14 @@ export function HeroSection({
           className="h-full w-full scale-105 object-cover opacity-60"
           src={heroSrc}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent transition-colors duration-150 ease-out dark:from-black dark:via-black/80" />
+        <div
+          className="absolute inset-0 bg-gradient-to-r transition-colors duration-150 ease-out md:bg-gradient-to-r"
+          style={{
+            backgroundImage: isDark
+              ? `linear-gradient(to right, ${bgDark}, ${bgDark}cc, transparent)`
+              : `linear-gradient(to right, ${bgLight}, ${bgLight}cc, transparent)`,
+          }}
+        />
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-container-max">
@@ -53,12 +84,12 @@ export function HeroSection({
             {isBennyBoys ? (
               <>
                 BENNY <br />
-                BOYS <span className="text-[color:var(--brand-primary)]">DELIVERED.</span>
+                BOYS <span className="text-[color:var(--brand-accent)]">DELIVERED.</span>
               </>
             ) : (
               <>
                 PIZZA & <br />
-                PASTA <span className="text-[color:var(--brand-primary)]">REFINED.</span>
+                PASTA <span className="text-[color:var(--brand-accent)]">REFINED.</span>
               </>
             )}
           </h1>
@@ -70,7 +101,11 @@ export function HeroSection({
             <Button className="uppercase tracking-[0.15em]" onClick={onOpenCart}>
               Order Online
             </Button>
-            <Button asChild className="uppercase tracking-[0.15em] border-[color:var(--brand-primary)] text-[color:var(--brand-primary)] hover:bg-[color:var(--brand-primary)] hover:text-white dark:border-[color:var(--brand-primary)] dark:text-[color:var(--brand-primary)] dark:hover:bg-[color:var(--brand-primary)] dark:hover:text-white" variant="outline">
+            <Button
+              asChild
+              className="uppercase tracking-[0.15em] border-[color:var(--brand-accent)] text-[color:var(--brand-accent)] hover:bg-[color:var(--brand-accent)] hover:text-white dark:border-[color:var(--brand-accent)] dark:text-[color:var(--brand-accent)] dark:hover:bg-[color:var(--brand-accent)] dark:hover:text-white"
+              variant="outline"
+            >
               <Link href="/deals">View Specials</Link>
             </Button>
           </div>

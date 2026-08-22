@@ -27,8 +27,11 @@ interface FormState {
   logoUrl: string;
   logoDarkUrl: string;
   primaryColor: string;
-  secondaryColor: string;
+  backgroundLightColor: string;
+  backgroundDarkColor: string;
   heroImageUrl: string;
+  heroImageDarkUrl: string;
+  darkModeEnabled: boolean;
   pathPrefix: string;
   host: string;
   createStarterCategories: boolean;
@@ -71,8 +74,11 @@ export function CreateStoreWizard({
     logoUrl: "",
     logoDarkUrl: "",
     primaryColor: "#D81B60",
-    secondaryColor: "#111827",
+    backgroundLightColor: "#ffffff",
+    backgroundDarkColor: "#000000",
     heroImageUrl: "",
+    heroImageDarkUrl: "",
+    darkModeEnabled: true,
     pathPrefix: "",
     host: "",
     createStarterCategories: true,
@@ -145,8 +151,11 @@ export function CreateStoreWizard({
       logoUrl: form.logoUrl.trim() || undefined,
       logoDarkUrl: form.logoDarkUrl.trim() || undefined,
       primaryColor: form.primaryColor.trim() || undefined,
-      secondaryColor: form.secondaryColor.trim() || undefined,
+      backgroundLightColor: form.backgroundLightColor.trim() || undefined,
+      backgroundDarkColor: form.backgroundDarkColor.trim() || undefined,
       heroImageUrl: form.heroImageUrl.trim() || undefined,
+      heroImageDarkUrl: form.heroImageDarkUrl.trim() || undefined,
+      darkModeEnabled: form.darkModeEnabled,
       pathPrefix: normalizePathPrefix(form.slug, form.pathPrefix),
       host: form.host.trim() || undefined,
       createStarterCategories: form.createStarterCategories,
@@ -245,8 +254,8 @@ export function CreateStoreWizard({
 
           {step === 1 ? (
             <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Primary colour">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field label="Accent colour">
                   <div className="flex items-center gap-3">
                     <input
                       className="h-10 w-14 cursor-pointer rounded border border-zinc-200 bg-transparent dark:border-white/10"
@@ -261,22 +270,45 @@ export function CreateStoreWizard({
                     />
                   </div>
                 </Field>
-                <Field label="Secondary colour">
+                <Field label="Light background">
                   <div className="flex items-center gap-3">
                     <input
                       className="h-10 w-14 cursor-pointer rounded border border-zinc-200 bg-transparent dark:border-white/10"
-                      onChange={(event) => update("secondaryColor", event.target.value)}
+                      onChange={(event) => update("backgroundLightColor", event.target.value)}
                       type="color"
-                      value={form.secondaryColor || "#111827"}
+                      value={form.backgroundLightColor || "#ffffff"}
                     />
                     <Input
-                      onChange={(event) => update("secondaryColor", event.target.value)}
-                      placeholder="#111827"
-                      value={form.secondaryColor}
+                      onChange={(event) => update("backgroundLightColor", event.target.value)}
+                      placeholder="#ffffff"
+                      value={form.backgroundLightColor}
+                    />
+                  </div>
+                </Field>
+                <Field label="Dark background">
+                  <div className="flex items-center gap-3">
+                    <input
+                      className="h-10 w-14 cursor-pointer rounded border border-zinc-200 bg-transparent dark:border-white/10"
+                      onChange={(event) => update("backgroundDarkColor", event.target.value)}
+                      type="color"
+                      value={form.backgroundDarkColor || "#000000"}
+                    />
+                    <Input
+                      onChange={(event) => update("backgroundDarkColor", event.target.value)}
+                      placeholder="#000000"
+                      value={form.backgroundDarkColor}
                     />
                   </div>
                 </Field>
               </div>
+              <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                <input
+                  checked={form.darkModeEnabled}
+                  onChange={(event) => update("darkModeEnabled", event.target.checked)}
+                  type="checkbox"
+                />
+                Allow dark mode for this store
+              </label>
               <Field label="Light mode logo">
                 <LogoUploader
                   label="Light logo"
@@ -299,11 +331,18 @@ export function CreateStoreWizard({
                   value={form.logoDarkUrl}
                 />
               </Field>
-              <Field label="Homepage hero image">
+              <Field label="Hero image (light)">
                 <HeroImageUploader
                   onChange={(heroImageUrl) => update("heroImageUrl", heroImageUrl)}
                   token={token}
                   value={form.heroImageUrl}
+                />
+              </Field>
+              <Field label="Hero image (dark)">
+                <HeroImageUploader
+                  onChange={(heroImageDarkUrl) => update("heroImageDarkUrl", heroImageDarkUrl)}
+                  token={token}
+                  value={form.heroImageDarkUrl}
                 />
               </Field>
               <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
@@ -405,11 +444,13 @@ export function CreateStoreWizard({
               <ReviewRow label="Slug" value={form.slug} />
               <ReviewRow label="Path" value={pathPreview} />
               <ReviewRow label="Location" value={form.locationName} />
-              <ReviewRow label="Primary" value={form.primaryColor || "#D81B60"} />
-              <ReviewRow label="Secondary" value={form.secondaryColor || "#111827"} />
+              <ReviewRow label="Accent" value={form.primaryColor || "#D81B60"} />
+              <ReviewRow label="Light bg" value={form.backgroundLightColor || "#ffffff"} />
+              <ReviewRow label="Dark bg" value={form.backgroundDarkColor || "#000000"} />
+              <ReviewRow label="Dark mode" value={form.darkModeEnabled ? "Enabled" : "Light only"} />
               <ReviewRow
                 label="Hero image"
-                value={form.heroImageUrl ? "Uploaded" : "Default"}
+                value={form.heroImageUrl || form.heroImageDarkUrl ? "Uploaded" : "Default"}
               />
               <ReviewRow
                 label="Starter categories"

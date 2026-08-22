@@ -15,8 +15,11 @@ interface HomePageProps {
   brandSlug?: string;
   tagline?: string;
   heroImageUrl?: string | null;
+  heroImageDarkUrl?: string | null;
   primaryColor?: string | null;
-  secondaryColor?: string | null;
+  backgroundLightColor?: string | null;
+  backgroundDarkColor?: string | null;
+  darkModeEnabled?: boolean;
 }
 
 export function HomePage({
@@ -26,8 +29,10 @@ export function HomePage({
   brandSlug,
   tagline,
   heroImageUrl,
+  heroImageDarkUrl,
   primaryColor,
-  secondaryColor,
+  backgroundLightColor,
+  backgroundDarkColor,
 }: HomePageProps): React.ReactElement {
   const { addToCart, setCartOpen } = useCart();
   const [activeCategory, setActiveCategory] = useState(categories[0]?.value ?? "traditional-pizza");
@@ -35,12 +40,14 @@ export function HomePage({
   return (
     <main className="pt-20 transition-colors duration-150 ease-out">
       <HeroSection
+        backgroundDarkColor={backgroundDarkColor}
+        backgroundLightColor={backgroundLightColor}
         brandName={brandName}
         brandSlug={brandSlug}
+        heroImageDarkUrl={heroImageDarkUrl}
         heroImageUrl={heroImageUrl}
         onOpenCart={() => setCartOpen(true)}
         primaryColor={primaryColor}
-        secondaryColor={secondaryColor}
         tagline={tagline}
       />
       <CategoryTabs

@@ -15,7 +15,7 @@ export function AboutCta(): React.ReactElement {
         </p>
         <Button
           asChild
-          className="mt-8 rounded-xl bg-[#d81b60] px-10 py-6 text-sm font-semibold uppercase tracking-[0.2em] hover:bg-[#c2185b]"
+          className="mt-8 rounded-xl bg-[color:var(--brand-accent,#d81b60)] px-10 py-6 text-sm font-semibold uppercase tracking-[0.2em] hover:brightness-110"
         >
           <Link href="/">Explore the Menu</Link>
         </Button>

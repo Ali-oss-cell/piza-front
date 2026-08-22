@@ -30,7 +30,7 @@ export function AddToCartToast({
           exiting ? "animate-toastOut" : "animate-toastIn"
         )}
       >
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#d81b60]">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[color:var(--brand-accent,#d81b60)]">
           <Check className="h-3 w-3 text-white" />
         </span>
         {message}

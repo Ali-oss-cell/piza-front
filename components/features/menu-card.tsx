@@ -18,7 +18,7 @@ interface MenuCardProps {
 const SIZE_OPTIONS: PizzaSize[] = ["S", "L", "F"];
 
 const cardShellClassName =
-  "group relative flex h-full min-h-[420px] flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white/80 backdrop-blur-md transition-all duration-150 ease-out hover:scale-[1.02] hover:border-[#d81b60]/30 hover:shadow-2xl hover:shadow-[#d81b60]/10 dark:border-zinc-800/60 dark:bg-zinc-900/40 dark:hover:shadow-[#d81b60]/5 md:min-h-[360px] md:flex-row md:items-stretch";
+  "group relative flex h-full min-h-[420px] flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white/80 backdrop-blur-md transition-all duration-150 ease-out hover:scale-[1.02] hover:border-[color:var(--brand-accent,#d81b60)]/30 hover:shadow-2xl hover:shadow-[color:var(--brand-accent,#d81b60)]/10 dark:border-zinc-800/60 dark:bg-zinc-900/40 dark:hover:shadow-[color:var(--brand-accent,#d81b60)]/5 md:min-h-[360px] md:flex-row md:items-stretch";
 
 function formatPrice(price: number): string {
   return `$${price.toFixed(price % 1 === 0 ? 0 : 2)}`;
@@ -42,7 +42,7 @@ function getPriceForSize(item: MenuItem, size: PizzaSize): number {
 function CardHoverAccent(): React.ReactElement {
   return (
     <>
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-[#d81b60] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-[color:var(--brand-accent,#d81b60)] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       <div className="pointer-events-none absolute right-4 top-4 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200/60 bg-white/80 text-zinc-950 opacity-0 backdrop-blur-sm transition-all duration-300 group-hover:opacity-100 dark:border-white/10 dark:bg-zinc-950/60 dark:text-white">
         <ArrowUpRight className="h-4 w-4" />
       </div>
@@ -78,7 +78,7 @@ function ImagePanel({
         className="absolute inset-0 block bg-gradient-to-t from-zinc-950/50 via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-zinc-950/20"
       />
       {isInteractive ? (
-        <span className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 rounded-full border border-zinc-200/60 bg-white/80 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-950 backdrop-blur-md transition-colors duration-150 ease-out group-hover:border-[#d81b60]/40 dark:border-white/10 dark:bg-zinc-950/80 dark:text-white dark:group-hover:bg-zinc-950/90">
+        <span className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 rounded-full border border-zinc-200/60 bg-white/80 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-950 backdrop-blur-md transition-colors duration-150 ease-out group-hover:border-[color:var(--brand-accent,#d81b60)]/40 dark:border-white/10 dark:bg-zinc-950/80 dark:text-white dark:group-hover:bg-zinc-950/90">
           Customize
           <ArrowUpRight className="h-3 w-3" />
         </span>
@@ -130,7 +130,7 @@ function ActionFooter({
                 className={cn(
                   "min-w-[2.25rem] rounded-lg px-3 py-2 text-xs font-bold tracking-wide transition-colors",
                   selectedSize === size
-                    ? "bg-[#d81b60] text-white shadow-md shadow-[#d81b60]/20"
+                    ? "bg-[color:var(--brand-accent,#d81b60)] text-white shadow-md shadow-[color:var(--brand-accent,#d81b60)]/20"
                     : "bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
                 )}
                 key={size}
@@ -142,14 +142,14 @@ function ActionFooter({
             ))}
           </div>
         ) : null}
-        <span className="whitespace-nowrap text-xl font-bold text-[#d81b60]">
+        <span className="whitespace-nowrap text-xl font-bold text-[color:var(--brand-accent,#d81b60)]">
           {formatPrice(hasSizePricing ? selectedPrice : itemPrice)}
         </span>
       </div>
       {customizeHref ? (
         <Button
           asChild
-          className="h-11 shrink-0 rounded-xl bg-[#d81b60] px-4 hover:scale-105 hover:bg-[#c2185b] active:scale-95"
+          className="h-11 shrink-0 rounded-xl bg-[color:var(--brand-accent,#d81b60)] px-4 hover:scale-105 hover:brightness-110 active:scale-95"
         >
           <Link href={customizeHref}>Customize</Link>
         </Button>
@@ -159,7 +159,7 @@ function ActionFooter({
             "h-11 w-11 shrink-0 rounded-xl p-0 transition-all duration-300",
             justAdded
               ? "bg-emerald-600 hover:bg-emerald-600"
-              : "bg-[#d81b60] hover:scale-105 hover:bg-[#c2185b] active:scale-95"
+              : "bg-[color:var(--brand-accent,#d81b60)] hover:scale-105 hover:brightness-110 active:scale-95"
           )}
           onClick={onAddToCart}
           size="icon"
@@ -218,7 +218,7 @@ export function MenuCard({ item, onAddToCart }: MenuCardProps): React.ReactEleme
         </span>
         <MenuItemBadges badges={item.badges} className="shrink-0" />
       </span>
-      <h3 className="text-xl font-bold text-zinc-950 transition-colors duration-150 ease-out group-hover:text-[#d81b60] dark:text-white dark:group-hover:text-[#f8f8f8]">
+      <h3 className="text-xl font-bold text-zinc-950 transition-colors duration-150 ease-out group-hover:text-[color:var(--brand-accent,#d81b60)] dark:text-white dark:group-hover:text-[#f8f8f8]">
         {item.name}
       </h3>
       <p className="mt-3 text-sm leading-relaxed text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400">

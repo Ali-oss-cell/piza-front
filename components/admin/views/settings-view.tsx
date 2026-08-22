@@ -31,8 +31,11 @@ interface SettingsFormState {
   logoUrl: string;
   logoDarkUrl: string;
   primaryColor: string;
-  secondaryColor: string;
+  backgroundLightColor: string;
+  backgroundDarkColor: string;
   heroImageUrl: string;
+  heroImageDarkUrl: string;
+  darkModeEnabled: boolean;
   deliveryFee: string;
   minOrderAmount: string;
   contactEmail: string;
@@ -48,8 +51,11 @@ function formFromSettings(settings: StoreSettings): SettingsFormState {
     logoUrl: settings.logoUrl ?? "",
     logoDarkUrl: settings.logoDarkUrl ?? "",
     primaryColor: settings.primaryColor ?? "#D81B60",
-    secondaryColor: settings.secondaryColor ?? "#111827",
+    backgroundLightColor: settings.backgroundLightColor ?? "#ffffff",
+    backgroundDarkColor: settings.backgroundDarkColor ?? "#000000",
     heroImageUrl: settings.heroImageUrl ?? "",
+    heroImageDarkUrl: settings.heroImageDarkUrl ?? "",
+    darkModeEnabled: settings.darkModeEnabled !== false,
     deliveryFee: String(settings.deliveryFee),
     minOrderAmount: String(settings.minOrderAmount),
     contactEmail: settings.contactEmail ?? "",
@@ -108,8 +114,11 @@ export function SettingsView({
       logoUrl: form.logoUrl.trim() || null,
       logoDarkUrl: form.logoDarkUrl.trim() || null,
       primaryColor: form.primaryColor.trim() || null,
-      secondaryColor: form.secondaryColor.trim() || null,
+      backgroundLightColor: form.backgroundLightColor.trim() || null,
+      backgroundDarkColor: form.backgroundDarkColor.trim() || null,
       heroImageUrl: form.heroImageUrl.trim() || null,
+      heroImageDarkUrl: form.heroImageDarkUrl.trim() || null,
+      darkModeEnabled: form.darkModeEnabled,
       deliveryFee: Number(form.deliveryFee),
       minOrderAmount: Number(form.minOrderAmount),
       contactEmail: form.contactEmail.trim(),
@@ -211,65 +220,141 @@ export function SettingsView({
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={cn("mb-1 block text-sm font-medium", primaryText)}>Primary colour</label>
-            <div className="flex items-center gap-3">
-              <input
-                className="h-10 w-14 cursor-pointer rounded border border-zinc-200 bg-transparent dark:border-white/10"
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, primaryColor: event.target.value }))
-                }
-                type="color"
-                value={form.primaryColor || "#D81B60"}
-              />
-              <Input
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, primaryColor: event.target.value }))
-                }
-                placeholder="#D81B60"
-                value={form.primaryColor}
-              />
+        <div className="rounded-2xl border border-zinc-200/70 p-4 dark:border-white/10">
+          <h3 className={cn("mb-1 text-sm font-semibold", primaryText)}>Storefront theme</h3>
+          <p className={cn("mb-4 text-xs", secondaryText)}>
+            Colours apply across the customer site — menu, checkout, deals, and landing page.
+          </p>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                Accent colour
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  className="h-10 w-14 cursor-pointer rounded border border-zinc-200 bg-transparent dark:border-white/10"
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, primaryColor: event.target.value }))
+                  }
+                  type="color"
+                  value={form.primaryColor || "#D81B60"}
+                />
+                <Input
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, primaryColor: event.target.value }))
+                  }
+                  placeholder="#D81B60"
+                  value={form.primaryColor}
+                />
+              </div>
+              <p className={cn("mt-1 text-xs", secondaryText)}>Buttons, links, prices</p>
             </div>
-            <p className={cn("mt-1 text-xs", secondaryText)}>Buttons and main accents</p>
-          </div>
-          <div>
-            <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
-              Secondary colour
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                className="h-10 w-14 cursor-pointer rounded border border-zinc-200 bg-transparent dark:border-white/10"
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, secondaryColor: event.target.value }))
-                }
-                type="color"
-                value={form.secondaryColor || "#111827"}
-              />
-              <Input
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, secondaryColor: event.target.value }))
-                }
-                placeholder="#111827"
-                value={form.secondaryColor}
-              />
+            <div>
+              <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                Light background
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  className="h-10 w-14 cursor-pointer rounded border border-zinc-200 bg-transparent dark:border-white/10"
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      backgroundLightColor: event.target.value,
+                    }))
+                  }
+                  type="color"
+                  value={form.backgroundLightColor || "#ffffff"}
+                />
+                <Input
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      backgroundLightColor: event.target.value,
+                    }))
+                  }
+                  placeholder="#ffffff"
+                  value={form.backgroundLightColor}
+                />
+              </div>
+              <p className={cn("mt-1 text-xs", secondaryText)}>Light mode page base</p>
             </div>
-            <p className={cn("mt-1 text-xs", secondaryText)}>Hero highlight and secondary accents</p>
+            <div>
+              <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                Dark background
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  className="h-10 w-14 cursor-pointer rounded border border-zinc-200 bg-transparent dark:border-white/10"
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      backgroundDarkColor: event.target.value,
+                    }))
+                  }
+                  type="color"
+                  value={form.backgroundDarkColor || "#000000"}
+                />
+                <Input
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      backgroundDarkColor: event.target.value,
+                    }))
+                  }
+                  placeholder="#000000"
+                  value={form.backgroundDarkColor}
+                />
+              </div>
+              <p className={cn("mt-1 text-xs", secondaryText)}>Dark mode page base</p>
+            </div>
           </div>
+
+          <label className="mt-4 flex cursor-pointer items-center gap-3">
+            <input
+              checked={form.darkModeEnabled}
+              className="h-4 w-4 rounded border-zinc-300"
+              onChange={(event) =>
+                setForm((current) => ({ ...current, darkModeEnabled: event.target.checked }))
+              }
+              type="checkbox"
+            />
+            <span className={cn("text-sm", primaryText)}>Allow dark mode for this store</span>
+          </label>
+          <p className={cn("mt-1 text-xs", secondaryText)}>
+            When off, customers always see light mode and the theme toggle is hidden.
+          </p>
         </div>
 
-        <div>
-          <label className={cn("mb-1 block text-sm font-semibold", primaryText)}>
-            Homepage hero image
-          </label>
-          <p className={cn("mb-3 text-xs", secondaryText)}>
-            Full-bleed banner behind the homepage headline.
-          </p>
-          <HeroImageUploader
-            onChange={(heroImageUrl) => setForm((current) => ({ ...current, heroImageUrl }))}
-            token={token}
-            value={form.heroImageUrl}
-          />
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="rounded-2xl border border-zinc-200/70 p-4 dark:border-white/10">
+            <label className={cn("mb-1 block text-sm font-semibold", primaryText)}>
+              Hero image (light mode)
+            </label>
+            <p className={cn("mb-3 text-xs", secondaryText)}>
+              Landing page banner when the site is in light mode.
+            </p>
+            <HeroImageUploader
+              onChange={(heroImageUrl) => setForm((current) => ({ ...current, heroImageUrl }))}
+              token={token}
+              value={form.heroImageUrl}
+            />
+          </div>
+          <div className="rounded-2xl border border-zinc-200/70 p-4 dark:border-white/10">
+            <label className={cn("mb-1 block text-sm font-semibold", primaryText)}>
+              Hero image (dark mode)
+            </label>
+            <p className={cn("mb-3 text-xs", secondaryText)}>
+              Optional — falls back to the light hero if empty.
+            </p>
+            <HeroImageUploader
+              onChange={(heroImageDarkUrl) =>
+                setForm((current) => ({ ...current, heroImageDarkUrl }))
+              }
+              token={token}
+              value={form.heroImageDarkUrl}
+            />
+          </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">

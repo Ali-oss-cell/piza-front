@@ -6,9 +6,15 @@ import { CartDrawer } from "@/components/features/cart-drawer";
 import { MenuSheet } from "@/components/features/menu-sheet";
 import { SiteFooter } from "@/components/features/site-footer";
 import { SiteHeader } from "@/components/features/site-header";
+import { StoreThemeProvider } from "@/components/layout/store-theme-provider";
 import { getSiteBrandSlug } from "@/lib/brand-storage";
 import { useCart } from "@/lib/cart-context";
 import { fetchStoreSettings } from "@/lib/menu-api";
+import {
+  DEFAULT_BG_DARK,
+  DEFAULT_BG_LIGHT,
+  PLATFORM_ACCENT,
+} from "@/lib/store-theme";
 import { DEFAULT_BRAND_SLUG } from "@/types/brand";
 
 function isStandaloneRoute(pathname: string): boolean {
@@ -30,8 +36,10 @@ function homeHrefForSlug(slug: string): string {
 /** Bundled Leovorno logos (marinapizzas.com.au → Leovorno for now). */
 const LEOVORNO_LOGO_LIGHT = "/leovorno-logo-light.png";
 const LEOVORNO_LOGO_DARK = "/leovorno-logo-dark.png";
-const DEFAULT_PRIMARY = "#d81b60";
+const DEFAULT_PRIMARY = PLATFORM_ACCENT;
 const DEFAULT_SECONDARY = "#111827";
+const DEFAULT_BG_LIGHT_COLOR = DEFAULT_BG_LIGHT;
+const DEFAULT_BG_DARK_COLOR = DEFAULT_BG_DARK;
 
 function defaultLogosForSlug(slug: string): {
   logoUrl: string | null;
@@ -53,6 +61,9 @@ export interface InitialSiteBranding {
   openingHours?: unknown;
   primaryColor?: string | null;
   secondaryColor?: string | null;
+  backgroundLightColor?: string | null;
+  backgroundDarkColor?: string | null;
+  darkModeEnabled?: boolean;
 }
 
 export function AppShell({
@@ -107,6 +118,15 @@ export function AppShell({
   const [secondaryColor, setSecondaryColor] = useState(
     initialBranding?.secondaryColor?.trim() || DEFAULT_SECONDARY,
   );
+  const [backgroundLightColor, setBackgroundLightColor] = useState(
+    initialBranding?.backgroundLightColor?.trim() || DEFAULT_BG_LIGHT_COLOR,
+  );
+  const [backgroundDarkColor, setBackgroundDarkColor] = useState(
+    initialBranding?.backgroundDarkColor?.trim() || DEFAULT_BG_DARK_COLOR,
+  );
+  const [darkModeEnabled, setDarkModeEnabled] = useState(
+    initialBranding?.darkModeEnabled !== false,
+  );
 
   useEffect(() => {
     const onScroll = (): void => setIsScrolled(window.scrollY > 50);
@@ -145,6 +165,13 @@ export function AppShell({
         setOpeningHours(settings.openingHours ?? null);
         setPrimaryColor(settings.primaryColor?.trim() || DEFAULT_PRIMARY);
         setSecondaryColor(settings.secondaryColor?.trim() || DEFAULT_SECONDARY);
+        setBackgroundLightColor(
+          settings.backgroundLightColor?.trim() || DEFAULT_BG_LIGHT_COLOR,
+        );
+        setBackgroundDarkColor(
+          settings.backgroundDarkColor?.trim() || DEFAULT_BG_DARK_COLOR,
+        );
+        setDarkModeEnabled(settings.darkModeEnabled !== false);
       })
       .catch(() => {
         if (cancelled) {
@@ -157,6 +184,9 @@ export function AppShell({
         setOpeningHours(null);
         setPrimaryColor(DEFAULT_PRIMARY);
         setSecondaryColor(DEFAULT_SECONDARY);
+        setBackgroundLightColor(DEFAULT_BG_LIGHT_COLOR);
+        setBackgroundDarkColor(DEFAULT_BG_DARK_COLOR);
+        setDarkModeEnabled(true);
       });
 
     return () => {
@@ -164,23 +194,27 @@ export function AppShell({
     };
   }, [brandSlug, initialBranding?.brandSlug]);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isStandaloneRoute(pathname)) {
-      root.style.setProperty("--brand-primary", DEFAULT_PRIMARY);
-      root.style.setProperty("--brand-secondary", DEFAULT_SECONDARY);
-      return;
-    }
-    root.style.setProperty("--brand-primary", primaryColor);
-    root.style.setProperty("--brand-secondary", secondaryColor);
-  }, [primaryColor, secondaryColor, pathname]);
+  const standalone = isStandaloneRoute(pathname);
 
-  if (isStandaloneRoute(pathname)) {
-    return <>{children}</>;
+  if (standalone) {
+    return (
+      <>
+        <StoreThemeProvider config={{}} usePlatformTheme />
+        {children}
+      </>
+    );
   }
 
   return (
     <>
+      <StoreThemeProvider
+        config={{
+          accent: primaryColor,
+          backgroundLight: backgroundLightColor,
+          backgroundDark: backgroundDarkColor,
+          darkModeEnabled,
+        }}
+      />
       <SiteHeader
         brandName={brandName}
         cartCount={cartCount}
@@ -191,6 +225,7 @@ export function AppShell({
         onOpenCart={() => setCartOpen(true)}
         onOpenMenu={() => setMenuOpen(true)}
         scrolled={isScrolled}
+        showThemeToggle={darkModeEnabled}
       />
       {children}
       <SiteFooter

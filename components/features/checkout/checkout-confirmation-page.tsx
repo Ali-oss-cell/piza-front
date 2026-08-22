@@ -27,7 +27,7 @@ export function CheckoutConfirmationPage(): React.ReactElement {
         ) : null}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
-            className="inline-flex items-center justify-center rounded-xl bg-[#d81b60] px-5 py-3 text-sm font-semibold text-white"
+            className="inline-flex items-center justify-center rounded-xl bg-[color:var(--brand-accent,#d81b60)] px-5 py-3 text-sm font-semibold text-white"
             href="/"
           >
             Back to menu

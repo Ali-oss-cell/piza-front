@@ -32,7 +32,7 @@ function deliveryModeButtonClass(isActive: boolean): string {
   return cn(
     "flex-1 rounded py-3 text-label-md transition-all duration-150 ease-out",
     isActive
-      ? "bg-[#d81b60] text-white shadow-md shadow-[#d81b60]/20"
+      ? "bg-[color:var(--brand-accent,#d81b60)] text-white shadow-md shadow-[color:var(--brand-accent,#d81b60)]/20"
       : cn(secondaryText, "hover:text-zinc-950 dark:hover:text-zinc-50")
   );
 }

@@ -41,7 +41,7 @@ export function getStatusBadgeClass(status: OrderStatus): string {
       return "bg-amber-500/15 text-amber-700 dark:text-amber-300";
     case "CONFIRMED":
     case "PREPARING":
-      return "bg-[#d81b60]/15 text-[#d81b60]";
+      return "bg-[color:var(--brand-accent,#d81b60)]/15 text-[color:var(--brand-accent,#d81b60)]";
     case "READY":
       return "bg-orange-500/15 text-orange-700 dark:text-orange-300";
     case "OUT_FOR_DELIVERY":

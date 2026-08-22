@@ -18,7 +18,7 @@ export const MENU_ITEM_BADGES: MenuBadgeDefinition[] = [
     description: "House specialty or chef's pick",
     icon: Sparkles,
     className:
-      "border-[#d81b60]/30 bg-[#d81b60]/15 text-[#d81b60] dark:border-[#d81b60]/40 dark:bg-[#d81b60]/20",
+      "border-[color:var(--brand-accent,#d81b60)]/30 bg-[color:var(--brand-accent,#d81b60)]/15 text-[color:var(--brand-accent,#d81b60)] dark:border-[color:var(--brand-accent,#d81b60)]/40 dark:bg-[color:var(--brand-accent,#d81b60)]/20",
   },
   {
     id: "SPICY",

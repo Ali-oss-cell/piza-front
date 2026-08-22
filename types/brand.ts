@@ -12,7 +12,11 @@ export interface Brand {
   logoDarkUrl?: string | null;
   primaryColor?: string | null;
   secondaryColor?: string | null;
+  backgroundLightColor?: string | null;
+  backgroundDarkColor?: string | null;
   heroImageUrl?: string | null;
+  heroImageDarkUrl?: string | null;
+  darkModeEnabled?: boolean;
   isActive: boolean;
   status?: "DRAFT" | "LIVE";
   pathPrefix?: string | null;
@@ -37,7 +41,11 @@ export interface CreateStorePayload {
   logoDarkUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  backgroundLightColor?: string;
+  backgroundDarkColor?: string;
   heroImageUrl?: string;
+  heroImageDarkUrl?: string;
+  darkModeEnabled?: boolean;
   pathPrefix?: string;
   host?: string;
   createStarterCategories?: boolean;

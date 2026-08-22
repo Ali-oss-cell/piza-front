@@ -63,7 +63,7 @@ export function SiteFooter({
             <p className="whitespace-pre-line leading-loose text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400">
               {resolvedAddress}
             </p>
-            <p className="mt-4 font-bold text-[#d81b60]">${deliveryFee} Flat Delivery</p>
+            <p className="mt-4 font-bold text-[color:var(--brand-accent,#d81b60)]">${deliveryFee} Flat Delivery</p>
           </div>
           <div>
             <h4 className="mb-6 text-label-md uppercase tracking-widest text-zinc-950 transition-colors duration-150 ease-out dark:text-white">

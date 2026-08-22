@@ -8,7 +8,7 @@ function highlightText(text: string, phrases: string[]): React.ReactNode {
 
   return parts.map((part, index) =>
     phrases.includes(part) ? (
-      <span className="text-[#d81b60]" key={`${part}-${index}`}>
+      <span className="text-[color:var(--brand-accent,#d81b60)]" key={`${part}-${index}`}>
         {part}
       </span>
     ) : (
@@ -32,7 +32,7 @@ export function AboutStory(): React.ReactElement {
         </div>
 
         <div>
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-[#d81b60]">
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-[color:var(--brand-accent,#d81b60)]">
             Our Story
           </p>
           <h2 className="font-display text-3xl font-bold text-zinc-950 transition-colors duration-150 ease-out dark:text-white md:text-4xl">

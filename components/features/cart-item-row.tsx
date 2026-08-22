@@ -78,7 +78,7 @@ export function CartItemRow({
             </Button>
           </div>
           <Button
-            className="h-8 w-8 p-0 text-zinc-400 transition-colors duration-150 ease-out hover:text-[#d81b60] dark:text-zinc-500 dark:hover:text-[#d81b60]"
+            className="h-8 w-8 p-0 text-zinc-400 transition-colors duration-150 ease-out hover:text-[color:var(--brand-accent,#d81b60)] dark:text-zinc-500 dark:hover:text-[color:var(--brand-accent,#d81b60)]"
             onClick={() => onRemove(item.id)}
             size="icon"
             variant="ghost"

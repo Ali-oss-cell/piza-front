@@ -43,9 +43,11 @@ export default async function Home(): Promise<React.ReactElement> {
           brandSlug={brandSlug}
           categories={categories}
           heroImageUrl={settings.heroImageUrl}
+          heroImageDarkUrl={settings.heroImageDarkUrl}
           menuItems={menuItems}
           primaryColor={settings.primaryColor}
-          secondaryColor={settings.secondaryColor}
+          backgroundLightColor={settings.backgroundLightColor}
+          backgroundDarkColor={settings.backgroundDarkColor}
           tagline={settings.tagline ?? undefined}
         />
       </>

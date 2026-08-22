@@ -8,7 +8,11 @@ export interface StoreSettings {
   logoDarkUrl?: string | null;
   primaryColor?: string | null;
   secondaryColor?: string | null;
+  backgroundLightColor?: string | null;
+  backgroundDarkColor?: string | null;
   heroImageUrl?: string | null;
+  heroImageDarkUrl?: string | null;
+  darkModeEnabled?: boolean;
   deliveryFee: string | number;
   minOrderAmount: string | number;
   contactEmail?: string | null;
@@ -44,7 +48,11 @@ export interface UpdateStoreSettingsPayload {
   logoDarkUrl?: string | null;
   primaryColor?: string | null;
   secondaryColor?: string | null;
+  backgroundLightColor?: string | null;
+  backgroundDarkColor?: string | null;
   heroImageUrl?: string | null;
+  heroImageDarkUrl?: string | null;
+  darkModeEnabled?: boolean;
   deliveryFee?: number;
   minOrderAmount?: number;
   contactEmail?: string;

@@ -15,7 +15,7 @@ export function DetailCta({
 }: DetailCtaProps): React.ReactElement {
   return (
     <button
-      className={`w-full rounded-xl bg-[#d81b60] px-6 py-4 text-base font-semibold text-white transition-all hover:scale-[1.01] hover:bg-[#c2185b] active:scale-[0.99] ${className}`}
+      className={`w-full rounded-xl bg-[color:var(--brand-accent,#d81b60)] px-6 py-4 text-base font-semibold text-white transition-all hover:scale-[1.01] hover:brightness-110 active:scale-[0.99] ${className}`}
       onClick={onAddToOrder}
       type="button"
     >

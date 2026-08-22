@@ -29,7 +29,7 @@ export function AboutHero(): React.ReactElement {
 
       <div className="relative mx-auto flex min-h-[78vh] max-w-7xl items-end px-4 pb-20 pt-32 md:px-8 lg:px-12">
         <div className="max-w-3xl">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-[#d81b60]">
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-[color:var(--brand-accent,#d81b60)]">
             {aboutHero.eyebrow}
           </p>
           <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white md:text-6xl lg:text-7xl">

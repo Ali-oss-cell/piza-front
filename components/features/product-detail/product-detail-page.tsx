@@ -132,7 +132,7 @@ export function ProductDetailPage({
 
           <div className="space-y-8">
             <header className="space-y-4">
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#d81b60]">
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[color:var(--brand-accent,#d81b60)]">
                 Customize your order
               </p>
               <h1 className="font-display text-4xl font-bold tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white md:text-5xl">

@@ -33,6 +33,7 @@ interface SiteHeaderProps {
   logoUrl?: string | null;
   logoDarkUrl?: string | null;
   homeHref?: string;
+  showThemeToggle?: boolean;
 }
 
 export function SiteHeader({
@@ -45,6 +46,7 @@ export function SiteHeader({
   logoUrl,
   logoDarkUrl,
   homeHref = "/",
+  showThemeToggle = true,
 }: SiteHeaderProps): React.ReactElement {
   const pathname = usePathname();
   const [cartBump, setCartBump] = useState(false);
@@ -111,7 +113,7 @@ export function SiteHeader({
         </nav>
       </div>
       <div className="flex items-center gap-3">
-        <ThemeToggle />
+        {showThemeToggle ? <ThemeToggle /> : null}
         <Button
           aria-label="Open cart"
           className={cn(
@@ -125,7 +127,7 @@ export function SiteHeader({
           <ShoppingCart className="h-5 w-5" />
           <span
             className={cn(
-              "absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#d81b60] text-[10px] font-bold text-white transition-opacity duration-300",
+              "absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[color:var(--brand-accent,#d81b60)] text-[10px] font-bold text-white transition-opacity duration-300",
               cartBump && "animate-cartBump",
               isCartReady ? "opacity-100" : "opacity-0"
             )}

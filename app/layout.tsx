@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { LocalBusinessJsonLd } from "@/components/seo/JsonLd";
 import { CartProvider } from "@/lib/cart-context";
 import { montserrat } from "@/lib/fonts";
+import { pageShell } from "@/lib/theme-classes";
 import {
   fetchStoreSettings,
   resolveStoreByHost,
@@ -21,6 +22,12 @@ import {
 } from "@/lib/request-host";
 import { AuthProvider } from "@/providers/auth-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
+import {
+  DEFAULT_BG_DARK,
+  DEFAULT_BG_LIGHT,
+  PLATFORM_ACCENT,
+} from "@/lib/store-theme";
+import { cn } from "@/lib/utils";
 import { DEFAULT_BRAND_SLUG } from "@/types/brand";
 import "./globals.css";
 
@@ -69,8 +76,11 @@ export default async function RootLayout({
     tagline: null as string | null,
     address: null as string | null,
     openingHours: null as unknown,
-    primaryColor: "#d81b60" as string | null,
+    primaryColor: PLATFORM_ACCENT as string | null,
     secondaryColor: "#111827" as string | null,
+    backgroundLightColor: DEFAULT_BG_LIGHT as string | null,
+    backgroundDarkColor: DEFAULT_BG_DARK as string | null,
+    darkModeEnabled: true,
   };
 
   try {
@@ -87,8 +97,11 @@ export default async function RootLayout({
           tagline: store.tagline ?? null,
           address: null,
           openingHours: null,
-          primaryColor: store.primaryColor ?? "#d81b60",
+          primaryColor: store.primaryColor ?? PLATFORM_ACCENT,
           secondaryColor: store.secondaryColor ?? "#111827",
+          backgroundLightColor: store.backgroundLightColor ?? DEFAULT_BG_LIGHT,
+          backgroundDarkColor: store.backgroundDarkColor ?? DEFAULT_BG_DARK,
+          darkModeEnabled: store.darkModeEnabled !== false,
         };
       } catch {
         // Unknown custom host — fall through to primary brand settings.
@@ -110,6 +123,11 @@ export default async function RootLayout({
       openingHours: settings.openingHours ?? null,
       primaryColor: settings.primaryColor ?? initialBranding.primaryColor,
       secondaryColor: settings.secondaryColor ?? initialBranding.secondaryColor,
+      backgroundLightColor:
+        settings.backgroundLightColor ?? initialBranding.backgroundLightColor,
+      backgroundDarkColor:
+        settings.backgroundDarkColor ?? initialBranding.backgroundDarkColor,
+      darkModeEnabled: settings.darkModeEnabled !== false,
     };
   } catch {
     // keep defaults with bundled logos
@@ -119,10 +137,16 @@ export default async function RootLayout({
     <html
       lang="en"
       className={bodyFont.variable}
+      style={{
+        "--brand-accent": initialBranding.primaryColor ?? PLATFORM_ACCENT,
+        "--brand-primary": initialBranding.primaryColor ?? PLATFORM_ACCENT,
+        "--brand-bg-light": initialBranding.backgroundLightColor ?? DEFAULT_BG_LIGHT,
+        "--brand-bg-dark": initialBranding.backgroundDarkColor ?? DEFAULT_BG_DARK,
+      } as React.CSSProperties}
       suppressHydrationWarning
     >
       <body
-        className="flex min-h-full flex-col bg-white text-zinc-950 dark:bg-black dark:text-white"
+        className={cn("flex min-h-full flex-col", pageShell)}
         suppressHydrationWarning
       >
         <LocalBusinessJsonLd

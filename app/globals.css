@@ -23,15 +23,15 @@
 
 @layer utilities {
   .text-accent {
-    color: #d81b60;
+    color: var(--brand-accent, #d81b60);
   }
 
   .bg-accent {
-    background-color: #d81b60;
+    background-color: var(--brand-accent, #d81b60);
   }
 
   .border-accent {
-    border-color: #d81b60;
+    border-color: var(--brand-accent, #d81b60);
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -64,6 +64,6 @@
 }
 
 ::selection {
-  background: #d81b60;
+  background: var(--brand-accent, #d81b60);
   color: #fff;
 }

@@ -42,8 +42,8 @@ export function LocationsMap({ activeLocation }: LocationsMapProps): React.React
           top: `${activeLocation.mapPosition.y}%`,
         }}
       >
-        <span className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 animate-mapPinPulse rounded-full bg-[#d81b60]/30" />
-        <span className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-[#d81b60] shadow-lg shadow-[#d81b60]/40">
+        <span className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 animate-mapPinPulse rounded-full bg-[color:var(--brand-accent,#d81b60)]/30" />
+        <span className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-[color:var(--brand-accent,#d81b60)] shadow-lg shadow-[color:var(--brand-accent,#d81b60)]/40">
           <MapPin className="h-5 w-5 fill-white text-white" />
         </span>
       </div>

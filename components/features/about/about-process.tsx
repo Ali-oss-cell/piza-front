@@ -14,7 +14,7 @@ export function AboutProcess(): React.ReactElement {
     <RevealSection className="py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 lg:px-12">
         <div className="mb-12 max-w-2xl">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-[#d81b60]">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-[color:var(--brand-accent,#d81b60)]">
             From Dough to Flame
           </p>
           <h2 className="font-display text-3xl font-bold text-zinc-950 transition-colors duration-150 ease-out dark:text-white md:text-4xl">
@@ -29,7 +29,7 @@ export function AboutProcess(): React.ReactElement {
                 className={cn(
                   "rounded-full border px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.15em] transition-all duration-300",
                   activeStepId === step.id
-                    ? "border-[#d81b60] bg-[#d81b60] text-white"
+                    ? "border-[color:var(--brand-accent,#d81b60)] bg-[color:var(--brand-accent,#d81b60)] text-white"
                     : "border-zinc-200/60 bg-white/70 text-zinc-600 hover:border-zinc-300/80 hover:text-zinc-950 dark:border-white/10 dark:bg-zinc-900/40 dark:text-zinc-400 dark:hover:border-white/20 dark:hover:text-white"
                 )}
                 key={step.id}
@@ -52,7 +52,7 @@ export function AboutProcess(): React.ReactElement {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent transition-colors duration-150 ease-out dark:from-black dark:via-black/20 dark:to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-8">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d81b60]">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--brand-accent,#d81b60)]">
                 Step {activeStep.step}
               </p>
               <h3 className="mt-2 text-2xl font-bold text-zinc-950 transition-colors duration-150 ease-out dark:text-white">
