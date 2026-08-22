@@ -216,6 +216,7 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
                 >
                   <option value="STAFF">Staff (POS only for this store)</option>
                   <option value="STORE_ADMIN">Store Admin</option>
+                  <option value="SEO">SEO Editor</option>
                 </select>
                 <p className={cn("mt-1 text-xs", secondaryText)}>
                   Use Staff for floor tablets so they only access this store&apos;s POS.

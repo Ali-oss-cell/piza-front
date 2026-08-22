@@ -1,6 +1,6 @@
 export type UserRole = "USER" | "STAFF" | "MANAGER" | "ADMIN";
 
-export type StoreMembershipRole = "PLATFORM_ADMIN" | "STORE_ADMIN" | "STAFF";
+export type StoreMembershipRole = "PLATFORM_ADMIN" | "STORE_ADMIN" | "STAFF" | "SEO";
 
 export interface AuthStoreLocation {
   id: string;
@@ -63,5 +63,19 @@ export function canAccessAdminDashboard(user: AuthUser | null | undefined): bool
 
   return (user.stores ?? []).some((store) =>
     ["PLATFORM_ADMIN", "STORE_ADMIN"].includes(store.membershipRole),
+  );
+}
+
+export function canAccessSeoDashboard(user: AuthUser | null | undefined): boolean {
+  if (!user) {
+    return false;
+  }
+
+  if (user.role === "ADMIN" || user.role === "MANAGER") {
+    return true;
+  }
+
+  return (user.stores ?? []).some((store) =>
+    ["PLATFORM_ADMIN", "STORE_ADMIN", "SEO"].includes(store.membershipRole),
   );
 }

@@ -1,7 +1,19 @@
+"use client";
+
 import Image from "next/image";
 import { aboutHero } from "@/data/about";
+import { useSeoContent } from "@/hooks/useSeoContent";
+import { resolveMediaUrl } from "@/lib/media-url";
 
 export function AboutHero(): React.ReactElement {
+  const { sections } = useSeoContent("about");
+
+  const title = sections.hero_h1 || aboutHero.title;
+  const subtitle = sections.hero_body || aboutHero.subtitle;
+  const imageSrc =
+    (sections.hero_image && resolveMediaUrl(sections.hero_image)) ||
+    aboutHero.imageUrl;
+
   return (
     <section className="relative min-h-[78vh] overflow-hidden">
       <Image
@@ -10,7 +22,7 @@ export function AboutHero(): React.ReactElement {
         fill
         priority
         sizes="100vw"
-        src={aboutHero.imageUrl}
+        src={imageSrc}
       />
       <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-white/30 transition-colors duration-150 ease-out dark:from-black dark:via-black/80 dark:to-black/30" />
       <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-white/40 transition-colors duration-150 ease-out dark:from-black dark:via-transparent dark:to-black/40" />
@@ -21,10 +33,10 @@ export function AboutHero(): React.ReactElement {
             {aboutHero.eyebrow}
           </p>
           <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white md:text-6xl lg:text-7xl">
-            {aboutHero.title}
+            {title}
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-300 md:text-xl">
-            {aboutHero.subtitle}
+            {subtitle}
           </p>
         </div>
       </div>

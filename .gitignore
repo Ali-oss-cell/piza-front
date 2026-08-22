@@ -23,6 +23,7 @@
 
 # production
 /build
+/public/tinymce
 
 # misc
 .DS_Store

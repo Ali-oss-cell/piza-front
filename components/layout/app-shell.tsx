@@ -12,7 +12,12 @@ import { fetchStoreSettings } from "@/lib/menu-api";
 import { DEFAULT_BRAND_SLUG } from "@/types/brand";
 
 function isStandaloneRoute(pathname: string): boolean {
-  return pathname === "/login" || pathname.startsWith("/admin");
+  return (
+    pathname === "/login" ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/seo-login") ||
+    pathname.startsWith("/seo-dashboard")
+  );
 }
 
 function homeHrefForSlug(slug: string): string {

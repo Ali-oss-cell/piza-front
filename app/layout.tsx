@@ -2,12 +2,19 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { ChunkLoadRecovery } from "@/components/chunk-load-recovery";
 import { AppShell } from "@/components/layout/app-shell";
+import { LocalBusinessJsonLd } from "@/components/seo/JsonLd";
 import { CartProvider } from "@/lib/cart-context";
 import { montserrat } from "@/lib/fonts";
 import {
   fetchStoreSettings,
   resolveStoreByHost,
 } from "@/lib/menu-api";
+import {
+  buildSeoMetadata,
+  fetchSeoForPage,
+  resolveBrandSlugForRequest,
+  siteOriginFromHost,
+} from "@/lib/seo-server";
 import {
   getRequestHost,
   isPrimaryWebHost,
@@ -21,10 +28,28 @@ const DEFAULT_DELIVERY_FEE = 5;
 
 const bodyFont = montserrat;
 
-export const metadata: Metadata = {
-  title: "Marina Pizzas",
-  description: "Premium pizza and pasta ordering experience",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { brandSlug, host } = await resolveBrandSlugForRequest();
+  try {
+    const [seo, settings] = await Promise.all([
+      fetchSeoForPage(brandSlug, "home", host),
+      fetchStoreSettings(brandSlug),
+    ]);
+    return buildSeoMetadata(
+      seo,
+      {
+        title: settings.storeName,
+        description: settings.tagline ?? `Order from ${settings.storeName}`,
+      },
+      siteOriginFromHost(host),
+    );
+  } catch {
+    return {
+      title: "Marina Pizzas",
+      description: "Premium pizza and pasta ordering experience",
+    };
+  }
+}
 
 export default async function RootLayout({
   children,
@@ -100,6 +125,11 @@ export default async function RootLayout({
         className="flex min-h-full flex-col bg-white text-zinc-950 dark:bg-black dark:text-white"
         suppressHydrationWarning
       >
+        <LocalBusinessJsonLd
+          address={initialBranding.address}
+          name={initialBranding.brandName}
+          url={siteOriginFromHost(await getRequestHost())}
+        />
         <Script
           dangerouslySetInnerHTML={{
             __html: `(function(){var a=["bis_skin_checked","bis_register"];function s(n){if(!n||n.nodeType!==1)return;for(var i=0;i<a.length;i++)n.hasAttribute(a[i])&&n.removeAttribute(a[i]);for(var c=n.children,j=0;j<c.length;j++)s(c[j])}function c(){s(document.documentElement)}c();new MutationObserver(function(r){for(var i=0;i<r.length;i++){var e=r[i];if(e.type==="attributes"&&a.indexOf(e.attributeName)!==-1)e.target.removeAttribute(e.attributeName);else if(e.type==="childList")for(var n=0;n<e.addedNodes.length;n++)s(e.addedNodes[n])}c()}).observe(document.documentElement,{attributes:!0,childList:!0,subtree:!0,attributeFilter:a})})();`,
