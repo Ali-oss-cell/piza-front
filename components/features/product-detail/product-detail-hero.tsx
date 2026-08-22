@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { MenuItemBadges } from "@/components/features/menu-item-badges";
+import { resolveMediaUrl } from "@/lib/media-url";
 import type { MenuItem } from "@/types/menu";
 
 interface ProductDetailHeroProps {
@@ -16,7 +17,7 @@ export function ProductDetailHero({ item }: ProductDetailHeroProps): React.React
           fill
           priority
           sizes="(max-width: 768px) 100vw, 50vw"
-          src={item.imageUrl}
+          src={resolveMediaUrl(item.imageUrl) ?? item.imageUrl}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-white/50 via-transparent to-transparent transition-colors duration-150 ease-out dark:from-black/50" />
       </div>

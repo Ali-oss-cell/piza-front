@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { resolveMediaUrl } from "@/lib/media-url";
 import {
   brandPink,
   panelBg,
@@ -36,7 +37,7 @@ export function CartItemRow({
           alt={item.imageAlt}
           className="h-full w-full object-cover"
           height={96}
-          src={item.imageUrl}
+          src={resolveMediaUrl(item.imageUrl) ?? item.imageUrl}
           width={96}
         />
       </div>

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Check, Plus } from "lucide-react";
 import { MenuItemBadges } from "@/components/features/menu-item-badges";
 import { Button } from "@/components/ui/button";
+import { resolveMediaUrl } from "@/lib/media-url";
 import { cn } from "@/lib/utils";
 import type { AddToCartPayload, MenuItem, PizzaSize } from "@/types/menu";
 
@@ -61,6 +62,8 @@ function ImagePanel({
   const panelClassName =
     "relative min-h-[260px] w-full shrink-0 overflow-hidden md:min-h-full md:w-[44%]";
 
+  const imageSrc = resolveMediaUrl(item.imageUrl) ?? item.imageUrl;
+
   const panelContent = (
     <>
       <Image
@@ -68,7 +71,7 @@ function ImagePanel({
         className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
         fill
         sizes="(max-width: 768px) 100vw, 44vw"
-        src={item.imageUrl}
+        src={imageSrc}
       />
       <span
         aria-hidden
