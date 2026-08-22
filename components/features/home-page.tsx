@@ -23,6 +23,7 @@ export function HomePage({
   menuItems,
   categories,
   brandName,
+  brandSlug,
   tagline,
   heroImageUrl,
   primaryColor,
@@ -35,6 +36,7 @@ export function HomePage({
     <main className="pt-20 transition-colors duration-150 ease-out">
       <HeroSection
         brandName={brandName}
+        brandSlug={brandSlug}
         heroImageUrl={heroImageUrl}
         onOpenCart={() => setCartOpen(true)}
         primaryColor={primaryColor}

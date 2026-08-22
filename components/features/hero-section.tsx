@@ -8,6 +8,7 @@ const DEFAULT_HERO =
 interface HeroSectionProps {
   onOpenCart: () => void;
   brandName?: string;
+  brandSlug?: string;
   tagline?: string;
   heroImageUrl?: string | null;
   primaryColor?: string | null;
@@ -17,17 +18,25 @@ interface HeroSectionProps {
 export function HeroSection({
   onOpenCart,
   brandName,
+  brandSlug,
   tagline,
   heroImageUrl,
   primaryColor,
-  secondaryColor,
 }: HeroSectionProps): React.ReactElement {
-  const isBunnyBoys = brandName === "Bunny Boys";
-  const accent = secondaryColor?.trim() || primaryColor?.trim() || "#d81b60";
+  const slug = brandSlug?.toLowerCase() ?? "";
+  const isBennyBoys =
+    slug.includes("bunny") ||
+    slug.includes("benny") ||
+    (brandName?.toLowerCase().includes("benny") ?? false);
+  const brandPrimary = primaryColor?.trim() || "#d81b60";
   const heroSrc = resolveMediaUrl(heroImageUrl) ?? DEFAULT_HERO;
+  const heroStyle = { "--brand-primary": brandPrimary } as React.CSSProperties;
 
   return (
-    <section className="relative flex min-h-[85vh] items-center overflow-hidden px-margin-mobile transition-colors duration-150 ease-out md:px-margin-desktop">
+    <section
+      className="relative flex min-h-[85vh] items-center overflow-hidden px-margin-mobile transition-colors duration-150 ease-out md:px-margin-desktop"
+      style={heroStyle}
+    >
       <div className="absolute inset-0 z-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -41,19 +50,19 @@ export function HeroSection({
       <div className="relative z-10 mx-auto w-full max-w-container-max">
         <div className="max-w-2xl space-y-8">
           <h1 className="font-display text-headline-xl leading-none tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white">
-            {isBunnyBoys ? (
+            {isBennyBoys ? (
               <>
-                BUNNY <br />
-                BOYS <span style={{ color: accent }}>DELIVERED.</span>
+                BENNY <br />
+                BOYS <span className="text-[color:var(--brand-primary)]">DELIVERED.</span>
               </>
             ) : (
               <>
                 PIZZA & <br />
-                PASTA <span style={{ color: accent }}>REFINED.</span>
+                PASTA <span className="text-[color:var(--brand-primary)]">REFINED.</span>
               </>
             )}
           </h1>
-          <p className="max-w-lg text-body-lg text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400">
+          <p className="max-w-lg text-body-lg text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-300">
             {tagline ??
               "Artisanal sourdough foundations, heritage recipes, and contemporary culinary precision delivered to your urban doorstep."}
           </p>
@@ -61,7 +70,7 @@ export function HeroSection({
             <Button className="uppercase tracking-[0.15em]" onClick={onOpenCart}>
               Order Online
             </Button>
-            <Button asChild className="uppercase tracking-[0.15em]" variant="outline">
+            <Button asChild className="uppercase tracking-[0.15em] border-[color:var(--brand-primary)] text-[color:var(--brand-primary)] hover:bg-[color:var(--brand-primary)] hover:text-white dark:border-[color:var(--brand-primary)] dark:text-[color:var(--brand-primary)] dark:hover:bg-[color:var(--brand-primary)] dark:hover:text-white" variant="outline">
               <Link href="/deals">View Specials</Link>
             </Button>
           </div>
