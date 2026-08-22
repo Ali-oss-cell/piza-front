@@ -13,6 +13,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RichTextEditor } from "@/components/seo/RichTextEditor";
+import { SeoImageField } from "@/components/seo/SeoImageField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { clearAuthSession, getStoredToken, getStoredUser } from "@/lib/auth-storage";
@@ -73,6 +74,15 @@ function storeOptionLabel(store: AuthStore): string {
   return `${store.name} (${store.slug})`;
 }
 
+function slugifyTitle(title: string): string {
+  return title
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
 export function SeoDashboardContent(): React.ReactElement {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("dashboard");
@@ -93,6 +103,7 @@ export function SeoDashboardContent(): React.ReactElement {
   const [missingImages, setMissingImages] = useState<SeoImageRecord[]>([]);
   const [posts, setPosts] = useState<BlogPostRecord[]>([]);
   const [editingPost, setEditingPost] = useState<Partial<BlogPostRecord> | null>(null);
+  const [slugTouched, setSlugTouched] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -205,7 +216,7 @@ export function SeoDashboardContent(): React.ReactElement {
   useEffect(() => {
     if (!token) return;
     if (tab === "pages") void loadContent();
-    if (tab === "images") void loadImages();
+    if (tab === "images" || tab === "blog") void loadImages();
     if (tab === "blog") void loadPosts();
     if (tab === "dashboard") void loadChecklist();
   }, [token, tab, loadContent, loadImages, loadPosts, loadChecklist]);
@@ -224,6 +235,33 @@ export function SeoDashboardContent(): React.ReactElement {
     setMessage(null);
     setError(null);
   };
+
+  const handleEditorImageUpload = useCallback(
+    async (file: File): Promise<string> => {
+      if (!token) throw new Error("Not signed in.");
+      const result = await uploadSeoImage(token, brandSlug, file, null, {
+        label: file.name,
+      });
+      await loadImages();
+      const url = resolveMediaUrl(result.url) ?? result.url;
+      return url;
+    },
+    [token, brandSlug, loadImages],
+  );
+
+  const handleThumbnailUpload = useCallback(
+    async (file: File): Promise<{ id: string; url: string }> => {
+      if (!token) throw new Error("Not signed in.");
+      const result = await uploadSeoImage(token, brandSlug, file, null, {
+        label: file.name,
+        page: "blog",
+        section: "thumbnail",
+      });
+      await loadImages();
+      return { id: result.id, url: result.url };
+    },
+    [token, brandSlug, loadImages],
+  );
 
   const handleSavePages = async (): Promise<void> => {
     if (!token) return;
@@ -575,10 +613,12 @@ export function SeoDashboardContent(): React.ReactElement {
                     </label>
                     {section === "hero_body" ? (
                       <RichTextEditor
-                        height={220}
+                        height={280}
+                        label="Hero body"
                         onChange={(content) =>
                           setDraft((prev) => ({ ...prev, [section]: content }))
                         }
+                        onImageUpload={handleEditorImageUpload}
                         value={draft[section] ?? ""}
                       />
                     ) : (
@@ -736,15 +776,18 @@ export function SeoDashboardContent(): React.ReactElement {
               {!editingPost ? (
                 <>
                   <Button
-                    onClick={() =>
+                    onClick={() => {
+                      setSlugTouched(false);
                       setEditingPost({
                         title: "",
                         slug: "",
                         content: "",
                         status: "DRAFT",
                         excerpt: "",
-                      })
-                    }
+                        thumbnailImageId: null,
+                      });
+                      void loadImages();
+                    }}
                   >
                     New post
                   </Button>
@@ -761,7 +804,14 @@ export function SeoDashboardContent(): React.ReactElement {
                           </p>
                         </div>
                         <div className="flex gap-2">
-                          <Button onClick={() => setEditingPost(post)} variant="outline">
+                          <Button
+                            onClick={() => {
+                              setSlugTouched(true);
+                              setEditingPost(post);
+                              void loadImages();
+                            }}
+                            variant="outline"
+                          >
                             Edit
                           </Button>
                           <Button
@@ -781,50 +831,94 @@ export function SeoDashboardContent(): React.ReactElement {
                 </>
               ) : (
                 <div className="space-y-4">
-                  <Input
-                    onChange={(event) =>
-                      setEditingPost((prev) => ({ ...prev, title: event.target.value }))
-                    }
-                    placeholder="Title"
-                    value={editingPost.title ?? ""}
-                  />
-                  <Input
-                    onChange={(event) =>
-                      setEditingPost((prev) => ({ ...prev, slug: event.target.value }))
-                    }
-                    placeholder="slug"
-                    value={editingPost.slug ?? ""}
-                  />
-                  <textarea
-                    className={cn(fieldClass, "min-h-[80px]")}
-                    onChange={(event) =>
-                      setEditingPost((prev) => ({ ...prev, excerpt: event.target.value }))
-                    }
-                    placeholder="Excerpt"
-                    value={editingPost.excerpt ?? ""}
-                  />
-                  <RichTextEditor
-                    onChange={(content) =>
-                      setEditingPost((prev) => ({ ...prev, content }))
-                    }
-                    value={editingPost.content ?? ""}
-                  />
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className={cn("mb-1 block text-sm", secondaryText)}>Title</label>
                     <Input
-                      onChange={(event) =>
-                        setEditingPost((prev) => ({ ...prev, author: event.target.value }))
-                      }
-                      placeholder="Author"
-                      value={editingPost.author ?? ""}
-                    />
-                    <Input
-                      onChange={(event) =>
-                        setEditingPost((prev) => ({ ...prev, category: event.target.value }))
-                      }
-                      placeholder="Category"
-                      value={editingPost.category ?? ""}
+                      onChange={(event) => {
+                        const title = event.target.value;
+                        setEditingPost((prev) => {
+                          const next = { ...prev, title };
+                          if (!slugTouched && !prev?.id) {
+                            next.slug = slugifyTitle(title);
+                          }
+                          return next;
+                        });
+                      }}
+                      placeholder="Title"
+                      value={editingPost.title ?? ""}
                     />
                   </div>
+                  <div>
+                    <label className={cn("mb-1 block text-sm", secondaryText)}>Slug</label>
+                    <Input
+                      onChange={(event) => {
+                        setSlugTouched(true);
+                        setEditingPost((prev) => ({ ...prev, slug: event.target.value }));
+                      }}
+                      placeholder="url-slug"
+                      value={editingPost.slug ?? ""}
+                    />
+                  </div>
+                  <div>
+                    <label className={cn("mb-1 block text-sm", secondaryText)}>Excerpt</label>
+                    <textarea
+                      className={cn(fieldClass, "min-h-[80px]")}
+                      onChange={(event) =>
+                        setEditingPost((prev) => ({ ...prev, excerpt: event.target.value }))
+                      }
+                      placeholder="Short summary for listings"
+                      value={editingPost.excerpt ?? ""}
+                    />
+                  </div>
+
+                  <div className="rounded-xl border border-zinc-200/70 p-3 dark:border-white/10">
+                    <RichTextEditor
+                      height={480}
+                      label="Content"
+                      onChange={(content) =>
+                        setEditingPost((prev) => ({ ...prev, content }))
+                      }
+                      onImageUpload={handleEditorImageUpload}
+                      value={editingPost.content ?? ""}
+                    />
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className={cn("mb-1 block text-sm", secondaryText)}>Author</label>
+                      <Input
+                        onChange={(event) =>
+                          setEditingPost((prev) => ({ ...prev, author: event.target.value }))
+                        }
+                        placeholder="Author"
+                        value={editingPost.author ?? ""}
+                      />
+                    </div>
+                    <div>
+                      <label className={cn("mb-1 block text-sm", secondaryText)}>Category</label>
+                      <Input
+                        onChange={(event) =>
+                          setEditingPost((prev) => ({ ...prev, category: event.target.value }))
+                        }
+                        placeholder="Category"
+                        value={editingPost.category ?? ""}
+                      />
+                    </div>
+                  </div>
+
+                  <SeoImageField
+                    images={images}
+                    label="Thumbnail"
+                    onChange={(imageId) =>
+                      setEditingPost((prev) => ({
+                        ...prev,
+                        thumbnailImageId: imageId,
+                      }))
+                    }
+                    onUpload={handleThumbnailUpload}
+                    valueId={editingPost.thumbnailImageId}
+                  />
+
                   <div className="space-y-3 rounded-xl border border-zinc-200/70 p-4 dark:border-white/10">
                     <h3 className={cn("font-medium", primaryText)}>Post SEO</h3>
                     <Input
@@ -852,51 +946,34 @@ export function SeoDashboardContent(): React.ReactElement {
                       placeholder="Meta keywords"
                       value={editingPost.metaKeywords ?? ""}
                     />
-                    <div>
-                      <label className={cn("mb-1 block text-sm", secondaryText)}>Thumbnail</label>
-                      <select
-                        className={fieldClass}
-                        onChange={(event) =>
-                          setEditingPost((prev) => ({
-                            ...prev,
-                            thumbnailImageId: event.target.value || null,
-                          }))
-                        }
-                        onFocus={() => {
-                          if (token && images.length === 0) void loadImages();
-                        }}
-                        value={editingPost.thumbnailImageId ?? ""}
-                      >
-                        <option value="">No thumbnail</option>
-                        {images.map((image) => (
-                          <option key={image.id} value={image.id}>
-                            {image.label || image.filename}
-                          </option>
-                        ))}
-                      </select>
-                      <p className={cn("mt-1 text-xs", secondaryText)}>
-                        Upload images in the Images tab first, then select here.
-                      </p>
-                    </div>
                   </div>
-                  <select
-                    className={fieldClass}
-                    onChange={(event) =>
-                      setEditingPost((prev) => ({
-                        ...prev,
-                        status: event.target.value as "DRAFT" | "PUBLISHED",
-                      }))
-                    }
-                    value={editingPost.status ?? "DRAFT"}
-                  >
-                    <option value="DRAFT">Draft</option>
-                    <option value="PUBLISHED">Published</option>
-                  </select>
+                  <div>
+                    <label className={cn("mb-1 block text-sm", secondaryText)}>Status</label>
+                    <select
+                      className={fieldClass}
+                      onChange={(event) =>
+                        setEditingPost((prev) => ({
+                          ...prev,
+                          status: event.target.value as "DRAFT" | "PUBLISHED",
+                        }))
+                      }
+                      value={editingPost.status ?? "DRAFT"}
+                    >
+                      <option value="DRAFT">Draft</option>
+                      <option value="PUBLISHED">Published</option>
+                    </select>
+                  </div>
                   <div className="flex gap-2">
                     <Button disabled={saving} onClick={() => void handleSavePost()}>
                       Save post
                     </Button>
-                    <Button onClick={() => setEditingPost(null)} variant="outline">
+                    <Button
+                      onClick={() => {
+                        setEditingPost(null);
+                        setSlugTouched(false);
+                      }}
+                      variant="outline"
+                    >
                       Cancel
                     </Button>
                   </div>
