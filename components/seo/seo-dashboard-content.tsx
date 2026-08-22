@@ -23,7 +23,6 @@ import {
   ensureStarterBlog,
   fetchBlogPosts,
   fetchSeoContentAdmin,
-  fetchSeoDomains,
   fetchSeoImages,
   fetchSeoLaunchChecklist,
   fillSeoFromStore,
@@ -34,10 +33,9 @@ import {
   verifySeoImages,
   type BlogPostRecord,
   type SeoContentRow,
-  type SeoDomain,
   type SeoImageRecord,
 } from "@/lib/seo-api";
-import { getSeoBrandSlug, getSeoDomainId, setSeoBrandSlug, setSeoDomainId } from "@/lib/seo-storage";
+import { getSeoBrandSlug, setSeoBrandSlug } from "@/lib/seo-storage";
 import { canAccessSeoDashboard, type AuthStore } from "@/types/auth";
 
 type Tab = "dashboard" | "pages" | "images" | "blog";
@@ -50,10 +48,8 @@ const PAGE_SECTIONS: Record<string, string[]> = {
   blog: ["hero_h1", "hero_body", "hero_image", "page_title"],
 };
 
-function domainLabel(domain: SeoDomain): string {
-  if (domain.host) return domain.host;
-  if (domain.pathPrefix) return domain.pathPrefix;
-  return domain.id.slice(0, 8);
+function storeOptionLabel(store: AuthStore): string {
+  return `${store.name} (${store.slug})`;
 }
 
 export function SeoDashboardContent(): React.ReactElement {
@@ -62,8 +58,6 @@ export function SeoDashboardContent(): React.ReactElement {
   const [token, setToken] = useState<string | null>(null);
   const [stores, setStores] = useState<AuthStore[]>([]);
   const [brandSlug, setBrandSlug] = useState<string>("leovorno");
-  const [domainId, setDomainId] = useState<string | null>(null);
-  const [domains, setDomains] = useState<SeoDomain[]>([]);
   const [pageFilter, setPageFilter] = useState<string>("home");
   const [contentRows, setContentRows] = useState<SeoContentRow[]>([]);
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -104,78 +98,88 @@ export function SeoDashboardContent(): React.ReactElement {
         ? savedBrand
         : userStores[0]?.slug ?? "leovorno";
     setBrandSlug(initialBrand);
-
-    const savedDomain = getSeoDomainId();
-    setDomainId(savedDomain);
     setLoading(false);
   }, [router]);
 
-  const loadDomains = useCallback(async () => {
-    if (!token) return;
-    const list = await fetchSeoDomains(token, brandSlug);
-    setDomains(list);
-  }, [token, brandSlug]);
+  const selectedStore = useMemo(
+    () => stores.find((store) => store.slug === brandSlug) ?? null,
+    [stores, brandSlug],
+  );
 
-  const loadContent = useCallback(async () => {
-    if (!token) return;
-    const rows = await fetchSeoContentAdmin(token, brandSlug, domainId);
-    setContentRows(rows);
+  const applyContentRows = useCallback(
+    (rows: SeoContentRow[], page: string): void => {
+      setContentRows(rows);
+      const pageRows = rows.filter((row) => row.page === page);
+      const nextDraft: Record<string, string> = {};
+      for (const row of pageRows) {
+        nextDraft[row.section] = row.content;
+      }
+      setDraft(nextDraft);
 
-    const pageRows = rows.filter((row) => row.page === pageFilter);
-    const nextDraft: Record<string, string> = {};
-    for (const row of pageRows) {
-      nextDraft[row.section] = row.content;
+      const titleRow = pageRows.find((row) => row.section === "page_title");
+      if (titleRow) {
+        setMetaDraft({
+          metaTitle: titleRow.metaTitle ?? "",
+          metaDescription: titleRow.metaDescription ?? "",
+          metaKeywords: titleRow.metaKeywords ?? "",
+          ogImageUrl: titleRow.ogImageUrl ?? "",
+          robotsIndex: titleRow.robotsIndex,
+        });
+      } else {
+        setMetaDraft({
+          metaTitle: "",
+          metaDescription: "",
+          metaKeywords: "",
+          ogImageUrl: "",
+          robotsIndex: true,
+        });
+      }
+    },
+    [],
+  );
+
+  const loadContent = useCallback(async (): Promise<void> => {
+    if (!token) return;
+    let rows = await fetchSeoContentAdmin(token, brandSlug, null);
+
+    // Fill any empty SEO fields from store settings so Pages always show current data.
+    try {
+      const filled = await fillSeoFromStore(token, brandSlug, null, false);
+      await ensureStarterBlog(token, brandSlug, null);
+      if (filled.updated > 0) {
+        rows = await fetchSeoContentAdmin(token, brandSlug, null);
+        setMessage("Loaded SEO from current store settings.");
+      }
+    } catch {
+      // leave whatever we fetched; user can fill manually
     }
-    setDraft(nextDraft);
 
-    const titleRow = pageRows.find((row) => row.section === "page_title");
-    if (titleRow) {
-      setMetaDraft({
-        metaTitle: titleRow.metaTitle ?? "",
-        metaDescription: titleRow.metaDescription ?? "",
-        metaKeywords: titleRow.metaKeywords ?? "",
-        ogImageUrl: titleRow.ogImageUrl ?? "",
-        robotsIndex: titleRow.robotsIndex,
-      });
-    } else {
-      setMetaDraft({
-        metaTitle: "",
-        metaDescription: "",
-        metaKeywords: "",
-        ogImageUrl: "",
-        robotsIndex: true,
-      });
-    }
-  }, [token, brandSlug, domainId, pageFilter]);
+    applyContentRows(rows, pageFilter);
+  }, [token, brandSlug, pageFilter, applyContentRows]);
 
-  const loadImages = useCallback(async () => {
+  const loadImages = useCallback(async (): Promise<void> => {
     if (!token) return;
-    const list = await fetchSeoImages(token, brandSlug, domainId);
+    const list = await fetchSeoImages(token, brandSlug, null);
     setImages(list);
-    const verify = await verifySeoImages(token, brandSlug, domainId);
+    const verify = await verifySeoImages(token, brandSlug, null);
     setMissingImages(verify.missing);
-  }, [token, brandSlug, domainId]);
+  }, [token, brandSlug]);
 
   const loadPosts = useCallback(async (): Promise<void> => {
     if (!token) return;
-    const list = await fetchBlogPosts(token, brandSlug, domainId);
+    const list = await fetchBlogPosts(token, brandSlug, null);
     setPosts(list);
-  }, [token, brandSlug, domainId]);
+  }, [token, brandSlug]);
 
   const loadChecklist = useCallback(async (): Promise<void> => {
     if (!token) return;
     try {
-      const next = await fetchSeoLaunchChecklist(token, brandSlug, domainId);
+      const next = await fetchSeoLaunchChecklist(token, brandSlug, null);
       setChecklist(next);
     } catch {
       setChecklist(null);
     }
-  }, [token, brandSlug, domainId]);
-
-  useEffect(() => {
-    if (!token) return;
-    void loadDomains();
-  }, [token, loadDomains]);
+  }, [token, brandSlug]);
 
   useEffect(() => {
     if (!token) return;
@@ -187,20 +191,17 @@ export function SeoDashboardContent(): React.ReactElement {
 
   useEffect(() => {
     if (!token || tab !== "pages") return;
-    void loadContent();
-  }, [pageFilter, token, tab, loadContent]);
+    // Only re-apply draft for page filter change without re-fetching when rows already loaded
+    if (contentRows.length > 0) {
+      applyContentRows(contentRows, pageFilter);
+    }
+  }, [pageFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleBrandChange = (slug: string): void => {
     setBrandSlug(slug);
     setSeoBrandSlug(slug);
-    setDomainId(null);
-    setSeoDomainId(null);
-  };
-
-  const handleDomainChange = (value: string): void => {
-    const next = value === "default" ? null : value;
-    setDomainId(next);
-    setSeoDomainId(next);
+    setMessage(null);
+    setError(null);
   };
 
   const handleSavePages = async (): Promise<void> => {
@@ -243,7 +244,7 @@ export function SeoDashboardContent(): React.ReactElement {
         });
       }
 
-      await bulkUpsertSeoContent(token, brandSlug, domainId, items);
+      await bulkUpsertSeoContent(token, brandSlug, null, items);
       setMessage("Page content saved.");
       await loadContent();
     } catch (err) {
@@ -258,7 +259,7 @@ export function SeoDashboardContent(): React.ReactElement {
     setSaving(true);
     setError(null);
     try {
-      await uploadSeoImage(token, brandSlug, file, domainId);
+      await uploadSeoImage(token, brandSlug, file, null);
       setMessage("Image uploaded.");
       await loadImages();
     } catch (err) {
@@ -268,11 +269,14 @@ export function SeoDashboardContent(): React.ReactElement {
     }
   };
 
-  const handleAssignImage = async (image: SeoImageRecord, slot: (typeof IMAGE_SLOTS)[number]): Promise<void> => {
+  const handleAssignImage = async (
+    image: SeoImageRecord,
+    slot: (typeof IMAGE_SLOTS)[number],
+  ): Promise<void> => {
     if (!token) return;
     setSaving(true);
     try {
-      await bulkUpsertSeoContent(token, brandSlug, domainId, [
+      await bulkUpsertSeoContent(token, brandSlug, null, [
         {
           page: slot.page,
           section: slot.section,
@@ -294,7 +298,7 @@ export function SeoDashboardContent(): React.ReactElement {
     try {
       await saveBlogPost(token, brandSlug, {
         ...editingPost,
-        domainId,
+        domainId: null,
         title: editingPost.title,
         slug: editingPost.slug,
       });
@@ -314,13 +318,13 @@ export function SeoDashboardContent(): React.ReactElement {
     setError(null);
     setMessage(null);
     try {
-      const result = await fillSeoFromStore(token, brandSlug, domainId, overwrite);
+      const result = await fillSeoFromStore(token, brandSlug, null, overwrite);
       setMessage(
         overwrite
           ? `Overwrote SEO from store settings (${result.updated} fields).`
           : `Filled empty SEO fields from store (${result.updated} updated).`,
       );
-      if (tab === "pages") await loadContent();
+      await loadContent();
       await loadChecklist();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Fill from store failed.");
@@ -334,11 +338,11 @@ export function SeoDashboardContent(): React.ReactElement {
     setSaving(true);
     setError(null);
     try {
-      const result = await ensureStarterBlog(token, brandSlug, domainId);
+      const result = await ensureStarterBlog(token, brandSlug, null);
       setMessage(
         result.created
           ? "Starter blog draft created — edit and publish when ready."
-          : "A blog post already exists for this store/domain.",
+          : "A blog post already exists for this store.",
       );
       setTab("blog");
       await loadPosts();
@@ -349,13 +353,6 @@ export function SeoDashboardContent(): React.ReactElement {
       setSaving(false);
     }
   };
-
-  const scopeLabel = useMemo(() => {
-    if (!domainId) return "Store default (all domains)";
-    const domain = domains.find((item) => item.id === domainId);
-    return domain ? domainLabel(domain) : domainId;
-  }, [domainId, domains]);
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
@@ -370,7 +367,9 @@ export function SeoDashboardContent(): React.ReactElement {
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold">SEO Dashboard</h1>
-            <p className="text-sm text-zinc-400">{scopeLabel}</p>
+            <p className="text-sm text-zinc-400">
+              {selectedStore ? storeOptionLabel(selectedStore) : brandSlug}
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <select
@@ -380,19 +379,7 @@ export function SeoDashboardContent(): React.ReactElement {
             >
               {stores.map((store) => (
                 <option key={store.id} value={store.slug}>
-                  {store.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm"
-              onChange={(event) => handleDomainChange(event.target.value)}
-              value={domainId ?? "default"}
-            >
-              <option value="default">Store default (all domains)</option>
-              {domains.map((domain) => (
-                <option key={domain.id} value={domain.id}>
-                  {domainLabel(domain)}
+                  {storeOptionLabel(store)}
                 </option>
               ))}
             </select>
@@ -443,7 +430,11 @@ export function SeoDashboardContent(): React.ReactElement {
               <div>
                 <h2 className="text-lg font-medium">Launch checklist</h2>
                 <p className="mt-1 text-sm text-zinc-400">
-                  Editing <strong className="text-white">{brandSlug}</strong> — {scopeLabel}.
+                  Editing{" "}
+                  <strong className="text-white">
+                    {selectedStore ? storeOptionLabel(selectedStore) : brandSlug}
+                  </strong>
+                  .
                 </p>
               </div>
 
@@ -502,6 +493,7 @@ export function SeoDashboardContent(): React.ReactElement {
                 <li>Use Images to upload and assign hero backgrounds.</li>
                 <li>Use Blog for posts (meta, thumbnail, author, category).</li>
                 <li>Each custom domain needs its own Google Search Console property + that host&apos;s sitemap.xml.</li>
+                <li>SEO is per store (not per domain override).</li>
               </ul>
             </div>
           ) : null}
