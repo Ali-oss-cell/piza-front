@@ -79,3 +79,27 @@ export function canAccessSeoDashboard(user: AuthUser | null | undefined): boolea
     ["PLATFORM_ADMIN", "STORE_ADMIN", "SEO"].includes(store.membershipRole),
   );
 }
+
+/** True when the user only has SEO membership (no store/platform admin). */
+export function isSeoOnlyUser(user: AuthUser | null | undefined): boolean {
+  if (!user) {
+    return false;
+  }
+  if (user.role === "ADMIN" || user.role === "MANAGER") {
+    return false;
+  }
+  const stores = user.stores ?? [];
+  if (stores.length === 0) {
+    return false;
+  }
+  return stores.every((store) => store.membershipRole === "SEO");
+}
+
+export function seoAccessLabel(user: AuthUser | null | undefined): string {
+  if (!user) return "Guest";
+  if (isPlatformAdmin(user)) return "Platform admin";
+  if (canAccessAdminDashboard(user)) return "Store admin";
+  if (isSeoOnlyUser(user)) return "SEO editor";
+  if (canAccessSeoDashboard(user)) return "SEO access";
+  return user.role;
+}

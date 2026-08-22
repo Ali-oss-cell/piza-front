@@ -65,14 +65,62 @@ function hostSplitEnabled(): boolean {
   return raw === "1" || raw === "true" || raw === "yes";
 }
 
-export function middleware(request: NextRequest): NextResponse {
+function shouldSkipRedirectLookup(pathname: string): boolean {
+  return (
+    pathname.startsWith("/seo-dashboard") ||
+    pathname.startsWith("/seo-login") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next")
+  );
+}
+
+async function resolveSeoRedirect(
+  host: string,
+  pathname: string,
+): Promise<string | null> {
+  if (!host || shouldSkipRedirectLookup(pathname)) {
+    return null;
+  }
+
+  const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+  if (!apiBase) {
+    return null;
+  }
+
+  try {
+    const url = `${apiBase}/seo/redirects/resolve?host=${encodeURIComponent(host)}&path=${encodeURIComponent(pathname)}`;
+    const response = await fetch(url, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 30 },
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const body = (await response.json()) as { toPath?: string } | null;
+    return body?.toPath ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function middleware(request: NextRequest): Promise<NextResponse> {
+  const host = hostnameOf(request);
+  const { pathname, search } = request.nextUrl;
+
+  const redirectTo = await resolveSeoRedirect(host, pathname);
+  if (redirectTo) {
+    const target = redirectTo.startsWith("http")
+      ? redirectTo
+      : new URL(`${redirectTo}${search}`, request.url).toString();
+    return NextResponse.redirect(target, 301);
+  }
+
   // Default: same-origin admin (old domain style).
   if (!hostSplitEnabled()) {
     return NextResponse.next();
   }
-
-  const host = hostnameOf(request);
-  const { pathname, search } = request.nextUrl;
 
   if (!host || isLocalHost(host)) {
     return NextResponse.next();

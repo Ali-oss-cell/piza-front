@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { BlogPostClient } from "./BlogPostClient";
 import { fetchBlogPost } from "@/lib/seo-api";
 import { buildSeoMetadata, resolveBrandSlugForRequest, siteOriginFromHost } from "@/lib/seo-server";
@@ -44,6 +45,8 @@ export default async function BlogPostPage({
   const baseUrl = siteOriginFromHost(host);
 
   return (
-    <BlogPostClient baseUrl={baseUrl} brandSlug={brandSlug} host={host} slug={slug} />
+    <Suspense fallback={<main className="mx-auto max-w-3xl px-4 py-16">Loading…</main>}>
+      <BlogPostClient baseUrl={baseUrl} brandSlug={brandSlug} host={host} slug={slug} />
+    </Suspense>
   );
 }

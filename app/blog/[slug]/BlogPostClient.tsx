@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BlogPostingJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import { getStoredToken } from "@/lib/auth-storage";
 import { fetchBlogPost, type BlogPostRecord } from "@/lib/seo-api";
 import { resolveMediaUrl } from "@/lib/media-url";
 
@@ -19,14 +21,23 @@ export function BlogPostClient({
   brandSlug,
   host,
 }: BlogPostClientProps): React.ReactElement {
+  const searchParams = useSearchParams();
+  const isPreview = searchParams.get("preview") === "1";
   const [post, setPost] = useState<BlogPostRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchBlogPost(slug, brandSlug, null, undefined, host)
+    const token = isPreview ? getStoredToken() ?? undefined : undefined;
+    void fetchBlogPost(slug, brandSlug, null, token, host)
       .then(setPost)
-      .catch(() => setError("Post not found"));
-  }, [slug, brandSlug, host]);
+      .catch(() =>
+        setError(
+          isPreview
+            ? "Preview unavailable — sign in to the SEO dashboard, then try again."
+            : "Post not found",
+        ),
+      );
+  }, [slug, brandSlug, host, isPreview]);
 
   if (error) {
     return (
@@ -47,9 +58,23 @@ export function BlogPostClient({
   const image = post.thumbnail?.filePath
     ? resolveMediaUrl(post.thumbnail.filePath) ?? post.thumbnail.filePath
     : null;
+  const isScheduled =
+    post.status === "PUBLISHED" &&
+    post.publishedAt &&
+    new Date(post.publishedAt).getTime() > Date.now();
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-16 md:px-8">
+      {isPreview ? (
+        <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+          Preview mode
+          {post.status === "DRAFT"
+            ? " — draft (not public)"
+            : isScheduled
+              ? ` — scheduled for ${new Date(post.publishedAt!).toLocaleString()}`
+              : " — live version"}
+        </div>
+      ) : null}
       <BreadcrumbJsonLd
         items={[
           { name: "Home", url: baseUrl },

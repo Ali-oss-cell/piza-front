@@ -7,6 +7,7 @@ import {
   Loader2,
   LogOut,
   Newspaper,
+  Route,
   Save,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -22,20 +23,26 @@ import {
   bulkUpsertSeoContent,
   deleteBlogPost,
   deleteSeoImage,
+  deleteSeoRedirect,
   ensureStarterBlog,
   fetchBlogPosts,
   fetchSeoContentAdmin,
   fetchSeoImages,
   fetchSeoLaunchChecklist,
+  fetchSeoRedirects,
   fillSeoFromStore,
   IMAGE_SLOTS,
   saveBlogPost,
+  saveSeoRedirect,
   SEO_PAGES,
+  updateSeoGscSettings,
+  updateSeoImage,
   uploadSeoImage,
   verifySeoImages,
   type BlogPostRecord,
   type SeoContentRow,
   type SeoImageRecord,
+  type SeoRedirectRecord,
 } from "@/lib/seo-api";
 import { getSeoBrandSlug, setSeoBrandSlug } from "@/lib/seo-storage";
 import {
@@ -47,7 +54,13 @@ import {
   secondaryText,
 } from "@/lib/theme-classes";
 import { cn } from "@/lib/utils";
-import { canAccessSeoDashboard, type AuthStore } from "@/types/auth";
+import {
+  canAccessSeoDashboard,
+  isSeoOnlyUser,
+  seoAccessLabel,
+  type AuthStore,
+  type AuthUser,
+} from "@/types/auth";
 
 const ThemeToggle = dynamic(
   () => import("@/components/ui/theme-toggle").then((mod) => mod.ThemeToggle),
@@ -60,7 +73,7 @@ const ThemeToggle = dynamic(
 const fieldClass =
   "w-full rounded-xl border border-zinc-200/70 bg-white/80 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-[#d81b60] focus:ring-2 focus:ring-[#d81b60]/20 dark:border-white/10 dark:bg-zinc-950/60 dark:text-zinc-50";
 
-type Tab = "dashboard" | "pages" | "images" | "blog";
+type Tab = "dashboard" | "pages" | "images" | "blog" | "redirects";
 
 const PAGE_SECTIONS: Record<string, string[]> = {
   home: ["hero_h1", "hero_h2", "hero_body", "hero_image", "page_title"],
@@ -83,10 +96,31 @@ function slugifyTitle(title: string): string {
     .slice(0, 80);
 }
 
+function toDatetimeLocalValue(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function postStatusLabel(post: Partial<BlogPostRecord>): string {
+  if (post.status === "DRAFT") return "DRAFT";
+  if (
+    post.status === "PUBLISHED" &&
+    post.publishedAt &&
+    new Date(post.publishedAt).getTime() > Date.now()
+  ) {
+    return "SCHEDULED";
+  }
+  return "PUBLISHED";
+}
+
 export function SeoDashboardContent(): React.ReactElement {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [token, setToken] = useState<string | null>(null);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [stores, setStores] = useState<AuthStore[]>([]);
   const [brandSlug, setBrandSlug] = useState<string>("leovorno");
   const [pageFilter, setPageFilter] = useState<string>("home");
@@ -100,10 +134,14 @@ export function SeoDashboardContent(): React.ReactElement {
     robotsIndex: true,
   });
   const [images, setImages] = useState<SeoImageRecord[]>([]);
+  const [imageSearch, setImageSearch] = useState("");
   const [missingImages, setMissingImages] = useState<SeoImageRecord[]>([]);
   const [posts, setPosts] = useState<BlogPostRecord[]>([]);
   const [editingPost, setEditingPost] = useState<Partial<BlogPostRecord> | null>(null);
   const [slugTouched, setSlugTouched] = useState(false);
+  const [redirects, setRedirects] = useState<SeoRedirectRecord[]>([]);
+  const [redirectDraft, setRedirectDraft] = useState({ fromPath: "", toPath: "" });
+  const [gscToken, setGscToken] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -121,6 +159,7 @@ export function SeoDashboardContent(): React.ReactElement {
     }
 
     setToken(storedToken);
+    setAuthUser(user);
     const userStores = user?.stores ?? [];
     setStores(userStores);
 
@@ -208,18 +247,51 @@ export function SeoDashboardContent(): React.ReactElement {
     try {
       const next = await fetchSeoLaunchChecklist(token, brandSlug, null);
       setChecklist(next);
+      setGscToken(next.googleSiteVerification ?? "");
     } catch {
       setChecklist(null);
     }
   }, [token, brandSlug]);
 
+  const loadRedirects = useCallback(async (): Promise<void> => {
+    if (!token) return;
+    const list = await fetchSeoRedirects(token, brandSlug);
+    setRedirects(list);
+  }, [token, brandSlug]);
+
   useEffect(() => {
     if (!token) return;
     if (tab === "pages") void loadContent();
-    if (tab === "images" || tab === "blog") void loadImages();
+    if (tab === "images" || tab === "blog" || tab === "pages") void loadImages();
     if (tab === "blog") void loadPosts();
     if (tab === "dashboard") void loadChecklist();
-  }, [token, tab, loadContent, loadImages, loadPosts, loadChecklist]);
+    if (tab === "redirects") void loadRedirects();
+  }, [token, tab, loadContent, loadImages, loadPosts, loadChecklist, loadRedirects]);
+
+  const filteredImages = useMemo(() => {
+    const q = imageSearch.trim().toLowerCase();
+    if (!q) return images;
+    return images.filter((image) => {
+      const hay = [
+        image.label,
+        image.filename,
+        image.altText,
+        image.page,
+        image.section,
+        ...(image.usage ?? []),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [images, imageSearch]);
+
+  const heroImageId = useMemo(() => {
+    const path = draft.hero_image;
+    if (!path) return null;
+    return images.find((image) => image.filePath === path)?.id ?? null;
+  }, [draft.hero_image, images]);
 
   useEffect(() => {
     if (!token || tab !== "pages") return;
@@ -360,12 +432,70 @@ export function SeoDashboardContent(): React.ReactElement {
         domainId: null,
         title: editingPost.title,
         slug: editingPost.slug,
+        publishedAt: editingPost.publishedAt ?? null,
+        status: editingPost.status ?? "DRAFT",
       });
       setEditingPost(null);
+      setSlugTouched(false);
       setMessage("Blog post saved.");
       await loadPosts();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveGsc = async (): Promise<void> => {
+    if (!token) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await updateSeoGscSettings(token, brandSlug, {
+        googleSiteVerification: gscToken.trim() || null,
+        sitemapSubmitted: checklist?.sitemapSubmitted ?? false,
+      });
+      setMessage("GSC settings saved.");
+      await loadChecklist();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save GSC settings.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleSitemapSubmitted = async (submitted: boolean): Promise<void> => {
+    if (!token) return;
+    setSaving(true);
+    try {
+      await updateSeoGscSettings(token, brandSlug, {
+        googleSiteVerification: gscToken.trim() || null,
+        sitemapSubmitted: submitted,
+      });
+      setMessage(submitted ? "Marked sitemap as submitted." : "Cleared sitemap submitted flag.");
+      await loadChecklist();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update sitemap status.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveRedirect = async (): Promise<void> => {
+    if (!token || !redirectDraft.fromPath.trim() || !redirectDraft.toPath.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await saveSeoRedirect(token, brandSlug, {
+        fromPath: redirectDraft.fromPath.trim(),
+        toPath: redirectDraft.toPath.trim(),
+        isActive: true,
+      });
+      setRedirectDraft({ fromPath: "", toPath: "" });
+      setMessage("Redirect saved.");
+      await loadRedirects();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save redirect.");
     } finally {
       setSaving(false);
     }
@@ -428,6 +558,11 @@ export function SeoDashboardContent(): React.ReactElement {
             <h1 className={cn("text-xl font-semibold", primaryText)}>SEO Dashboard</h1>
             <p className={cn("text-sm", secondaryText)}>
               {selectedStore ? storeOptionLabel(selectedStore) : brandSlug}
+              {" · "}
+              <span className="text-[#d81b60]">{seoAccessLabel(authUser)}</span>
+              {isSeoOnlyUser(authUser)
+                ? " — content & SEO only (no menu/orders admin)"
+                : null}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -465,6 +600,7 @@ export function SeoDashboardContent(): React.ReactElement {
               ["pages", "Pages", FileText],
               ["images", "Images", ImageIcon],
               ["blog", "Blog", Newspaper],
+              ["redirects", "Redirects", Route],
             ] as const
           ).map(([key, label, Icon]) => (
             <button
@@ -541,7 +677,13 @@ export function SeoDashboardContent(): React.ReactElement {
                       {checklist.hasVerification ? "✓" : "○"} Google site verification token
                       {checklist.googleSiteVerification
                         ? ` (${checklist.googleSiteVerification.slice(0, 12)}…)`
-                        : " — set in Admin → System Settings"}
+                        : " — paste below"}
+                    </li>
+                    <li>
+                      {checklist.sitemapSubmitted ? "✓" : "○"} Sitemap submitted in GSC
+                      {checklist.sitemapSubmittedAt
+                        ? ` (${checklist.sitemapSubmittedAt.slice(0, 10)})`
+                        : ""}
                     </li>
                     <li>
                       {checklist.seoContentCount > 0 ? "✓" : "○"} SEO content rows (
@@ -558,6 +700,33 @@ export function SeoDashboardContent(): React.ReactElement {
                   </ol>
                 </div>
               ) : null}
+
+              <div className="space-y-3 rounded-xl border border-zinc-200/70 p-4 dark:border-white/10">
+                <h3 className={cn("font-medium", primaryText)}>Google Search Console</h3>
+                <p className={cn("text-sm", secondaryText)}>
+                  Paste only the <code>content</code> value from Google&apos;s HTML tag meta
+                  verification (not the full tag).
+                </p>
+                <Input
+                  onChange={(event) => setGscToken(event.target.value)}
+                  placeholder="google-site-verification token"
+                  value={gscToken}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button disabled={saving} onClick={() => void handleSaveGsc()}>
+                    Save verification token
+                  </Button>
+                  <Button
+                    disabled={saving}
+                    onClick={() => void handleToggleSitemapSubmitted(!(checklist?.sitemapSubmitted ?? false))}
+                    variant="outline"
+                  >
+                    {checklist?.sitemapSubmitted
+                      ? "Clear sitemap submitted"
+                      : "Mark sitemap submitted"}
+                  </Button>
+                </div>
+              </div>
 
               <div className="flex flex-wrap gap-2">
                 <Button disabled={saving} onClick={() => void handleFillFromStore(false)} variant="outline">
@@ -631,6 +800,39 @@ export function SeoDashboardContent(): React.ReactElement {
                     )}
                   </div>
                 ))}
+
+              {(PAGE_SECTIONS[pageFilter] ?? []).includes("hero_image") ? (
+                <SeoImageField
+                  images={images}
+                  label="Hero image"
+                  onChange={(imageId) => {
+                    if (!imageId) {
+                      setDraft((prev) => ({ ...prev, hero_image: "" }));
+                      return;
+                    }
+                    const image = images.find((row) => row.id === imageId);
+                    if (image) {
+                      setDraft((prev) => ({ ...prev, hero_image: image.filePath }));
+                    }
+                  }}
+                  onUpload={async (file) => {
+                    if (!token) throw new Error("Not signed in.");
+                    const result = await uploadSeoImage(token, brandSlug, file, null, {
+                      label: file.name,
+                      page: pageFilter,
+                      section: "hero_image",
+                    });
+                    const list = await fetchSeoImages(token, brandSlug, null);
+                    setImages(list);
+                    const uploaded = list.find((row) => row.id === result.id);
+                    if (uploaded) {
+                      setDraft((prev) => ({ ...prev, hero_image: uploaded.filePath }));
+                    }
+                    return result;
+                  }}
+                  valueId={heroImageId}
+                />
+              ) : null}
 
               {PAGE_SECTIONS[pageFilter]?.includes("page_title") ? (
                 <div className="space-y-3 rounded-xl border border-zinc-200/70 p-4 dark:border-white/10">
@@ -709,18 +911,30 @@ export function SeoDashboardContent(): React.ReactElement {
 
           {tab === "images" ? (
             <div className="space-y-6">
-              <div>
-                <label className={cn("mb-2 block text-sm", secondaryText)}>
-                  Upload image (max 5MB)
-                </label>
-                <input
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) void handleUpload(file);
-                  }}
-                  type="file"
-                />
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="min-w-[220px] flex-1">
+                  <label className={cn("mb-2 block text-sm", secondaryText)}>
+                    Search library
+                  </label>
+                  <Input
+                    onChange={(event) => setImageSearch(event.target.value)}
+                    placeholder="Name, alt text, page usage…"
+                    value={imageSearch}
+                  />
+                </div>
+                <div>
+                  <label className={cn("mb-2 block text-sm", secondaryText)}>
+                    Upload image (max 5MB)
+                  </label>
+                  <input
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) void handleUpload(file);
+                    }}
+                    type="file"
+                  />
+                </div>
               </div>
 
               {missingImages.length > 0 ? (
@@ -730,9 +944,9 @@ export function SeoDashboardContent(): React.ReactElement {
               ) : null}
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {images.map((image) => (
+                {filteredImages.map((image) => (
                   <div
-                    className="rounded-xl border border-zinc-200/70 p-3 dark:border-white/10"
+                    className="space-y-2 rounded-xl border border-zinc-200/70 p-3 dark:border-white/10"
                     key={image.id}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -741,7 +955,36 @@ export function SeoDashboardContent(): React.ReactElement {
                       className="mb-2 h-32 w-full rounded-lg object-cover"
                       src={resolveMediaUrl(image.filePath) ?? image.filePath}
                     />
-                    <p className={cn("truncate text-xs", secondaryText)}>{image.filename}</p>
+                    <Input
+                      onBlur={(event) => {
+                        if (!token) return;
+                        const label = event.target.value.trim() || null;
+                        if (label === (image.label ?? null)) return;
+                        void updateSeoImage(token, brandSlug, image.id, { label }).then(
+                          () => loadImages(),
+                        );
+                      }}
+                      defaultValue={image.label ?? ""}
+                      placeholder="Label / name"
+                    />
+                    <Input
+                      onBlur={(event) => {
+                        if (!token) return;
+                        const altText = event.target.value.trim() || null;
+                        if (altText === (image.altText ?? null)) return;
+                        void updateSeoImage(token, brandSlug, image.id, { altText }).then(
+                          () => loadImages(),
+                        );
+                      }}
+                      defaultValue={image.altText ?? ""}
+                      placeholder="Alt text"
+                    />
+                    <p className={cn("text-xs", secondaryText)}>
+                      Used in:{" "}
+                      {image.usage && image.usage.length > 0
+                        ? image.usage.join(", ")
+                        : "nowhere yet"}
+                    </p>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {IMAGE_SLOTS.map((slot) => (
                         <button
@@ -800,7 +1043,7 @@ export function SeoDashboardContent(): React.ReactElement {
                         <div>
                           <p className={cn("font-medium", primaryText)}>{post.title}</p>
                           <p className={cn("text-xs", secondaryText)}>
-                            /{post.slug} · {post.status}
+                            /{post.slug} · {postStatusLabel(post)}
                           </p>
                         </div>
                         <div className="flex gap-2">
@@ -951,22 +1194,77 @@ export function SeoDashboardContent(): React.ReactElement {
                     <label className={cn("mb-1 block text-sm", secondaryText)}>Status</label>
                     <select
                       className={fieldClass}
-                      onChange={(event) =>
-                        setEditingPost((prev) => ({
-                          ...prev,
-                          status: event.target.value as "DRAFT" | "PUBLISHED",
-                        }))
+                      onChange={(event) => {
+                        const value = event.target.value as "DRAFT" | "PUBLISHED" | "SCHEDULED";
+                        setEditingPost((prev) => {
+                          if (value === "DRAFT") {
+                            return { ...prev, status: "DRAFT", publishedAt: null };
+                          }
+                          if (value === "SCHEDULED") {
+                            const when =
+                              prev?.publishedAt &&
+                              new Date(prev.publishedAt).getTime() > Date.now()
+                                ? prev.publishedAt
+                                : new Date(Date.now() + 60 * 60 * 1000).toISOString();
+                            return { ...prev, status: "PUBLISHED", publishedAt: when };
+                          }
+                          return {
+                            ...prev,
+                            status: "PUBLISHED",
+                            publishedAt: new Date().toISOString(),
+                          };
+                        });
+                      }}
+                      value={
+                        editingPost.status === "DRAFT"
+                          ? "DRAFT"
+                          : postStatusLabel(editingPost) === "SCHEDULED"
+                            ? "SCHEDULED"
+                            : "PUBLISHED"
                       }
-                      value={editingPost.status ?? "DRAFT"}
                     >
                       <option value="DRAFT">Draft</option>
-                      <option value="PUBLISHED">Published</option>
+                      <option value="SCHEDULED">Scheduled</option>
+                      <option value="PUBLISHED">Published (live now)</option>
                     </select>
                   </div>
-                  <div className="flex gap-2">
+                  {postStatusLabel(editingPost) === "SCHEDULED" ||
+                  (editingPost.status === "PUBLISHED" &&
+                    editingPost.publishedAt &&
+                    new Date(editingPost.publishedAt).getTime() > Date.now()) ? (
+                    <div>
+                      <label className={cn("mb-1 block text-sm", secondaryText)}>
+                        Publish at
+                      </label>
+                      <Input
+                        onChange={(event) => {
+                          const local = event.target.value;
+                          setEditingPost((prev) => ({
+                            ...prev,
+                            status: "PUBLISHED",
+                            publishedAt: local ? new Date(local).toISOString() : null,
+                          }));
+                        }}
+                        type="datetime-local"
+                        value={toDatetimeLocalValue(editingPost.publishedAt)}
+                      />
+                    </div>
+                  ) : null}
+                  <div className="flex flex-wrap gap-2">
                     <Button disabled={saving} onClick={() => void handleSavePost()}>
                       Save post
                     </Button>
+                    {editingPost.slug ? (
+                      <Button
+                        onClick={() => {
+                          window.open(`/blog/${editingPost.slug}?preview=1`, "_blank", "noopener");
+                        }}
+                        type="button"
+                        variant="outline"
+                      >
+                        View on site
+                      </Button>
+                    ) : null}
                     <Button
                       onClick={() => {
                         setEditingPost(null);
@@ -979,6 +1277,71 @@ export function SeoDashboardContent(): React.ReactElement {
                   </div>
                 </div>
               )}
+            </div>
+          ) : null}
+
+          {tab === "redirects" ? (
+            <div className="space-y-6">
+              <div>
+                <h2 className={cn("text-lg font-medium", primaryText)}>301 Redirects</h2>
+                <p className={cn("mt-1 text-sm", secondaryText)}>
+                  When you rename a blog slug or old path, add a redirect so Google and bookmarks
+                  keep working.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className={cn("mb-1 block text-sm", secondaryText)}>From path</label>
+                  <Input
+                    onChange={(event) =>
+                      setRedirectDraft((prev) => ({ ...prev, fromPath: event.target.value }))
+                    }
+                    placeholder="/blog/old-slug"
+                    value={redirectDraft.fromPath}
+                  />
+                </div>
+                <div>
+                  <label className={cn("mb-1 block text-sm", secondaryText)}>To path</label>
+                  <Input
+                    onChange={(event) =>
+                      setRedirectDraft((prev) => ({ ...prev, toPath: event.target.value }))
+                    }
+                    placeholder="/blog/new-slug"
+                    value={redirectDraft.toPath}
+                  />
+                </div>
+              </div>
+              <Button disabled={saving} onClick={() => void handleSaveRedirect()}>
+                Add redirect
+              </Button>
+              <div className="space-y-2">
+                {redirects.map((redirect) => (
+                  <div
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-200/70 p-3 dark:border-white/10"
+                    key={redirect.id}
+                  >
+                    <p className={cn("text-sm", primaryText)}>
+                      <code>{redirect.fromPath}</code>
+                      {" → "}
+                      <code>{redirect.toPath}</code>
+                      {!redirect.isActive ? " (inactive)" : null}
+                    </p>
+                    <Button
+                      onClick={async () => {
+                        if (!token) return;
+                        await deleteSeoRedirect(token, brandSlug, redirect.id);
+                        await loadRedirects();
+                      }}
+                      variant="outline"
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                ))}
+                {redirects.length === 0 ? (
+                  <p className={cn("text-sm", secondaryText)}>No redirects yet.</p>
+                ) : null}
+              </div>
             </div>
           ) : null}
         </main>

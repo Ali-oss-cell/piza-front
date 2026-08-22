@@ -37,6 +37,17 @@ export interface SeoImageRecord {
   section: string | null;
   altText: string | null;
   createdAt: string;
+  usage?: string[];
+}
+
+export interface SeoRedirectRecord {
+  id: string;
+  storeId: string;
+  fromPath: string;
+  toPath: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SeoDomain {
@@ -214,6 +225,85 @@ export function deleteSeoImage(
   });
 }
 
+export function updateSeoImage(
+  token: string,
+  brandSlug: string,
+  id: string,
+  payload: {
+    label?: string | null;
+    altText?: string | null;
+    page?: string | null;
+    section?: string | null;
+  },
+): Promise<SeoImageRecord> {
+  return apiRequest<SeoImageRecord>(`/seo/images/${id}`, {
+    method: "PATCH",
+    token,
+    brandSlug,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchSeoRedirects(
+  token: string,
+  brandSlug: string,
+): Promise<SeoRedirectRecord[]> {
+  return apiRequest<SeoRedirectRecord[]>("/seo/redirects", {
+    token,
+    brandSlug,
+  });
+}
+
+export function saveSeoRedirect(
+  token: string,
+  brandSlug: string,
+  payload: {
+    id?: string;
+    fromPath: string;
+    toPath: string;
+    isActive?: boolean;
+  },
+): Promise<SeoRedirectRecord> {
+  return apiRequest<SeoRedirectRecord>("/seo/redirects", {
+    method: "POST",
+    token,
+    brandSlug,
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteSeoRedirect(
+  token: string,
+  brandSlug: string,
+  id: string,
+): Promise<{ success: boolean }> {
+  return apiRequest<{ success: boolean }>(`/seo/redirects/${id}`, {
+    method: "DELETE",
+    token,
+    brandSlug,
+  });
+}
+
+export function updateSeoGscSettings(
+  token: string,
+  brandSlug: string,
+  payload: {
+    googleSiteVerification?: string | null;
+    sitemapSubmitted?: boolean;
+  },
+): Promise<{
+  slug: string;
+  googleSiteVerification: string | null;
+  sitemapSubmittedAt: string | null;
+}> {
+  return apiRequest("/seo/gsc-settings", {
+    method: "PATCH",
+    token,
+    brandSlug,
+    body: JSON.stringify(payload),
+  });
+}
+
 export function verifySeoImages(
   token: string,
   brandSlug: string,
@@ -292,6 +382,8 @@ export function fetchSeoLaunchChecklist(
   storeName: string;
   googleSiteVerification: string | null;
   hasVerification: boolean;
+  sitemapSubmittedAt: string | null;
+  sitemapSubmitted: boolean;
   hasAddress: boolean;
   hasPhone: boolean;
   seoContentCount: number;
