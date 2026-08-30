@@ -6,7 +6,11 @@ import { OpeningHoursEditor } from "@/components/admin/opening-hours-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchOnboarding, updateStoreSettings, updateStoreStatus } from "@/lib/admin-api";
-import { coerceOpeningHours, type OpeningHoursConfig } from "@/lib/opening-hours";
+import {
+  coerceOpeningHours,
+  validateOpeningHoursForSave,
+  type OpeningHoursConfig,
+} from "@/lib/opening-hours";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import type { HqReadiness } from "@/types/hq";
 import type { StoreDomain } from "@/types/payments";
@@ -114,6 +118,13 @@ export function SettingsView({
     setError(null);
     setSaved(false);
 
+    const hoursCheck = validateOpeningHoursForSave(form.openingHours);
+    if (!hoursCheck.ok) {
+      setError(hoursCheck.message);
+      setIsSaving(false);
+      return;
+    }
+
     const payload: UpdateStoreSettingsPayload = {
       storeName: form.storeName.trim(),
       tagline: form.tagline.trim(),
@@ -131,7 +142,7 @@ export function SettingsView({
       contactEmail: form.contactEmail.trim(),
       contactPhone: form.contactPhone.trim(),
       address: form.address.trim(),
-      openingHours: form.openingHours,
+      openingHours: hoursCheck.value,
     };
 
     try {

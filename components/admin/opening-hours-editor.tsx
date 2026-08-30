@@ -42,8 +42,8 @@ export function OpeningHoursEditor({
       <div>
         <h3 className={cn("font-display text-lg font-bold", primaryText)}>Opening hours</h3>
         <p className={cn("mt-1 text-sm", secondaryText)}>
-          Choose which days the store is open and set open / close times. Used on the website and
-          for online order time slots.
+          Choose which days the store is open and set open / close times (24-hour, e.g. 16:00 to
+          22:00). Use 23:59 or 00:00 for midnight close. Used on the website and for order slots.
         </p>
       </div>
 

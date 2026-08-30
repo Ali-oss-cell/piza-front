@@ -90,7 +90,113 @@ export function parseOpeningHours(value: unknown): OpeningHoursConfig | null {
 }
 
 export function coerceOpeningHours(value: unknown): OpeningHoursConfig {
-  return parseOpeningHours(value) ?? structuredClone(DEFAULT_OPENING_HOURS);
+  const parsed = parseOpeningHours(value);
+  if (!parsed) {
+    return structuredClone(DEFAULT_OPENING_HOURS);
+  }
+  const sanitized = sanitizeOpeningHoursForSave(parsed);
+  return sanitized ?? structuredClone(DEFAULT_OPENING_HOURS);
+}
+
+/** Normalize times and drop invalid open days before API save. Returns null if still invalid. */
+export function sanitizeOpeningHoursForSave(
+  value: OpeningHoursConfig,
+): OpeningHoursConfig | null {
+  const days = {} as Record<WeekdayKey, DayHours | null>;
+
+  for (const key of DISPLAY_WEEKDAY_KEYS) {
+    const day = value.days[key];
+    if (day === null || day === undefined) {
+      days[key] = null;
+      continue;
+    }
+
+    const open = normalizeTimeString(day.open);
+    const close = normalizeTimeString(day.close);
+    if (!open || !close) {
+      return null;
+    }
+
+    const openMinutes = parseTimeToMinutes(open);
+    const closeMinutes = closeMinutesForValidation(open, close);
+    if (closeMinutes <= openMinutes) {
+      return null;
+    }
+
+    days[key] = { open, close };
+  }
+
+  return {
+    timezone: value.timezone?.trim() || DEFAULT_OPENING_HOURS.timezone,
+    leadTimeMinutes:
+      typeof value.leadTimeMinutes === "number" && value.leadTimeMinutes >= 0
+        ? Math.round(value.leadTimeMinutes)
+        : DEFAULT_OPENING_HOURS.leadTimeMinutes,
+    slotIntervalMinutes:
+      typeof value.slotIntervalMinutes === "number" && value.slotIntervalMinutes >= 1
+        ? Math.round(value.slotIntervalMinutes)
+        : DEFAULT_OPENING_HOURS.slotIntervalMinutes,
+    days,
+  };
+}
+
+export function validateOpeningHoursForSave(
+  value: OpeningHoursConfig,
+): { ok: true; value: OpeningHoursConfig } | { ok: false; message: string } {
+  for (const key of DISPLAY_WEEKDAY_KEYS) {
+    const day = value.days[key];
+    if (day === null || day === undefined) {
+      continue;
+    }
+    const open = normalizeTimeString(day.open);
+    const close = normalizeTimeString(day.close);
+    if (!open || !close) {
+      return {
+        ok: false,
+        message: `${WEEKDAY_LABELS[key]}: use HH:MM times (e.g. 16:00 and 22:00).`,
+      };
+    }
+    const openMinutes = parseTimeToMinutes(open);
+    const closeMinutes = closeMinutesForValidation(open, close);
+    if (closeMinutes <= openMinutes) {
+      return {
+        ok: false,
+        message: `${WEEKDAY_LABELS[key]}: close time must be after open (e.g. 16:00 to 22:00, or 17:00 to 00:00 for midnight).`,
+      };
+    }
+  }
+
+  const sanitized = sanitizeOpeningHoursForSave(value);
+  if (!sanitized) {
+    return {
+      ok: false,
+      message: "Invalid opening hours. Use HH:MM times and set close after open for each open day.",
+    };
+  }
+  return { ok: true, value: sanitized };
+}
+
+function normalizeTimeString(value: string): string | null {
+  const trimmed = value.trim();
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (!match) {
+    return null;
+  }
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) {
+    return null;
+  }
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+function closeMinutesForValidation(open: string, close: string): number {
+  const openMinutes = parseTimeToMinutes(open);
+  const closeMinutes = parseTimeToMinutes(close);
+  if (closeMinutes === 0 && openMinutes > 0) {
+    return 24 * 60;
+  }
+  return closeMinutes;
 }
 
 function parseTimeToMinutes(time: string): number {
@@ -251,7 +357,7 @@ export function buildTimeSlots(
     }
 
     const openMinutes = parseTimeToMinutes(dayHours.open);
-    const closeMinutes = parseTimeToMinutes(dayHours.close);
+    const closeMinutes = closeMinutesForValidation(dayHours.open, dayHours.close);
 
     for (
       let minutes = openMinutes;
