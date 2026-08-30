@@ -73,15 +73,15 @@ export function HeroSection({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           alt=""
-          className="h-full w-full scale-105 object-cover opacity-60"
+          className="h-full w-full scale-105 object-cover opacity-90"
           src={heroSrc}
         />
         <div
-          className="absolute inset-0 bg-gradient-to-r transition-colors duration-150 ease-out md:bg-gradient-to-r"
+          className="absolute inset-0 transition-colors duration-150 ease-out"
           style={{
             backgroundImage: isDark
-              ? `linear-gradient(to right, ${bgDark}, ${bgDark}cc, transparent)`
-              : `linear-gradient(to right, ${bgLight}, ${bgLight}cc, transparent)`,
+              ? `linear-gradient(to right, ${bgDark}e6 0%, ${bgDark}99 18%, ${bgDark}55 32%, ${bgDark}22 45%, transparent 58%)`
+              : `linear-gradient(to right, ${bgLight}e6 0%, ${bgLight}99 18%, ${bgLight}55 32%, ${bgLight}22 45%, transparent 58%)`,
           }}
         />
       </div>
