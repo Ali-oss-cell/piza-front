@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchOnboarding, updateStoreSettings, updateStoreStatus } from "@/lib/admin-api";
 import {
-  coerceOpeningHours,
+  mergeOpeningHours,
   validateOpeningHoursForSave,
   type OpeningHoursConfig,
 } from "@/lib/opening-hours";
@@ -67,7 +67,7 @@ function formFromSettings(settings: StoreSettings): SettingsFormState {
     contactEmail: settings.contactEmail ?? "",
     contactPhone: settings.contactPhone ?? "",
     address: settings.address ?? "",
-    openingHours: coerceOpeningHours(settings.openingHours),
+    openingHours: mergeOpeningHours(settings.openingHours),
   };
 }
 
@@ -90,7 +90,7 @@ export function SettingsView({
 
   useEffect(() => {
     setForm(formFromSettings(settings));
-  }, [settings]);
+  }, [brandSlug, settings.id, settings.updatedAt]);
 
   useEffect(() => {
     let cancelled = false;

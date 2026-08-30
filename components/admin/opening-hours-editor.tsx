@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import {
-  coerceOpeningHours,
+  mergeOpeningHours,
   DISPLAY_WEEKDAY_KEYS,
   WEEKDAY_LABELS,
   type DayHours,
@@ -18,10 +18,11 @@ interface OpeningHoursEditorProps {
 }
 
 function updateDay(
-  config: OpeningHoursConfig,
+  value: OpeningHoursConfig,
   key: WeekdayKey,
   day: DayHours | null,
 ): OpeningHoursConfig {
+  const config = mergeOpeningHours(value);
   return {
     ...config,
     days: {
@@ -35,7 +36,7 @@ export function OpeningHoursEditor({
   value,
   onChange,
 }: OpeningHoursEditorProps): React.ReactElement {
-  const config = coerceOpeningHours(value);
+  const config = mergeOpeningHours(value);
 
   return (
     <div className="space-y-4">
@@ -64,13 +65,13 @@ export function OpeningHoursEditor({
                   onChange={(event) => {
                     if (event.target.checked) {
                       onChange(
-                        updateDay(config, key, {
+                        updateDay(value, key, {
                           open: day?.open ?? "17:00",
                           close: day?.close ?? "23:00",
                         }),
                       );
                     } else {
-                      onChange(updateDay(config, key, null));
+                      onChange(updateDay(value, key, null));
                     }
                   }}
                   type="checkbox"
@@ -87,7 +88,7 @@ export function OpeningHoursEditor({
                     className="w-[8.5rem]"
                     onChange={(event) =>
                       onChange(
-                        updateDay(config, key, {
+                        updateDay(value, key, {
                           ...day,
                           open: event.target.value,
                         }),
@@ -102,7 +103,7 @@ export function OpeningHoursEditor({
                     className="w-[8.5rem]"
                     onChange={(event) =>
                       onChange(
-                        updateDay(config, key, {
+                        updateDay(value, key, {
                           ...day,
                           close: event.target.value,
                         }),
@@ -129,7 +130,7 @@ export function OpeningHoursEditor({
             min={0}
             onChange={(event) =>
               onChange({
-                ...config,
+                ...mergeOpeningHours(value),
                 leadTimeMinutes: Number(event.target.value) || 0,
               })
             }
@@ -145,7 +146,7 @@ export function OpeningHoursEditor({
             min={5}
             onChange={(event) =>
               onChange({
-                ...config,
+                ...mergeOpeningHours(value),
                 slotIntervalMinutes: Number(event.target.value) || 15,
               })
             }

@@ -90,12 +90,42 @@ export function parseOpeningHours(value: unknown): OpeningHoursConfig | null {
 }
 
 export function coerceOpeningHours(value: unknown): OpeningHoursConfig {
-  const parsed = parseOpeningHours(value);
-  if (!parsed) {
-    return structuredClone(DEFAULT_OPENING_HOURS);
+  return mergeOpeningHours(value);
+}
+
+/** Lenient merge for forms — keeps in-progress edits; does not reset invalid days to defaults. */
+export function mergeOpeningHours(value: unknown): OpeningHoursConfig {
+  const base = structuredClone(DEFAULT_OPENING_HOURS);
+  if (!value || typeof value !== "object") {
+    return base;
   }
-  const sanitized = sanitizeOpeningHoursForSave(parsed);
-  return sanitized ?? structuredClone(DEFAULT_OPENING_HOURS);
+
+  const raw = value as Partial<OpeningHoursConfig>;
+  const days = { ...base.days } as Record<WeekdayKey, DayHours | null>;
+
+  if (raw.days && typeof raw.days === "object") {
+    for (const key of DISPLAY_WEEKDAY_KEYS) {
+      if (Object.prototype.hasOwnProperty.call(raw.days, key)) {
+        days[key] = (raw.days as Record<WeekdayKey, DayHours | null>)[key];
+      }
+    }
+  }
+
+  return {
+    timezone:
+      typeof raw.timezone === "string" && raw.timezone.trim()
+        ? raw.timezone.trim()
+        : base.timezone,
+    leadTimeMinutes:
+      typeof raw.leadTimeMinutes === "number" && raw.leadTimeMinutes >= 0
+        ? raw.leadTimeMinutes
+        : base.leadTimeMinutes,
+    slotIntervalMinutes:
+      typeof raw.slotIntervalMinutes === "number" && raw.slotIntervalMinutes >= 1
+        ? raw.slotIntervalMinutes
+        : base.slotIntervalMinutes,
+    days,
+  };
 }
 
 /** Normalize times and drop invalid open days before API save. Returns null if still invalid. */
