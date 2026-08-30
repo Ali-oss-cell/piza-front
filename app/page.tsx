@@ -6,7 +6,12 @@ import {
   getRequestHost,
   isPrimaryWebHost,
 } from "@/lib/request-host";
-import { DEFAULT_BRAND_SLUG } from "@/types/brand";
+import {
+  BENNY_BOYS_NAME,
+  BENNY_BOYS_PRIMARY_COLOR,
+  BENNY_BOYS_TAGLINE,
+  DEFAULT_BRAND_SLUG,
+} from "@/types/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +61,14 @@ export default async function Home(): Promise<React.ReactElement> {
     return (
       <>
         <SiteBrandInit brandSlug={brandSlug} />
-        <HomePage brandSlug={brandSlug} categories={[]} menuItems={[]} />
+        <HomePage
+          brandName={BENNY_BOYS_NAME}
+          brandSlug={brandSlug}
+          categories={[]}
+          menuItems={[]}
+          primaryColor={BENNY_BOYS_PRIMARY_COLOR}
+          tagline={BENNY_BOYS_TAGLINE}
+        />
       </>
     );
   }

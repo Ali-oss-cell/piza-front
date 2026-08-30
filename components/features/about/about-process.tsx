@@ -18,7 +18,7 @@ export function AboutProcess(): React.ReactElement {
             From Dough to Flame
           </p>
           <h2 className="font-display text-3xl font-bold text-zinc-950 transition-colors duration-150 ease-out dark:text-white md:text-4xl">
-            The Leovorno Process
+            The Benny Boy&apos;s Way
           </h2>
         </div>
 

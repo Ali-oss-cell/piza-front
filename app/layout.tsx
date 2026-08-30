@@ -28,7 +28,12 @@ import {
   PLATFORM_ACCENT,
 } from "@/lib/store-theme";
 import { cn } from "@/lib/utils";
-import { DEFAULT_BRAND_SLUG } from "@/types/brand";
+import {
+  BENNY_BOYS_LOGO_DARK,
+  BENNY_BOYS_LOGO_LIGHT,
+  BENNY_BOYS_NAME,
+  DEFAULT_BRAND_SLUG,
+} from "@/types/brand";
 import "./globals.css";
 
 const DEFAULT_DELIVERY_FEE = 5;
@@ -53,8 +58,8 @@ export async function generateMetadata(): Promise<Metadata> {
     );
   } catch {
     return {
-      title: "Marina Pizzas",
-      description: "Premium pizza and pasta ordering experience",
+      title: BENNY_BOYS_NAME,
+      description: "Bold flavours · Fresh bites — order online from Wantirna South",
     };
   }
 }
@@ -65,13 +70,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>): Promise<React.ReactElement> {
   let deliveryFee = DEFAULT_DELIVERY_FEE;
-  const defaultLogoUrl = "/leovorno-logo-light.png";
-  const defaultLogoDarkUrl = "/leovorno-logo-dark.png";
+  const defaultLogoUrl = BENNY_BOYS_LOGO_LIGHT;
+  const defaultLogoDarkUrl = BENNY_BOYS_LOGO_DARK;
 
   let brandSlug = DEFAULT_BRAND_SLUG;
   let initialBranding = {
     brandSlug: DEFAULT_BRAND_SLUG,
-    brandName: "Leovorno",
+    brandName: BENNY_BOYS_NAME,
     logoUrl: defaultLogoUrl as string | null,
     logoDarkUrl: defaultLogoDarkUrl as string | null,
     tagline: null as string | null,

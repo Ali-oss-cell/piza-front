@@ -23,7 +23,7 @@ export function useSeoContent(
 
   useEffect(() => {
     let cancelled = false;
-    const slug = brandSlug ?? getSiteBrandSlug() ?? "leovorno";
+    const slug = brandSlug ?? getSiteBrandSlug() ?? "benny-boys";
 
     async function load() {
       setLoading(true);

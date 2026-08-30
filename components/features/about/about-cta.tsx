@@ -7,11 +7,10 @@ export function AboutCta(): React.ReactElement {
     <RevealSection className="py-20 md:py-28">
       <div className="mx-auto max-w-4xl px-4 text-center lg:px-12">
         <h2 className="font-display text-3xl font-bold text-zinc-950 transition-colors duration-150 ease-out dark:text-white md:text-5xl">
-          Taste the Tradition Tonight.
+          Bold Flavours Tonight.
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400 md:text-lg">
-          Experience wood-fired pizza refined for the city. Order online or visit your nearest
-          Leovorno kitchen.
+          Experience bold flavours and fresh bites. Order online or pick up from Wantirna South.
         </p>
         <Button
           asChild

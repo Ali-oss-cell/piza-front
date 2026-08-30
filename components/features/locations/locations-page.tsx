@@ -18,14 +18,13 @@ export function LocationsPage(): React.ReactElement {
       <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8 lg:px-12">
         <header className="mb-12 text-center md:mb-16">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-[color:var(--brand-accent,#d81b60)]">
-            Wood-Fired Network
+            Visit Us
           </p>
           <h1 className="font-display text-4xl font-bold tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white md:text-5xl">
-            Our Locations
+            Our Location
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400 md:text-lg">
-            Discover Leovorno across Melbourne. Every store is built around wood-fired craft,
-            premium ingredients, and fast urban delivery zones.
+            Pick up from our Wantirna South store or order delivery online — bold flavours, fresh bites.
           </p>
         </header>
 

@@ -2,6 +2,7 @@
 
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { formatOpeningHoursLines } from "@/lib/opening-hours";
+import { BENNY_BOYS_ADDRESS, BENNY_BOYS_NAME, BENNY_BOYS_TAGLINE } from "@/types/brand";
 
 interface SiteFooterProps {
   brandName?: string;
@@ -16,20 +17,17 @@ interface SiteFooterProps {
 const FALLBACK_HOURS = ["Mon — Fri: 5pm – 11pm", "Sat — Sun: 12pm – 12am"];
 
 export function SiteFooter({
-  brandName = "Leovorno",
+  brandName = BENNY_BOYS_NAME,
   logoUrl = null,
   logoDarkUrl = null,
-  tagline = "Experience the zenith of Italian culinary art. Designed for the urban epicurean who demands both speed and soul.",
-  address = "231 Murrumbeena Rd.\nMelbourne, VIC 3163\nAustralia",
+  tagline = BENNY_BOYS_TAGLINE,
+  address = BENNY_BOYS_ADDRESS,
   deliveryFee = "5",
   openingHours = null,
 }: SiteFooterProps): React.ReactElement {
   const hasLogo = Boolean(logoUrl || logoDarkUrl);
-  const resolvedTagline =
-    tagline?.trim() ||
-    "Experience the zenith of Italian culinary art. Designed for the urban epicurean who demands both speed and soul.";
-  const resolvedAddress =
-    address?.trim() || "231 Murrumbeena Rd.\nMelbourne, VIC 3163\nAustralia";
+  const resolvedTagline = tagline?.trim() || BENNY_BOYS_TAGLINE;
+  const resolvedAddress = address?.trim() || BENNY_BOYS_ADDRESS;
   const hourLines = formatOpeningHoursLines(openingHours);
   const displayHours = hourLines.length > 0 ? hourLines : FALLBACK_HOURS;
 

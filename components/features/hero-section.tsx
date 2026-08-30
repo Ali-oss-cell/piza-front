@@ -5,6 +5,12 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { resolveMediaUrl } from "@/lib/media-url";
 import { PLATFORM_ACCENT } from "@/lib/store-theme";
+import {
+  BENNY_BOYS_HERO_LINE_1,
+  BENNY_BOYS_HERO_LINE_2,
+  BENNY_BOYS_TAGLINE,
+  DEFAULT_BRAND_SLUG,
+} from "@/types/brand";
 
 const DEFAULT_HERO =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuBvLbch0jQ5PYw35jNjOwWrBuRd7eU_GlrTVGHvtPk_llIBerZFSgY2-RGO1dkxZpRa0FX5hKSYfkpRZWQRQksuFZZNgBNXgziC80aEEXAonKXkXEUYm4mwhAe2yXLjnYzXeQco1l4G3bHIp2nG1Qx7a-toviugVlrlrKmuQ3TJCB6mWpuKtKNdc6U62q70HyfIP3rarjnJI9-VWRee5BI3XwPb_CVeEzmfQrbaLax7OCoHPN4g82XSYhXqCFl6xZSnspMSAzb2QnU";
@@ -23,7 +29,6 @@ interface HeroSectionProps {
 
 export function HeroSection({
   onOpenCart,
-  brandName,
   brandSlug,
   tagline,
   heroImageUrl,
@@ -33,11 +38,8 @@ export function HeroSection({
   backgroundDarkColor,
 }: HeroSectionProps): React.ReactElement {
   const { resolvedTheme } = useTheme();
-  const slug = brandSlug?.toLowerCase() ?? "";
-  const isBennyBoys =
-    slug.includes("bunny") ||
-    slug.includes("benny") ||
-    (brandName?.toLowerCase().includes("benny") ?? false);
+  const slug = brandSlug?.toLowerCase() ?? DEFAULT_BRAND_SLUG;
+  const isBennyBoys = slug.includes("benny") || slug.includes("bunny");
 
   const brandPrimary = primaryColor?.trim() || PLATFORM_ACCENT;
   const bgLight = backgroundLightColor?.trim() || "#ffffff";
@@ -55,6 +57,12 @@ export function HeroSection({
     "--brand-bg-light": bgLight,
     "--brand-bg-dark": bgDark,
   } as React.CSSProperties;
+
+  const subtitle =
+    tagline?.trim() ||
+    (isBennyBoys
+      ? `${BENNY_BOYS_TAGLINE} — order pickup & delivery online.`
+      : "Artisanal sourdough foundations, heritage recipes, and contemporary culinary precision delivered to your urban doorstep.");
 
   return (
     <section
@@ -83,8 +91,8 @@ export function HeroSection({
           <h1 className="font-display text-headline-xl leading-none tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white">
             {isBennyBoys ? (
               <>
-                BENNY <br />
-                BOYS <span className="text-[color:var(--brand-accent)]">DELIVERED.</span>
+                {BENNY_BOYS_HERO_LINE_1} <br />
+                <span className="text-[color:var(--brand-accent)]">{BENNY_BOYS_HERO_LINE_2}</span>
               </>
             ) : (
               <>
@@ -94,8 +102,7 @@ export function HeroSection({
             )}
           </h1>
           <p className="max-w-lg text-body-lg text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-300">
-            {tagline ??
-              "Artisanal sourdough foundations, heritage recipes, and contemporary culinary precision delivered to your urban doorstep."}
+            {subtitle}
           </p>
           <div className="flex flex-wrap gap-4 pt-4">
             <Button className="uppercase tracking-[0.15em]" onClick={onOpenCart}>

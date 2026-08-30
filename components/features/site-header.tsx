@@ -12,8 +12,9 @@ import {
   getDesktopNavLinkClass,
   isNavLinkActive,
 } from "@/lib/nav-links";
-import { cn } from "@/lib/utils";
+import { BENNY_BOYS_NAME } from "@/types/brand";
 import { headerShell } from "@/lib/theme-classes";
+import { cn } from "@/lib/utils";
 
 const ThemeToggle = dynamic(
   () => import("@/components/ui/theme-toggle").then((mod) => mod.ThemeToggle),
@@ -42,7 +43,7 @@ export function SiteHeader({
   onOpenMenu,
   onOpenCart,
   scrolled,
-  brandName = "Leovorno",
+  brandName = BENNY_BOYS_NAME,
   logoUrl,
   logoDarkUrl,
   homeHref = "/",

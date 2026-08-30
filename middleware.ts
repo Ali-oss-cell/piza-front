@@ -109,6 +109,17 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   const host = hostnameOf(request);
   const { pathname, search } = request.nextUrl;
 
+  const legacyStorePaths = ["/bunny-boys", "/leovorno"];
+  if (
+    legacyStorePaths.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace(/^\/(bunny-boys|leovorno)/, "") || "/";
+    return NextResponse.redirect(url, 301);
+  }
+
   const redirectTo = await resolveSeoRedirect(host, pathname);
   if (redirectTo) {
     const target = redirectTo.startsWith("http")

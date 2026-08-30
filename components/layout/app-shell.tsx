@@ -15,7 +15,14 @@ import {
   DEFAULT_BG_LIGHT,
   PLATFORM_ACCENT,
 } from "@/lib/store-theme";
-import { DEFAULT_BRAND_SLUG } from "@/types/brand";
+import {
+  BENNY_BOYS_ADDRESS,
+  BENNY_BOYS_LOGO_DARK,
+  BENNY_BOYS_LOGO_LIGHT,
+  BENNY_BOYS_NAME,
+  BENNY_BOYS_TAGLINE,
+  DEFAULT_BRAND_SLUG,
+} from "@/types/brand";
 
 function isStandaloneRoute(pathname: string): boolean {
   return (
@@ -33,9 +40,9 @@ function homeHrefForSlug(slug: string): string {
   return `/${slug}`;
 }
 
-/** Bundled Leovorno logos (marinapizzas.com.au → Leovorno for now). */
-const LEOVORNO_LOGO_LIGHT = "/leovorno-logo-light.png";
-const LEOVORNO_LOGO_DARK = "/leovorno-logo-dark.png";
+/** Bundled Benny Boy's logos for marinapizzas.com.au storefront. */
+const BENNY_LOGO_LIGHT = BENNY_BOYS_LOGO_LIGHT;
+const BENNY_LOGO_DARK = BENNY_BOYS_LOGO_DARK;
 const DEFAULT_PRIMARY = PLATFORM_ACCENT;
 const DEFAULT_SECONDARY = "#111827";
 const DEFAULT_BG_LIGHT_COLOR = DEFAULT_BG_LIGHT;
@@ -46,7 +53,7 @@ function defaultLogosForSlug(slug: string): {
   logoDarkUrl: string | null;
 } {
   if (slug === DEFAULT_BRAND_SLUG) {
-    return { logoUrl: LEOVORNO_LOGO_LIGHT, logoDarkUrl: LEOVORNO_LOGO_DARK };
+    return { logoUrl: BENNY_LOGO_LIGHT, logoDarkUrl: BENNY_LOGO_DARK };
   }
   return { logoUrl: null, logoDarkUrl: null };
 }
@@ -93,7 +100,7 @@ export function AppShell({
     initialBranding?.brandSlug ?? DEFAULT_BRAND_SLUG,
   );
   const [brandName, setBrandName] = useState(
-    initialBranding?.brandName ?? "Leovorno",
+    initialBranding?.brandName ?? BENNY_BOYS_NAME,
   );
   const [logoUrl, setLogoUrl] = useState<string | null>(
     initialBranding?.logoUrl ??
@@ -178,7 +185,11 @@ export function AppShell({
           return;
         }
         const fallbacks = defaultLogosForSlug(brandSlug);
-        setBrandName(brandSlug === DEFAULT_BRAND_SLUG ? "Leovorno" : brandSlug);
+        setBrandName(
+          brandSlug === DEFAULT_BRAND_SLUG ? BENNY_BOYS_NAME : brandSlug,
+        );
+        setTagline(BENNY_BOYS_TAGLINE);
+        setAddress(BENNY_BOYS_ADDRESS);
         setLogoUrl(fallbacks.logoUrl);
         setLogoDarkUrl(fallbacks.logoDarkUrl);
         setOpeningHours(null);

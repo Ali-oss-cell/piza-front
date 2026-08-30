@@ -122,7 +122,7 @@ export function SeoDashboardContent(): React.ReactElement {
   const [token, setToken] = useState<string | null>(null);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [stores, setStores] = useState<AuthStore[]>([]);
-  const [brandSlug, setBrandSlug] = useState<string>("leovorno");
+  const [brandSlug, setBrandSlug] = useState<string>("benny-boys");
   const [pageFilter, setPageFilter] = useState<string>("home");
   const [contentRows, setContentRows] = useState<SeoContentRow[]>([]);
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -167,7 +167,7 @@ export function SeoDashboardContent(): React.ReactElement {
     const initialBrand =
       savedBrand && userStores.some((store) => store.slug === savedBrand)
         ? savedBrand
-        : userStores[0]?.slug ?? "leovorno";
+        : userStores[0]?.slug ?? "benny-boys";
     setBrandSlug(initialBrand);
     setLoading(false);
   }, [router]);

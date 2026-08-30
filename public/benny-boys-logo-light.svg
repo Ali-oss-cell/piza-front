@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" role="img" aria-label="Benny Boy's">
+  <defs>
+    <linearGradient id="slice" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="100%" stop-color="#C2410C"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(4,8)">
+    <path fill="url(#slice)" d="M28 4c-12 0-22 10-22 22 0 14 12 24 22 24 2 0 4-.2 6-.6L28 4z"/>
+    <path fill="#FED7AA" d="M28 4 34 49.4c6-2.2 10-8 10-15.4C44 18 37 4 28 4z"/>
+    <circle cx="22" cy="22" r="2.5" fill="#DC2626"/>
+    <circle cx="30" cy="30" r="2" fill="#DC2626"/>
+    <circle cx="24" cy="36" r="1.8" fill="#DC2626"/>
+  </g>
+  <text x="68" y="34" fill="#111827" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="700">Benny</text>
+  <text x="68" y="58" fill="#111827" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="700">Boy&apos;s</text>
+  <text x="178" y="58" fill="#E85D04" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" letter-spacing="0.12em">PIZZA</text>
+</svg>

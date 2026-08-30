@@ -10,7 +10,7 @@ export function AboutPillars(): React.ReactElement {
             The Craftsmanship
           </p>
           <h2 className="font-display text-3xl font-bold text-zinc-950 transition-colors duration-150 ease-out dark:text-white md:text-4xl">
-            What Makes Leovorno Exceptional
+            What Makes Benny Boy&apos;s Different
           </h2>
         </div>
 

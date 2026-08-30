@@ -22,7 +22,7 @@ export function LocationsMap({ activeLocation }: LocationsMapProps): React.React
       <div className="absolute inset-0 bg-gradient-to-br from-zinc-100/50 via-white/70 to-white transition-colors duration-150 ease-out dark:from-zinc-900/30 dark:via-black/70 dark:to-black" />
 
       <div className="absolute left-6 top-6 rounded-full border border-zinc-200/60 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-700 backdrop-blur-md transition-colors duration-150 ease-out dark:border-white/10 dark:bg-zinc-900/70 dark:text-zinc-300">
-        Melbourne Coverage Map
+        Store Location
       </div>
 
       <div className="absolute bottom-6 left-6 right-6 rounded-xl border border-zinc-200/60 bg-white/70 p-4 backdrop-blur-md transition-colors duration-150 ease-out dark:border-white/10 dark:bg-zinc-900/40">
