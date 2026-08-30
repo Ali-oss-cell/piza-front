@@ -5,11 +5,16 @@ import { aboutHero } from "@/data/about";
 import { useSeoContent } from "@/hooks/useSeoContent";
 import { resolveMediaUrl } from "@/lib/media-url";
 
+function plainTextFromHtml(value: string): string {
+  return value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 export function AboutHero(): React.ReactElement {
   const { sections } = useSeoContent("about");
 
   const title = sections.hero_h1 || aboutHero.title;
-  const subtitle = sections.hero_body || aboutHero.subtitle;
+  const rawSubtitle = sections.hero_body || aboutHero.subtitle;
+  const subtitle = sections.hero_body ? plainTextFromHtml(rawSubtitle) : rawSubtitle;
   const imageSrc =
     (sections.hero_image && resolveMediaUrl(sections.hero_image)) ||
     aboutHero.imageUrl;

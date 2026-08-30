@@ -27,6 +27,30 @@ function isChunkLoadFailure(error: unknown): boolean {
   );
 }
 
+function isRecoverableNetworkFailure(error: unknown): boolean {
+  if (!error) {
+    return false;
+  }
+
+  const name = error instanceof Error ? error.name : "";
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : String(error);
+
+  return (
+    isChunkLoadFailure(error) ||
+    /ERR_NETWORK_CHANGED/i.test(message) ||
+    /network changed/i.test(message) ||
+    /Failed to fetch/i.test(message) ||
+    /Load failed/i.test(message) ||
+    (name === "TypeError" && /fetch/i.test(message)) ||
+    /An error occurred in the Server Components render/i.test(message)
+  );
+}
+
 function reloadOnceForChunkError(): void {
   try {
     const previous = Number(sessionStorage.getItem(RELOAD_KEY) ?? "0");
@@ -49,13 +73,13 @@ function reloadOnceForChunkError(): void {
 export function ChunkLoadRecovery(): null {
   useEffect(() => {
     const onError = (event: ErrorEvent): void => {
-      if (isChunkLoadFailure(event.error) || isChunkLoadFailure(event.message)) {
+      if (isRecoverableNetworkFailure(event.error) || isRecoverableNetworkFailure(event.message)) {
         reloadOnceForChunkError();
       }
     };
 
     const onUnhandledRejection = (event: PromiseRejectionEvent): void => {
-      if (isChunkLoadFailure(event.reason)) {
+      if (isRecoverableNetworkFailure(event.reason)) {
         reloadOnceForChunkError();
       }
     };

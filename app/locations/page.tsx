@@ -8,30 +8,47 @@ import {
   resolveBrandSlugForRequest,
   siteOriginFromHost,
 } from "@/lib/seo-server";
+import { BENNY_BOYS_NAME } from "@/types/brand";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { brandSlug, host } = await resolveBrandSlugForRequest();
-  const seo = await fetchSeoForPage(brandSlug, "locations", host);
-  const settings = await fetchStoreSettings(brandSlug);
-  return buildSeoMetadata(
-    seo,
-    {
-      title: `Locations | ${settings.storeName}`,
-      description: `Find ${settings.storeName} locations and opening hours`,
-    },
-    siteOriginFromHost(host),
-  );
+  try {
+    const [seo, settings] = await Promise.all([
+      fetchSeoForPage(brandSlug, "locations", host),
+      fetchStoreSettings(brandSlug),
+    ]);
+    return buildSeoMetadata(
+      seo,
+      {
+        title: `Locations | ${settings.storeName}`,
+        description: `Find ${settings.storeName} locations and opening hours`,
+      },
+      siteOriginFromHost(host),
+    );
+  } catch {
+    return {
+      title: `Locations | ${BENNY_BOYS_NAME}`,
+      description: `Find ${BENNY_BOYS_NAME} in Wantirna South`,
+    };
+  }
 }
 
 export default async function Page(): Promise<React.ReactElement> {
   const { brandSlug } = await resolveBrandSlugForRequest();
-  const settings = await fetchStoreSettings(brandSlug);
+  let storeName = BENNY_BOYS_NAME;
+
+  try {
+    const settings = await fetchStoreSettings(brandSlug);
+    storeName = settings.storeName || storeName;
+  } catch {
+    // Static locations page still renders without API.
+  }
 
   return (
     <>
-      <SeoMetaClient fallbackTitle={`Locations | ${settings.storeName}`} pageKey="locations" />
+      <SeoMetaClient fallbackTitle={`Locations | ${storeName}`} pageKey="locations" />
       <LocationsPage />
     </>
   );
