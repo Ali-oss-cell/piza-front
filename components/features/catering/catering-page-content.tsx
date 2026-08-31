@@ -12,12 +12,12 @@ import { cn } from "@/lib/utils";
 
 interface CateringPageContentProps {
   storeName: string;
-  contactEmail: string;
+  brandSlug: string;
 }
 
 export function CateringPageContent({
   storeName,
-  contactEmail,
+  brandSlug,
 }: CateringPageContentProps): React.ReactElement {
   const [flow, setFlow] = useState<CateringFlow>("instant");
   const packagesRef = useRef<HTMLDivElement>(null);
@@ -86,7 +86,7 @@ export function CateringPageContent({
             we&apos;ll reply within 24 hours.
           </p>
           <div className="mt-8">
-            <CateringQuoteForm contactEmail={contactEmail} storeName={storeName} />
+            <CateringQuoteForm brandSlug={brandSlug} storeName={storeName} />
           </div>
         </section>
 

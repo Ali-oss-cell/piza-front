@@ -39,12 +39,10 @@ export default async function CateringPage(): Promise<React.ReactElement> {
   const { brandSlug } = await resolveBrandSlugForRequest();
 
   let storeName = BENNY_BOYS_NAME;
-  let contactEmail = "orders@marinapizzas.com.au";
 
   try {
     const settings = await fetchStoreSettings(brandSlug);
     storeName = settings.storeName || storeName;
-    contactEmail = settings.contactEmail?.trim() || contactEmail;
   } catch {
     // Static catering page still renders without API.
   }
@@ -52,7 +50,7 @@ export default async function CateringPage(): Promise<React.ReactElement> {
   return (
     <>
       <SeoMetaClient fallbackTitle={`Catering | ${storeName}`} pageKey="catering" />
-      <CateringPageContent contactEmail={contactEmail} storeName={storeName} />
+      <CateringPageContent brandSlug={brandSlug} storeName={storeName} />
     </>
   );
 }

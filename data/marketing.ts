@@ -1,0 +1,99 @@
+export type MarketingPageKey = "gift-cards" | "loyalty" | "functions" | "nutrition";
+
+export interface MarketingPageContent {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  sections: { title: string; body: string }[];
+  ctaTitle: string;
+  ctaDescription: string;
+  primaryCta: { label: string; href: string };
+  secondaryCta?: { label: string; href: string };
+}
+
+export const marketingPages: Record<MarketingPageKey, MarketingPageContent> = {
+  "gift-cards": {
+    eyebrow: "Gift Cards",
+    title: "Give the Gift of Great Pizza",
+    subtitle:
+      "Perfect for birthdays, thank-yous, and anyone who loves a proper feed. Gift cards coming soon — contact us to arrange a voucher in the meantime.",
+    sections: [
+      {
+        title: "Digital & in-store",
+        body: "We're setting up online gift cards. Until then, visit us at Coleman Rd or call to purchase a voucher for any amount.",
+      },
+      {
+        title: "Corporate gifts",
+        body: "Need bulk vouchers for staff or clients? Our team can help with custom amounts and invoicing.",
+      },
+    ],
+    ctaTitle: "Want a gift card today?",
+    ctaDescription: "Get in touch and we'll sort a voucher for your recipient.",
+    primaryCta: { label: "Contact Us", href: "/contact" },
+    secondaryCta: { label: "View Menu", href: "/menu" },
+  },
+  loyalty: {
+    eyebrow: "Loyalty",
+    title: "Rewards for Regulars",
+    subtitle:
+      "We love seeing familiar faces. A loyalty program is on the way — order now and we'll make sure early supporters get first access.",
+    sections: [
+      {
+        title: "Earn on every order",
+        body: "Future loyalty perks will reward repeat orders online and in-store — think discounts, free sides, and birthday treats.",
+      },
+      {
+        title: "Stay in the loop",
+        body: "Follow us and check back here — we'll announce launch details soon.",
+      },
+    ],
+    ctaTitle: "Order now, benefit later",
+    ctaDescription: "Keep ordering your favourites — we'll reward our regulars when loyalty launches.",
+    primaryCta: { label: "Order Now", href: "/menu" },
+    secondaryCta: { label: "Contact Us", href: "/contact" },
+  },
+  functions: {
+    eyebrow: "Functions & Events",
+    title: "Host Your Next Event With Us",
+    subtitle:
+      "Birthdays, sports nights, office parties, and community gatherings — we feed groups from 10 to 500.",
+    sections: [
+      {
+        title: "In-store functions",
+        body: "Ask about hosting a casual function at our Wantirna South location — pizza, pasta, and room for your group.",
+      },
+      {
+        title: "Off-site catering",
+        body: "We deliver full catering packages to your venue. Packages start from $165 for 10–20 guests.",
+      },
+    ],
+    ctaTitle: "Planning something big?",
+    ctaDescription: "Tell us your date, headcount, and venue — we'll put together a quote.",
+    primaryCta: { label: "Catering Quote", href: "/catering#catering-quote" },
+    secondaryCta: { label: "Contact Us", href: "/contact" },
+  },
+  nutrition: {
+    eyebrow: "Nutrition",
+    title: "Nutrition & Portion Info",
+    subtitle:
+      "Our menu is built for flavour and generous portions. Detailed nutrition panels are being added — here's what to know today.",
+    sections: [
+      {
+        title: "GST-inclusive pricing",
+        body: "All menu prices include GST. Deals and catering packages show total prices upfront.",
+      },
+      {
+        title: "Customisation affects totals",
+        body: "Extra toppings, premium crusts, and sides change calories and price — your cart shows the final amount before checkout.",
+      },
+      {
+        title: "Questions?",
+        body: "For specific dietary or nutrition questions, contact our team before ordering.",
+      },
+    ],
+    ctaTitle: "Need allergen details?",
+    ctaDescription: "See our allergens page for kitchen and ingredient guidance.",
+    primaryCta: { label: "Allergen Info", href: "/allergens" },
+    secondaryCta: { label: "View Menu", href: "/menu" },
+  },
+};

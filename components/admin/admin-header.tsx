@@ -24,6 +24,7 @@ const VIEW_LABELS: Record<AdminView, string> = {
   hq: "HQ Overview",
   reports: "Reports",
   orders: "Live Orders",
+  inquiries: "Inquiries",
   menu: "Menu Management",
   "menu-categories": "Menu Categories",
   toppings: "Toppings Management",

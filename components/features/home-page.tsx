@@ -20,6 +20,7 @@ interface HomePageProps {
   backgroundLightColor?: string | null;
   backgroundDarkColor?: string | null;
   darkModeEnabled?: boolean;
+  variant?: "home" | "menu";
 }
 
 export function HomePage({
@@ -33,6 +34,7 @@ export function HomePage({
   primaryColor,
   backgroundLightColor,
   backgroundDarkColor,
+  variant = "home",
 }: HomePageProps): React.ReactElement {
   const { addToCart, setCartOpen } = useCart();
   const menuSectionRef = useRef<HTMLDivElement>(null);
@@ -72,6 +74,7 @@ export function HomePage({
         onViewDeal={handleViewDeal}
         primaryColor={primaryColor}
         tagline={tagline}
+        variant={variant}
       />
       <div ref={menuSectionRef}>
         <CategoryTabs

@@ -154,6 +154,7 @@ export type AdminView =
   | "people"
   | "health"
   | "activity"
+  | "inquiries"
   | "advanced-settings"
   | "platform-secrets";
 

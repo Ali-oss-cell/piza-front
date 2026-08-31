@@ -7,16 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  buildQuoteMailto,
   getEarliestEventDate,
   getMinimumLeadHours,
   isEventDateValid,
 } from "@/lib/catering-utils";
+import { submitInquiry } from "@/lib/inquiries-api";
+import { DEFAULT_BRAND_SLUG } from "@/types/brand";
 import type { CateringQuoteFormData } from "@/types/catering";
 
 interface CateringQuoteFormProps {
   storeName: string;
-  contactEmail: string;
+  brandSlug?: string;
 }
 
 const INITIAL: CateringQuoteFormData = {
@@ -35,11 +36,12 @@ const INITIAL: CateringQuoteFormData = {
 
 export function CateringQuoteForm({
   storeName,
-  contactEmail,
+  brandSlug = DEFAULT_BRAND_SLUG,
 }: CateringQuoteFormProps): React.ReactElement {
   const [form, setForm] = useState<CateringQuoteFormData>(INITIAL);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const minDate = useMemo(() => getEarliestEventDate(form.guestCount), [form.guestCount]);
   const leadHours = getMinimumLeadHours(form.guestCount);
@@ -52,7 +54,7 @@ export function CateringQuoteForm({
     setError(null);
   };
 
-  const handleSubmit = (event: React.FormEvent): void => {
+  const handleSubmit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
 
     if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) {
@@ -68,20 +70,59 @@ export function CateringQuoteForm({
       return;
     }
 
-    const mailto = buildQuoteMailto(contactEmail, form, storeName);
-    window.location.href = mailto;
-    setSubmitted(true);
+    setIsSubmitting(true);
+    try {
+      const messageParts = [
+        `Catering quote request for ${storeName}`,
+        `Guests: ${form.guestCount}`,
+        `Event: ${form.eventDate} at ${form.eventTime}`,
+        `Address: ${form.deliveryAddress}`,
+        form.dietaryNotes.trim() ? `Dietary: ${form.dietaryNotes.trim()}` : null,
+        form.notes.trim() ? `Notes: ${form.notes.trim()}` : null,
+        form.requestInvoice ? "Tax invoice requested." : null,
+      ].filter(Boolean);
+
+      await submitInquiry(
+        {
+          type: "CATERING",
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          subject: `Catering quote — ${form.guestCount} guests`,
+          message: messageParts.join("\n"),
+          payload: {
+            company: form.company.trim() || undefined,
+            guestCount: form.guestCount,
+            eventDate: form.eventDate,
+            eventTime: form.eventTime,
+            deliveryAddress: form.deliveryAddress.trim(),
+            dietaryNotes: form.dietaryNotes.trim() || undefined,
+            requestInvoice: form.requestInvoice,
+            notes: form.notes.trim() || undefined,
+          },
+        },
+        brandSlug
+      );
+      setSubmitted(true);
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Unable to send your request. Please call us directly."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
     return (
       <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/80 p-8 text-center dark:border-emerald-900/50 dark:bg-emerald-950/30">
         <h3 className="text-xl font-bold text-emerald-900 dark:text-emerald-200">
-          Quote request ready
+          Quote request sent
         </h3>
         <p className="mt-3 text-sm text-emerald-800 dark:text-emerald-300">
-          Your email app should open with your details pre-filled. Send it to us and we&apos;ll
-          respond within 24 hours with a tailored quote
+          Thanks — we&apos;ll respond within 24 hours with a tailored quote
           {form.requestInvoice ? " and invoice details" : ""}.
         </p>
         <Button
@@ -194,14 +235,14 @@ export function CateringQuoteForm({
 
       <Button
         className="h-12 w-full rounded-xl bg-[color:var(--brand-accent,#d81b60)] uppercase tracking-[0.12em] hover:brightness-110 sm:w-auto sm:px-10"
+        disabled={isSubmitting}
         type="submit"
       >
         <Send className="mr-2 h-4 w-4" />
-        Send Quote Request
+        {isSubmitting ? "Sending…" : "Send Quote Request"}
       </Button>
       <p className="text-xs text-zinc-500">
-        Opens your email to send the request to our team. We&apos;ll confirm availability and pricing
-        within 24 hours.
+        We&apos;ll confirm availability and pricing within 24 hours.
       </p>
     </form>
   );

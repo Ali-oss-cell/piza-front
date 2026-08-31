@@ -6,22 +6,30 @@ export interface NavItem {
 }
 
 export const DESKTOP_NAV_ITEMS: NavItem[] = [
-  { label: "Menu", href: "/" },
+  { label: "Menu", href: "/menu" },
+  { label: "Deals", href: "/deals" },
   { label: "Catering", href: "/catering" },
   { label: "Locations", href: "/locations" },
   { label: "About", href: "/about" },
 ];
 
 export const MOBILE_NAV_ITEMS: NavItem[] = [
-  { label: "Menu", href: "/" },
+  { label: "Menu", href: "/menu" },
   { label: "Deals", href: "/deals" },
   { label: "Catering", href: "/catering" },
   { label: "Locations", href: "/locations" },
   { label: "About", href: "/about" },
+  { label: "FAQ", href: "/faq" },
+  { label: "Contact", href: "/contact" },
+  { label: "Blog", href: "/blog" },
   { label: "Track Order", href: "/track-order" },
 ];
 
 export function isNavLinkActive(pathname: string, href: string): boolean {
+  if (href === "/menu") {
+    return pathname === "/menu" || pathname === "/" || pathname.startsWith("/menu/");
+  }
+
   if (href === "/") {
     return pathname === "/" || pathname.startsWith("/menu");
   }

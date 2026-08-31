@@ -30,6 +30,7 @@ interface HeroSectionProps {
   primaryColor?: string | null;
   backgroundLightColor?: string | null;
   backgroundDarkColor?: string | null;
+  variant?: "home" | "menu";
 }
 
 function formatPrice(price: number): string {
@@ -47,6 +48,7 @@ export function HeroSection({
   primaryColor,
   backgroundLightColor,
   backgroundDarkColor,
+  variant = "home",
 }: HeroSectionProps): React.ReactElement {
   const { resolvedTheme } = useTheme();
   const slug = brandSlug?.toLowerCase() ?? DEFAULT_BRAND_SLUG;
@@ -70,10 +72,12 @@ export function HeroSection({
   } as React.CSSProperties;
 
   const subtitle =
-    tagline?.trim() ||
-    (isBennyBoys
-      ? `${BENNY_BOYS_TAGLINE} — order pickup & delivery online.`
-      : "Artisanal sourdough foundations, heritage recipes, and contemporary culinary precision delivered to your urban doorstep.");
+    variant === "menu"
+      ? tagline?.trim() || "Browse our full menu — pickup and delivery available."
+      : tagline?.trim() ||
+        (isBennyBoys
+          ? `${BENNY_BOYS_TAGLINE} — order pickup & delivery online.`
+          : "Artisanal sourdough foundations, heritage recipes, and contemporary culinary precision delivered to your urban doorstep.");
 
   const promos = featuredDeals.slice(0, 3);
 
@@ -103,7 +107,12 @@ export function HeroSection({
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-end lg:gap-12">
           <div className="max-w-2xl space-y-8">
             <h1 className="font-display text-headline-xl leading-none tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white">
-              {isBennyBoys ? (
+              {variant === "menu" ? (
+                <>
+                  OUR <br />
+                  <span className="text-[color:var(--brand-accent)]">MENU</span>
+                </>
+              ) : isBennyBoys ? (
                 <>
                   {BENNY_BOYS_HERO_LINE_1} <br />
                   <span className="text-[color:var(--brand-accent)]">{BENNY_BOYS_HERO_LINE_2}</span>

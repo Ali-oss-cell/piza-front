@@ -425,12 +425,39 @@ export function deleteBlogPost(
   });
 }
 
-export const SEO_PAGES = ["home", "about", "deals", "locations", "blog"] as const;
+export const SEO_PAGES = [
+  "home",
+  "menu",
+  "about",
+  "deals",
+  "locations",
+  "blog",
+  "catering",
+  "faq",
+  "contact",
+  "delivery",
+  "privacy",
+  "terms",
+  "allergens",
+  "gallery",
+  "reviews",
+  "gift-cards",
+  "loyalty",
+  "careers",
+  "functions",
+  "nutrition",
+] as const;
 
 export const IMAGE_SLOTS = [
   { page: "home", section: "hero_image", label: "Home – Hero background" },
+  { page: "menu", section: "hero_image", label: "Menu – Hero background" },
   { page: "about", section: "hero_image", label: "About – Hero background" },
   { page: "deals", section: "hero_image", label: "Deals – Hero background" },
   { page: "locations", section: "hero_image", label: "Locations – Hero background" },
   { page: "blog", section: "hero_image", label: "Blog – Hero background" },
+  { page: "catering", section: "hero_image", label: "Catering – Hero background" },
+  { page: "faq", section: "hero_image", label: "FAQ – Hero background" },
+  { page: "contact", section: "hero_image", label: "Contact – Hero background" },
+  { page: "delivery", section: "hero_image", label: "Delivery – Hero background" },
+  { page: "gallery", section: "hero_image", label: "Gallery – Hero background" },
 ] as const;
