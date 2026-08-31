@@ -18,40 +18,47 @@ export function LocationCard({
   isActive,
   onSelect,
 }: LocationCardProps): React.ReactElement {
+  const showPhone = Boolean(location.phone.trim());
+  const showEmail = Boolean(location.email.trim());
+
   return (
     <article
       className={cn(
-        "rounded-2xl border bg-white/70 p-6 backdrop-blur-md transition-all duration-150 ease-out hover:scale-[1.01] dark:bg-zinc-900/40",
+        "min-w-0 overflow-hidden rounded-2xl border bg-white/70 p-5 backdrop-blur-md transition-all duration-150 ease-out dark:bg-zinc-900/40 sm:p-6",
         isActive
           ? "border-[color:var(--brand-accent,#d81b60)] shadow-lg shadow-[color:var(--brand-accent,#d81b60)]/15"
           : "border-zinc-200/60 hover:border-zinc-300/80 dark:border-white/10 dark:hover:border-white/20"
       )}
     >
       <button
-        className="w-full text-left"
+        className="w-full min-w-0 text-left"
         onClick={() => onSelect(location.id)}
         type="button"
       >
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-xl font-bold text-zinc-950 transition-colors duration-150 ease-out dark:text-white">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <h2 className="text-lg font-bold leading-snug text-zinc-950 transition-colors duration-150 ease-out dark:text-white sm:text-xl">
             {location.name} — {location.suburb}
           </h2>
           <LocationStatusBadge isOpen={location.isOpen} />
         </div>
 
         <div className="space-y-3 text-sm text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400">
-          <p className="flex items-start gap-3">
+          <p className="flex items-start gap-3 break-words">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--brand-accent,#d81b60)]" />
-            {location.address}
+            <span>{location.address}</span>
           </p>
-          <p className="flex items-center gap-3">
-            <Phone className="h-4 w-4 shrink-0 text-[color:var(--brand-accent,#d81b60)]" />
-            {location.phone}
-          </p>
-          <p className="flex items-center gap-3">
-            <Mail className="h-4 w-4 shrink-0 text-[color:var(--brand-accent,#d81b60)]" />
-            {location.email}
-          </p>
+          {showPhone ? (
+            <p className="flex items-center gap-3">
+              <Phone className="h-4 w-4 shrink-0 text-[color:var(--brand-accent,#d81b60)]" />
+              <span>{location.phone}</span>
+            </p>
+          ) : null}
+          {showEmail ? (
+            <p className="flex items-center gap-3">
+              <Mail className="h-4 w-4 shrink-0 text-[color:var(--brand-accent,#d81b60)]" />
+              <span>{location.email}</span>
+            </p>
+          ) : null}
         </div>
 
         <div className="mt-5 rounded-xl border border-zinc-200/60 bg-zinc-50/80 p-4 transition-colors duration-150 ease-out dark:border-white/5 dark:bg-black/30">
@@ -61,7 +68,10 @@ export function LocationCard({
           </p>
           <div className="space-y-2">
             {location.tradingHours.map((entry) => (
-              <div className="flex items-center justify-between text-sm" key={entry.label}>
+              <div
+                className="flex flex-col gap-0.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+                key={entry.label}
+              >
                 <span className="text-zinc-500">{entry.label}</span>
                 <span className="text-zinc-700 transition-colors duration-150 ease-out dark:text-zinc-300">
                   {entry.hours}
@@ -73,16 +83,16 @@ export function LocationCard({
       </button>
 
       {isActive ? (
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-5 flex flex-col gap-3">
           <Button
             asChild
-            className="flex-1 rounded-xl bg-[color:var(--brand-accent,#d81b60)] py-5 uppercase tracking-widest hover:brightness-110"
+            className="h-auto w-full rounded-xl bg-[color:var(--brand-accent,#d81b60)] px-4 py-3 text-sm font-semibold uppercase tracking-wide hover:brightness-110"
           >
-            <Link href="/">Order from this Store</Link>
+            <Link href="/">Order Online</Link>
           </Button>
           <Button
             asChild
-            className="flex-1 rounded-xl border border-zinc-300 bg-transparent py-5 uppercase tracking-widest text-zinc-950 transition-colors duration-150 ease-out hover:bg-zinc-100 dark:border-white/20 dark:text-white dark:hover:bg-white/5"
+            className="h-auto w-full rounded-xl border border-zinc-300 bg-transparent px-4 py-3 text-sm font-semibold uppercase tracking-wide text-zinc-950 transition-colors duration-150 ease-out hover:bg-zinc-100 dark:border-white/20 dark:text-white dark:hover:bg-white/5"
             variant="outline"
           >
             <a href={location.directionsUrl} rel="noopener noreferrer" target="_blank">

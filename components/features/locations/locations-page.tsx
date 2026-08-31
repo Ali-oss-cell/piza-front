@@ -28,9 +28,9 @@ export function LocationsPage(): React.ReactElement {
           </p>
         </header>
 
-        <div className="grid gap-8 lg:grid-cols-5 lg:gap-10">
-          <div className="order-2 lg:order-1 lg:col-span-2">
-            <div className="max-h-[620px] space-y-4 overflow-y-auto pr-1 no-scrollbar md:space-y-5">
+        <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-10">
+          <div className="order-2 min-w-0 lg:order-1">
+            <div className="space-y-4 md:space-y-5">
               {locations.map((location) => (
                 <LocationCard
                   isActive={location.id === activeLocationId}
@@ -42,7 +42,7 @@ export function LocationsPage(): React.ReactElement {
             </div>
           </div>
 
-          <div className="order-1 lg:order-2 lg:col-span-3 lg:sticky lg:top-24 lg:self-start">
+          <div className="order-1 min-w-0 lg:order-2 lg:sticky lg:top-24">
             <LocationsMap activeLocation={activeLocation} />
           </div>
         </div>

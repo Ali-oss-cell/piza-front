@@ -19,4 +19,9 @@ export interface Location {
   tradingHours: TradingHours[];
   mapPosition: MapPosition;
   directionsUrl: string;
+  mapEmbedUrl?: string;
+}
+
+export function buildMapEmbedUrl(address: string): string {
+  return `https://maps.google.com/maps?q=${encodeURIComponent(address)}&hl=en&z=16&output=embed`;
 }
