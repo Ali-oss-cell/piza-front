@@ -14,4 +14,5 @@ export interface ProcessStep {
   description: string;
   imageUrl: string;
   imageAlt: string;
+  icon: LucideIcon;
 }

@@ -7,6 +7,7 @@ export interface NavItem {
 
 export const DESKTOP_NAV_ITEMS: NavItem[] = [
   { label: "Menu", href: "/" },
+  { label: "Catering", href: "/catering" },
   { label: "Locations", href: "/locations" },
   { label: "About", href: "/about" },
 ];
@@ -14,6 +15,7 @@ export const DESKTOP_NAV_ITEMS: NavItem[] = [
 export const MOBILE_NAV_ITEMS: NavItem[] = [
   { label: "Menu", href: "/" },
   { label: "Deals", href: "/deals" },
+  { label: "Catering", href: "/catering" },
   { label: "Locations", href: "/locations" },
   { label: "About", href: "/about" },
   { label: "Track Order", href: "/track-order" },
@@ -24,7 +26,7 @@ export function isNavLinkActive(pathname: string, href: string): boolean {
     return pathname === "/" || pathname.startsWith("/menu");
   }
 
-  return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function getDesktopNavLinkClass(isActive: boolean): string {

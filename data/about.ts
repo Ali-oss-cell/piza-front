@@ -1,18 +1,21 @@
-import { Flame, Leaf, Wheat } from "lucide-react";
+import { ClipboardList, Flame, Leaf, ShoppingBag, Smile, Wheat } from "lucide-react";
 import { generalImages, pizzaImages } from "@/data/images";
 import { BENNY_BOYS_NAME, BENNY_BOYS_TAGLINE } from "@/types/brand";
 import type { CraftPillar, ProcessStep } from "@/types/about";
 
 export const aboutHero = {
-  eyebrow: BENNY_BOYS_NAME,
-  title: "Bold Flavours, Fresh Bites",
+  eyebrow: "Our Story",
+  title: "About Benny Boy's",
+  locationBadge: "Wantirna South",
   subtitle:
-    "Wantirna South pizza, pasta, deals and sides — made for pickup and delivery when you want it fast.",
-  imageUrl: generalImages[1].imageUrl,
-  imageAlt: generalImages[1].imageAlt,
+    "Serving Wantirna South's favourite pizza — generous portions, familiar favourites, and fast pickup or delivery when you need it.",
+  imageUrl: pizzaImages[2].imageUrl,
+  imageAlt: "Fresh pizza straight from the oven",
 };
 
 export const aboutStory = {
+  heading: "Your Neighborhood Favorite",
+  locationLine: "Serving Wantirna South with bold flavours and fresh bites.",
   imageUrl: generalImages[0].imageUrl,
   imageAlt: generalImages[0].imageAlt,
   paragraphs: [
@@ -48,32 +51,44 @@ export const craftPillars: CraftPillar[] = [
   },
 ];
 
+export const processSection = {
+  eyebrow: "How to Order",
+  title: "Simple as 1-2-3",
+  description:
+    "Browse the menu, place your order online, and enjoy fresh pizza from Coleman Rd — pickup or delivery.",
+  imageUrl: pizzaImages[0].imageUrl,
+  imageAlt: "Fresh Benny Boy's pizza ready to enjoy",
+};
+
 export const processSteps: ProcessStep[] = [
   {
-    id: "dough",
+    id: "pick",
     step: 1,
     title: "Pick Your Favourites",
     description:
       "Browse pizzas, pasta, sides and drinks — add deals and extras in a few taps.",
     imageUrl: generalImages[1].imageUrl,
     imageAlt: "Menu selection",
+    icon: ClipboardList,
   },
   {
-    id: "sauce",
+    id: "order",
     step: 2,
     title: "Place Your Order",
     description:
       "Choose pickup or delivery, pay online, and we'll confirm your order straight away.",
     imageUrl: pizzaImages[2].imageUrl,
     imageAlt: "Online ordering",
+    icon: ShoppingBag,
   },
   {
-    id: "fire",
+    id: "enjoy",
     step: 3,
     title: "Enjoy Fresh Bites",
     description:
       "Collect from Coleman Rd or wait for delivery — hot food, bold flavours, done.",
     imageUrl: pizzaImages[0].imageUrl,
     imageAlt: "Fresh pizza ready",
+    icon: Smile,
   },
 ];
