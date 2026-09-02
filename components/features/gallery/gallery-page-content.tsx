@@ -6,12 +6,13 @@ import { CtaBand } from "@/components/features/content/cta-band";
 import { MotionPageHero } from "@/components/motion/motion-page-hero";
 import { StaggerGrid } from "@/components/motion/stagger-grid";
 import { galleryHero, galleryImages } from "@/data/gallery";
+import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
 
 export function GalleryPageContent(): React.ReactElement {
   return (
     <ContentPageShell>
       <MotionPageHero
-        ctas={[{ label: "Order Now", href: "/menu" }]}
+        ctas={[{ label: "Order Now", href: ORDER_ONLINE_HREF }]}
         eyebrow={galleryHero.eyebrow}
         subtitle={galleryHero.subtitle}
         title={galleryHero.title}
@@ -41,7 +42,7 @@ export function GalleryPageContent(): React.ReactElement {
       </ContentSection>
       <CtaBand
         description="See something you like? It's on the menu."
-        primaryHref="/menu"
+        primaryHref={ORDER_ONLINE_HREF}
         primaryLabel="Browse Menu"
         title="Hungry yet?"
       />

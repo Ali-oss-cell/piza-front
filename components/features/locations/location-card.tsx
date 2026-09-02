@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { LocationStatusBadge } from "@/components/features/locations/location-status-badge";
 import { Button } from "@/components/ui/button";
+import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
 import { cn } from "@/lib/utils";
 import type { Location } from "@/types/location";
 
@@ -88,7 +89,7 @@ export function LocationCard({
             asChild
             className="h-auto w-full rounded-xl bg-[color:var(--brand-accent,#d81b60)] px-4 py-3 text-sm font-semibold uppercase tracking-wide hover:brightness-110"
           >
-            <Link href="/">Order Online</Link>
+            <Link href={ORDER_ONLINE_HREF}>Order Online</Link>
           </Button>
           <Button
             asChild

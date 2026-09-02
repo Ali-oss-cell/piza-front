@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
 import { RevealSection } from "@/components/features/about/reveal-section";
 import { Button } from "@/components/ui/button";
 
@@ -16,7 +17,7 @@ export function AboutCta(): React.ReactElement {
           asChild
           className="mt-8 rounded-xl bg-[color:var(--brand-accent,#d81b60)] px-10 py-6 text-sm font-semibold uppercase tracking-[0.2em] hover:brightness-110"
         >
-          <Link href="/">Explore the Menu</Link>
+          <Link href={ORDER_ONLINE_HREF}>Explore the Menu</Link>
         </Button>
       </div>
     </RevealSection>

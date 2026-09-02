@@ -428,6 +428,7 @@ export function deleteBlogPost(
 export const SEO_PAGES = [
   "home",
   "menu",
+  "order-online",
   "about",
   "deals",
   "locations",

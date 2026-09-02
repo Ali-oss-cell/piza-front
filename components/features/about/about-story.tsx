@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Pizza } from "lucide-react";
 import { aboutStory } from "@/data/about";
+import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
 import { RevealSection } from "@/components/features/about/reveal-section";
 import { Button } from "@/components/ui/button";
 
@@ -67,7 +68,7 @@ export function AboutStory(): React.ReactElement {
               className="mt-6 h-11 rounded-xl border-[color:var(--brand-accent,#d81b60)] px-6 text-[color:var(--brand-accent,#d81b60)] hover:bg-[color:var(--brand-accent,#d81b60)] hover:text-white"
               variant="outline"
             >
-              <Link href="/">
+              <Link href={ORDER_ONLINE_HREF}>
                 Explore Our Menu
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>

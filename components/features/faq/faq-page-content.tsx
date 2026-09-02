@@ -6,6 +6,7 @@ import { CtaBand } from "@/components/features/content/cta-band";
 import { FaqAccordion } from "@/components/motion/faq-accordion";
 import { MotionPageHero } from "@/components/motion/motion-page-hero";
 import { faqHero, faqSections } from "@/data/faq";
+import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
 
 export function FaqPageContent(): React.ReactElement {
   return (
@@ -13,7 +14,7 @@ export function FaqPageContent(): React.ReactElement {
       <MotionPageHero
         ctas={[
           { label: "Contact Us", href: "/contact" },
-          { label: "Order Now", href: "/menu", variant: "secondary" },
+          { label: "Order Now", href: ORDER_ONLINE_HREF, variant: "secondary" },
         ]}
         eyebrow={faqHero.eyebrow}
         subtitle={faqHero.subtitle}
@@ -28,7 +29,7 @@ export function FaqPageContent(): React.ReactElement {
         description="Our team is happy to help with orders, catering, and dietary questions."
         primaryHref="/contact"
         primaryLabel="Get in Touch"
-        secondaryHref="/menu"
+        secondaryHref={ORDER_ONLINE_HREF}
         secondaryLabel="View Menu"
         title="Still have questions?"
       />

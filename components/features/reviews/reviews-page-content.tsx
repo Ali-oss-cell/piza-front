@@ -7,6 +7,7 @@ import { CtaBand } from "@/components/features/content/cta-band";
 import { MotionPageHero } from "@/components/motion/motion-page-hero";
 import { StaggerGrid } from "@/components/motion/stagger-grid";
 import { reviews, reviewsHero } from "@/data/reviews";
+import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
 
 export function ReviewsPageContent(): React.ReactElement {
   return (
@@ -42,7 +43,7 @@ export function ReviewsPageContent(): React.ReactElement {
       </ContentSection>
       <CtaBand
         description="Join the locals who order pickup, delivery, and catering every week."
-        primaryHref="/menu"
+        primaryHref={ORDER_ONLINE_HREF}
         primaryLabel="Order Now"
         title="See for yourself"
       />

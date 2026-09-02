@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { aboutHero } from "@/data/about";
+import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
 import { Button } from "@/components/ui/button";
 import { useSeoContent } from "@/hooks/useSeoContent";
 import { resolveMediaUrl } from "@/lib/media-url";
@@ -57,14 +58,14 @@ export function AboutHero(): React.ReactElement {
               asChild
               className="h-12 rounded-xl bg-[color:var(--brand-accent,#d81b60)] px-8 uppercase tracking-[0.14em] hover:brightness-110"
             >
-              <Link href="/">View Menu</Link>
+              <Link href={ORDER_ONLINE_HREF}>View Menu</Link>
             </Button>
             <Button
               asChild
               className="h-12 rounded-xl border-white/30 bg-white/10 px-8 uppercase tracking-[0.14em] text-white backdrop-blur-sm hover:bg-white/20"
               variant="outline"
             >
-              <Link href="/">Order Now</Link>
+              <Link href={ORDER_ONLINE_HREF}>Order Now</Link>
             </Button>
           </div>
         </div>

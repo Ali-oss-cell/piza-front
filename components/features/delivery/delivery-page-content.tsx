@@ -7,13 +7,14 @@ import { InfoCards } from "@/components/features/content/info-cards";
 import { MotionPageHero } from "@/components/motion/motion-page-hero";
 import { MotionReveal } from "@/components/motion/motion-reveal";
 import { deliveryHero, deliveryNotes, deliveryOptions, deliveryZones } from "@/data/delivery";
+import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
 
 export function DeliveryPageContent(): React.ReactElement {
   return (
     <ContentPageShell>
       <MotionPageHero
         ctas={[
-          { label: "Order Delivery", href: "/menu" },
+          { label: "Order Delivery", href: ORDER_ONLINE_HREF },
           { label: "FAQ", href: "/faq", variant: "secondary" },
         ]}
         eyebrow={deliveryHero.eyebrow}
@@ -49,7 +50,7 @@ export function DeliveryPageContent(): React.ReactElement {
       </ContentSection>
       <CtaBand
         description="Browse the menu and choose delivery or pickup at checkout."
-        primaryHref="/menu"
+        primaryHref={ORDER_ONLINE_HREF}
         primaryLabel="Start Order"
         secondaryHref="/contact"
         secondaryLabel="Ask a Question"

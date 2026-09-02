@@ -1,3 +1,5 @@
+import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
+
 export type MarketingPageKey = "gift-cards" | "loyalty" | "functions" | "nutrition";
 
 export interface MarketingPageContent {
@@ -30,7 +32,7 @@ export const marketingPages: Record<MarketingPageKey, MarketingPageContent> = {
     ctaTitle: "Want a gift card today?",
     ctaDescription: "Get in touch and we'll sort a voucher for your recipient.",
     primaryCta: { label: "Contact Us", href: "/contact" },
-    secondaryCta: { label: "View Menu", href: "/menu" },
+    secondaryCta: { label: "View Menu", href: ORDER_ONLINE_HREF },
   },
   loyalty: {
     eyebrow: "Loyalty",
@@ -49,7 +51,7 @@ export const marketingPages: Record<MarketingPageKey, MarketingPageContent> = {
     ],
     ctaTitle: "Order now, benefit later",
     ctaDescription: "Keep ordering your favourites — we'll reward our regulars when loyalty launches.",
-    primaryCta: { label: "Order Now", href: "/menu" },
+    primaryCta: { label: "Order Now", href: ORDER_ONLINE_HREF },
     secondaryCta: { label: "Contact Us", href: "/contact" },
   },
   functions: {
@@ -94,6 +96,6 @@ export const marketingPages: Record<MarketingPageKey, MarketingPageContent> = {
     ctaTitle: "Need allergen details?",
     ctaDescription: "See our allergens page for kitchen and ingredient guidance.",
     primaryCta: { label: "Allergen Info", href: "/allergens" },
-    secondaryCta: { label: "View Menu", href: "/menu" },
+    secondaryCta: { label: "View Menu", href: ORDER_ONLINE_HREF },
   },
 };

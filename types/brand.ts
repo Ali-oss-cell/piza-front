@@ -10,6 +10,8 @@ export const BENNY_BOYS_ADDRESS =
 export const BENNY_BOYS_LOGO_LIGHT = "/benny-boys-logo-light.svg";
 export const BENNY_BOYS_LOGO_DARK = "/benny-boys-logo-dark.svg";
 export const BENNY_BOYS_PRIMARY_COLOR = "#E85D04";
+export const BENNY_BOYS_NEXTORDER_URL =
+  "https://benny-boys-pizza-wantirna-south.nextorder.com/";
 
 /** @deprecated Use BENNY_BOYS_SLUG */
 export const BUNNY_BOYS_SLUG = BENNY_BOYS_SLUG;

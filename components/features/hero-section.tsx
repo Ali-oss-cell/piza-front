@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { getMenuDisplayDescription } from "@/lib/menu-display-copy";
+import { isNextOrderOrderingEnabled, ORDER_ONLINE_HREF } from "@/lib/nextorder";
 import { resolveMediaUrl } from "@/lib/media-url";
 import { PLATFORM_ACCENT } from "@/lib/store-theme";
 import { cn } from "@/lib/utils";
@@ -80,6 +81,7 @@ export function HeroSection({
           : "Artisanal sourdough foundations, heritage recipes, and contemporary culinary precision delivered to your urban doorstep.");
 
   const promos = featuredDeals.slice(0, 3);
+  const useNextOrder = isNextOrderOrderingEnabled();
 
   return (
     <section
@@ -128,12 +130,18 @@ export function HeroSection({
               {subtitle}
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
-              <Button
-                className="h-12 px-8 uppercase tracking-[0.15em]"
-                onClick={onOpenCart}
-              >
-                Order Online
-              </Button>
+              {useNextOrder ? (
+                <Button asChild className="h-12 px-8 uppercase tracking-[0.15em]">
+                  <Link href={ORDER_ONLINE_HREF}>Order Online</Link>
+                </Button>
+              ) : (
+                <Button
+                  className="h-12 px-8 uppercase tracking-[0.15em]"
+                  onClick={onOpenCart}
+                >
+                  Order Online
+                </Button>
+              )}
               <Button
                 asChild
                 className="h-12 border-[color:var(--brand-accent)] px-8 uppercase tracking-[0.15em] text-[color:var(--brand-accent)] hover:bg-[color:var(--brand-accent)] hover:text-white dark:border-[color:var(--brand-accent)] dark:text-[color:var(--brand-accent)] dark:hover:bg-[color:var(--brand-accent)] dark:hover:text-white"
@@ -150,38 +158,66 @@ export function HeroSection({
                 Today&apos;s top deals
               </p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                {promos.map((deal) => (
-                  <button
-                    className={cn(
-                      "rounded-2xl border border-zinc-200/80 bg-white/90 p-4 text-left shadow-lg backdrop-blur-md transition-all",
-                      "hover:border-[color:var(--brand-accent,#d81b60)]/40 hover:shadow-xl",
-                      "dark:border-zinc-700/80 dark:bg-zinc-950/85"
-                    )}
-                    key={deal.id}
-                    onClick={() => onViewDeal?.(deal)}
-                    type="button"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-bold text-zinc-950 dark:text-white">{deal.name}</p>
-                        <p className="mt-1 line-clamp-2 text-sm leading-snug text-zinc-600 dark:text-zinc-400">
-                          {getMenuDisplayDescription(deal, brandSlug)}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                        {formatPrice(deal.price)}
-                      </span>
-                    </div>
-                    <span className="mt-3 inline-flex text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--brand-accent,#d81b60)]">
-                      View deal →
-                    </span>
-                  </button>
-                ))}
+                {promos.map((deal) =>
+                  useNextOrder ? (
+                    <Link
+                      className={cn(
+                        "rounded-2xl border border-zinc-200/80 bg-white/90 p-4 text-left shadow-lg backdrop-blur-md transition-all",
+                        "hover:border-[color:var(--brand-accent,#d81b60)]/40 hover:shadow-xl",
+                        "dark:border-zinc-700/80 dark:bg-zinc-950/85"
+                      )}
+                      href={ORDER_ONLINE_HREF}
+                      key={deal.id}
+                    >
+                      <DealPromoContent brandSlug={brandSlug} deal={deal} />
+                    </Link>
+                  ) : (
+                    <button
+                      className={cn(
+                        "rounded-2xl border border-zinc-200/80 bg-white/90 p-4 text-left shadow-lg backdrop-blur-md transition-all",
+                        "hover:border-[color:var(--brand-accent,#d81b60)]/40 hover:shadow-xl",
+                        "dark:border-zinc-700/80 dark:bg-zinc-950/85"
+                      )}
+                      key={deal.id}
+                      onClick={() => onViewDeal?.(deal)}
+                      type="button"
+                    >
+                      <DealPromoContent brandSlug={brandSlug} deal={deal} />
+                    </button>
+                  )
+                )}
               </div>
             </div>
           ) : null}
         </div>
       </div>
     </section>
+  );
+}
+
+function DealPromoContent({
+  deal,
+  brandSlug,
+}: {
+  deal: MenuItem;
+  brandSlug?: string;
+}): React.ReactElement {
+  return (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-bold text-zinc-950 dark:text-white">{deal.name}</p>
+          <p className="mt-1 line-clamp-2 text-sm leading-snug text-zinc-600 dark:text-zinc-400">
+            {getMenuDisplayDescription(deal, brandSlug)}
+          </p>
+        </div>
+        <span className="shrink-0 text-lg font-bold text-zinc-900 dark:text-zinc-100">
+          {formatPrice(deal.price)}
+        </span>
+      </div>
+      <span className="mt-3 inline-flex text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--brand-accent,#d81b60)]">
+        View deal →
+      </span>
+    </>
   );
 }

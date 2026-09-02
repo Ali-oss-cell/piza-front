@@ -6,6 +6,7 @@ import { CtaBand } from "@/components/features/content/cta-band";
 import { MotionPageHero } from "@/components/motion/motion-page-hero";
 import { StaggerGrid } from "@/components/motion/stagger-grid";
 import { allergenHero, allergenSections, commonAllergens } from "@/data/allergens";
+import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
 
 export function AllergensPageContent(): React.ReactElement {
   return (
@@ -37,7 +38,7 @@ export function AllergensPageContent(): React.ReactElement {
         description="Speak to our team before ordering so we can advise on safe choices."
         primaryHref="/contact"
         primaryLabel="Contact Us"
-        secondaryHref="/menu"
+        secondaryHref={ORDER_ONLINE_HREF}
         secondaryLabel="View Menu"
         title="Severe allergy?"
       />

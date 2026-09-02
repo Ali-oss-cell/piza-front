@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { formatOpeningHoursLines } from "@/lib/opening-hours";
+import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
 import { BENNY_BOYS_ADDRESS, BENNY_BOYS_NAME, BENNY_BOYS_TAGLINE } from "@/types/brand";
 
 interface SiteFooterProps {
@@ -19,7 +20,7 @@ const FALLBACK_HOURS = ["Mon — Fri: 5pm – 11pm", "Sat — Sun: 12pm – 12am
 
 const FOOTER_LINKS = {
   order: [
-    { label: "Menu", href: "/menu" },
+    { label: "Menu", href: ORDER_ONLINE_HREF },
     { label: "Deals", href: "/deals" },
     { label: "Catering", href: "/catering" },
     { label: "Delivery", href: "/delivery" },

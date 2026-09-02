@@ -7,6 +7,7 @@ import { Check, Plus } from "lucide-react";
 import { MenuItemBadges } from "@/components/features/menu-item-badges";
 import { Button } from "@/components/ui/button";
 import { getMenuDisplayDescription } from "@/lib/menu-display-copy";
+import { isNextOrderOrderingEnabled, ORDER_ONLINE_HREF } from "@/lib/nextorder";
 import { resolveMediaUrl } from "@/lib/media-url";
 import { cn } from "@/lib/utils";
 import type { AddToCartPayload, MenuItem, PizzaSize } from "@/types/menu";
@@ -164,7 +165,7 @@ export function MenuCard({
     item.category === "deals" ||
     (item.ingredients?.length ?? 0) > 0;
   const selectedPrice = hasSizePricing ? getPriceForSize(item, selectedSize) : item.price;
-  const detailHref = `/menu/${item.id}`;
+  const detailHref = isNextOrderOrderingEnabled() ? ORDER_ONLINE_HREF : `/menu/${item.id}`;
   const displayDescription = getMenuDisplayDescription(item, brandSlug);
 
   const handleAddToCart = (): void => {

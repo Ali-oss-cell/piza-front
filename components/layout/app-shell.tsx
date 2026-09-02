@@ -23,6 +23,8 @@ import {
   BENNY_BOYS_TAGLINE,
   DEFAULT_BRAND_SLUG,
 } from "@/types/brand";
+import { isOrderOnlinePath } from "@/lib/nextorder";
+import { cn } from "@/lib/utils";
 
 function isStandaloneRoute(pathname: string): boolean {
   return (
@@ -206,6 +208,7 @@ export function AppShell({
   }, [brandSlug, initialBranding?.brandSlug]);
 
   const standalone = isStandaloneRoute(pathname);
+  const embedRoute = isOrderOnlinePath(pathname);
 
   if (standalone) {
     return (
@@ -226,28 +229,34 @@ export function AppShell({
           darkModeEnabled,
         }}
       />
-      <SiteHeader
-        brandName={brandName}
-        cartCount={cartCount}
-        homeHref={homeHrefForSlug(brandSlug)}
-        isCartReady={isCartReady}
-        logoDarkUrl={logoDarkUrl}
-        logoUrl={logoUrl}
-        onOpenCart={() => setCartOpen(true)}
-        onOpenMenu={() => setMenuOpen(true)}
-        scrolled={isScrolled}
-        showThemeToggle={darkModeEnabled}
-      />
-      {children}
-      <SiteFooter
-        address={address}
-        brandName={brandName}
-        deliveryFee={String(deliveryFee)}
-        logoDarkUrl={logoDarkUrl}
-        logoUrl={logoUrl}
-        openingHours={openingHours}
-        tagline={tagline}
-      />
+      <div className={cn("flex min-h-[100dvh] flex-col", embedRoute && "min-h-0")}>
+        <SiteHeader
+          brandName={brandName}
+          cartCount={cartCount}
+          homeHref={homeHrefForSlug(brandSlug)}
+          isCartReady={isCartReady}
+          logoDarkUrl={logoDarkUrl}
+          logoUrl={logoUrl}
+          onOpenCart={() => setCartOpen(true)}
+          onOpenMenu={() => setMenuOpen(true)}
+          scrolled={isScrolled}
+          showThemeToggle={darkModeEnabled}
+        />
+        <div className={cn("flex min-h-0 flex-1 flex-col", embedRoute && "overflow-hidden")}>
+          {children}
+        </div>
+        {!embedRoute ? (
+          <SiteFooter
+            address={address}
+            brandName={brandName}
+            deliveryFee={String(deliveryFee)}
+            logoDarkUrl={logoDarkUrl}
+            logoUrl={logoUrl}
+            openingHours={openingHours}
+            tagline={tagline}
+          />
+        ) : null}
+      </div>
       <MenuSheet onOpenChange={setMenuOpen} open={isMenuOpen} />
       <CartDrawer
         deliveryFeeAmount={deliveryFee}

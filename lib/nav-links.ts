@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { isMenuOrderingPath, ORDER_ONLINE_HREF } from "@/lib/nextorder";
 
 export interface NavItem {
   label: string;
@@ -6,7 +7,7 @@ export interface NavItem {
 }
 
 export const DESKTOP_NAV_ITEMS: NavItem[] = [
-  { label: "Menu", href: "/menu" },
+  { label: "Menu", href: ORDER_ONLINE_HREF },
   { label: "Deals", href: "/deals" },
   { label: "Catering", href: "/catering" },
   { label: "Locations", href: "/locations" },
@@ -14,7 +15,7 @@ export const DESKTOP_NAV_ITEMS: NavItem[] = [
 ];
 
 export const MOBILE_NAV_ITEMS: NavItem[] = [
-  { label: "Menu", href: "/menu" },
+  { label: "Menu", href: ORDER_ONLINE_HREF },
   { label: "Deals", href: "/deals" },
   { label: "Catering", href: "/catering" },
   { label: "Locations", href: "/locations" },
@@ -26,12 +27,12 @@ export const MOBILE_NAV_ITEMS: NavItem[] = [
 ];
 
 export function isNavLinkActive(pathname: string, href: string): boolean {
-  if (href === "/menu") {
-    return pathname === "/menu" || pathname === "/" || pathname.startsWith("/menu/");
+  if (href === ORDER_ONLINE_HREF) {
+    return isMenuOrderingPath(pathname);
   }
 
   if (href === "/") {
-    return pathname === "/" || pathname.startsWith("/menu");
+    return pathname === "/";
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
