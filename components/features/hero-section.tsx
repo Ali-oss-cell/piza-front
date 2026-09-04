@@ -1,9 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { getMenuDisplayDescription } from "@/lib/menu-display-copy";
+import {
+  defaultTransition,
+  fadeUp,
+  fadeUpReduced,
+  pageHeroBg,
+  staggerContainer,
+  staggerItem,
+  staggerItemReduced,
+} from "@/lib/motion-presets";
 import { isNextOrderOrderingEnabled, ORDER_ONLINE_HREF } from "@/lib/nextorder";
 import { resolveMediaUrl } from "@/lib/media-url";
 import { PLATFORM_ACCENT } from "@/lib/store-theme";
@@ -51,6 +61,7 @@ export function HeroSection({
   backgroundDarkColor,
   variant = "home",
 }: HeroSectionProps): React.ReactElement {
+  const reduceMotion = useReducedMotion();
   const { resolvedTheme } = useTheme();
   const slug = brandSlug?.toLowerCase() ?? DEFAULT_BRAND_SLUG;
   const isBennyBoys = slug.includes("benny") || slug.includes("bunny");
@@ -82,13 +93,21 @@ export function HeroSection({
 
   const promos = featuredDeals.slice(0, 3);
   const useNextOrder = isNextOrderOrderingEnabled();
+  const textVariants = reduceMotion ? fadeUpReduced : fadeUp;
+  const itemVariants = reduceMotion ? staggerItemReduced : staggerItem;
 
   return (
     <section
       className="relative flex min-h-[min(100vh,920px)] min-h-[680px] flex-col justify-center overflow-hidden px-margin-mobile transition-colors duration-150 ease-out md:min-h-[min(100vh,960px)] md:px-margin-desktop"
       style={heroStyle}
     >
-      <div className="absolute inset-0 z-0">
+      <motion.div
+        animate="visible"
+        className="absolute inset-0 z-0"
+        initial="hidden"
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        variants={reduceMotion ? undefined : pageHeroBg}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           alt=""
@@ -103,12 +122,21 @@ export function HeroSection({
               : `linear-gradient(to bottom, ${bgLight}dd 0%, ${bgLight}88 35%, ${bgLight}55 55%, ${bgLight}22 72%, transparent 88%), linear-gradient(to right, ${bgLight}cc 0%, ${bgLight}66 28%, transparent 52%)`,
           }}
         />
-      </div>
+      </motion.div>
 
       <div className="relative z-10 mx-auto flex w-full max-w-container-max flex-1 flex-col justify-center py-16 md:py-20">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-end lg:gap-12">
-          <div className="max-w-2xl space-y-8">
-            <h1 className="font-display text-headline-xl leading-none tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white">
+          <motion.div
+            animate="visible"
+            className="max-w-2xl space-y-8"
+            initial="hidden"
+            variants={staggerContainer}
+          >
+            <motion.h1
+              className="font-display text-headline-xl leading-none tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white"
+              transition={defaultTransition}
+              variants={itemVariants}
+            >
               {variant === "menu" ? (
                 <>
                   OUR <br />
@@ -125,11 +153,19 @@ export function HeroSection({
                   PASTA <span className="text-[color:var(--brand-accent)]">REFINED.</span>
                 </>
               )}
-            </h1>
-            <p className="max-w-lg text-body-lg text-zinc-700 transition-colors duration-150 ease-out dark:text-zinc-300">
+            </motion.h1>
+            <motion.p
+              className="max-w-lg text-body-lg text-zinc-700 transition-colors duration-150 ease-out dark:text-zinc-300"
+              transition={defaultTransition}
+              variants={itemVariants}
+            >
               {subtitle}
-            </p>
-            <div className="flex flex-wrap gap-4 pt-2">
+            </motion.p>
+            <motion.div
+              className="flex flex-wrap gap-4 pt-2"
+              transition={defaultTransition}
+              variants={itemVariants}
+            >
               {useNextOrder ? (
                 <Button asChild className="h-12 px-8 uppercase tracking-[0.15em]">
                   <Link href={ORDER_ONLINE_HREF}>Order Online</Link>
@@ -149,45 +185,57 @@ export function HeroSection({
               >
                 <Link href="/deals">View Specials</Link>
               </Button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {promos.length > 0 ? (
-            <div className="flex flex-col gap-3 lg:max-w-md lg:justify-self-end">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-zinc-700 dark:text-zinc-300">
+            <motion.div
+              animate="visible"
+              className="flex flex-col gap-3 lg:max-w-md lg:justify-self-end"
+              initial="hidden"
+              transition={{ delayChildren: 0.28, staggerChildren: 0.1 }}
+              variants={staggerContainer}
+            >
+              <motion.p
+                className="text-xs font-bold uppercase tracking-[0.22em] text-zinc-700 dark:text-zinc-300"
+                transition={defaultTransition}
+                variants={textVariants}
+              >
                 Today&apos;s top deals
-              </p>
+              </motion.p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                 {promos.map((deal) =>
                   useNextOrder ? (
-                    <Link
-                      className={cn(
-                        "rounded-2xl border border-zinc-200/80 bg-white/90 p-4 text-left shadow-lg backdrop-blur-md transition-all",
-                        "hover:border-[color:var(--brand-accent,#d81b60)]/40 hover:shadow-xl",
-                        "dark:border-zinc-700/80 dark:bg-zinc-950/85"
-                      )}
-                      href={ORDER_ONLINE_HREF}
-                      key={deal.id}
-                    >
-                      <DealPromoContent brandSlug={brandSlug} deal={deal} />
-                    </Link>
+                    <motion.div key={deal.id} transition={defaultTransition} variants={itemVariants}>
+                      <Link
+                        className={cn(
+                          "block rounded-2xl border border-zinc-200/80 bg-white/90 p-4 text-left shadow-lg backdrop-blur-md transition-all",
+                          "hover:border-[color:var(--brand-accent,#d81b60)]/40 hover:shadow-xl",
+                          "dark:border-zinc-700/80 dark:bg-zinc-950/85"
+                        )}
+                        href={ORDER_ONLINE_HREF}
+                      >
+                        <DealPromoContent brandSlug={brandSlug} deal={deal} />
+                      </Link>
+                    </motion.div>
                   ) : (
-                    <button
-                      className={cn(
-                        "rounded-2xl border border-zinc-200/80 bg-white/90 p-4 text-left shadow-lg backdrop-blur-md transition-all",
-                        "hover:border-[color:var(--brand-accent,#d81b60)]/40 hover:shadow-xl",
-                        "dark:border-zinc-700/80 dark:bg-zinc-950/85"
-                      )}
-                      key={deal.id}
-                      onClick={() => onViewDeal?.(deal)}
-                      type="button"
-                    >
-                      <DealPromoContent brandSlug={brandSlug} deal={deal} />
-                    </button>
+                    <motion.div key={deal.id} transition={defaultTransition} variants={itemVariants}>
+                      <button
+                        className={cn(
+                          "w-full rounded-2xl border border-zinc-200/80 bg-white/90 p-4 text-left shadow-lg backdrop-blur-md transition-all",
+                          "hover:border-[color:var(--brand-accent,#d81b60)]/40 hover:shadow-xl",
+                          "dark:border-zinc-700/80 dark:bg-zinc-950/85"
+                        )}
+                        onClick={() => onViewDeal?.(deal)}
+                        type="button"
+                      >
+                        <DealPromoContent brandSlug={brandSlug} deal={deal} />
+                      </button>
+                    </motion.div>
                   )
                 )}
               </div>
-            </div>
+            </motion.div>
           ) : null}
         </div>
       </div>

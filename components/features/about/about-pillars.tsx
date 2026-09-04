@@ -1,5 +1,8 @@
+"use client";
+
 import { craftPillars } from "@/data/about";
 import { RevealSection } from "@/components/features/about/reveal-section";
+import { StaggerGrid } from "@/components/motion/stagger-grid";
 
 export function AboutPillars(): React.ReactElement {
   return (
@@ -14,15 +17,14 @@ export function AboutPillars(): React.ReactElement {
           </h2>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3 md:gap-8">
-          {craftPillars.map((pillar, index) => {
+        <StaggerGrid className="grid gap-6 md:grid-cols-3 md:gap-8">
+          {craftPillars.map((pillar) => {
             const Icon = pillar.icon;
 
             return (
               <article
                 className="rounded-2xl border border-zinc-200/60 bg-white/70 p-8 backdrop-blur-md transition-all duration-150 ease-out hover:border-[color:var(--brand-accent,#d81b60)]/30 dark:border-white/10 dark:bg-zinc-900/40"
                 key={pillar.id}
-                style={{ transitionDelay: `${index * 80}ms` }}
               >
                 <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl border border-[color:var(--brand-accent,#d81b60)]/30 bg-[color:var(--brand-accent,#d81b60)]/10">
                   <Icon className="h-6 w-6 text-[color:var(--brand-accent,#d81b60)]" />
@@ -36,7 +38,7 @@ export function AboutPillars(): React.ReactElement {
               </article>
             );
           })}
-        </div>
+        </StaggerGrid>
       </div>
     </RevealSection>
   );

@@ -1,4 +1,4 @@
-import { pizzaImages } from "@/data/images";
+import { generalImages, pastaImages, pizzaImages } from "@/data/images";
 import type {
   BulkMenuItem,
   CateringPackage,
@@ -29,7 +29,7 @@ export const cateringPackages: CateringPackage[] = [
       "Serviettes & plates included",
     ],
     dietaryTags: ["Vegetarian", "Gluten-Free Options"],
-    imageUrl: pizzaImages[0].imageUrl,
+    imageUrl: pizzaImages[3].imageUrl,
     imageAlt: "Office lunch pizza spread",
   },
   {
@@ -47,7 +47,7 @@ export const cateringPackages: CateringPackage[] = [
       "2× 1.25L drinks",
     ],
     dietaryTags: ["Vegetarian"],
-    imageUrl: pizzaImages[2].imageUrl,
+    imageUrl: pizzaImages[1].imageUrl,
     imageAlt: "Game day pizza boxes",
   },
   {
@@ -66,7 +66,7 @@ export const cateringPackages: CateringPackage[] = [
       "Includes 2× vegetarian & 1× gluten-free option",
     ],
     dietaryTags: ["Vegetarian", "Gluten-Free Options", "Halal Friendly"],
-    imageUrl: pizzaImages[1].imageUrl,
+    imageUrl: generalImages[0].imageUrl,
     imageAlt: "Large party pizza spread",
   },
 ];
@@ -82,6 +82,8 @@ export const bulkMenuItems: BulkMenuItem[] = [
     minQty: 1,
     maxQty: 10,
     dietaryTags: ["Vegetarian", "Gluten-Free Options"],
+    imageUrl: pizzaImages[0].imageUrl,
+    imageAlt: pizzaImages[0].imageAlt,
   },
   {
     id: "pasta-full",
@@ -93,6 +95,8 @@ export const bulkMenuItems: BulkMenuItem[] = [
     minQty: 1,
     maxQty: 8,
     dietaryTags: ["Vegetarian"],
+    imageUrl: pastaImages[0].imageUrl,
+    imageAlt: pastaImages[0].imageAlt,
   },
   {
     id: "pasta-half",
@@ -104,6 +108,8 @@ export const bulkMenuItems: BulkMenuItem[] = [
     minQty: 1,
     maxQty: 10,
     dietaryTags: ["Vegetarian"],
+    imageUrl: pastaImages[1].imageUrl,
+    imageAlt: pastaImages[1].imageAlt,
   },
   {
     id: "garlic-bread-bundle",
@@ -115,6 +121,8 @@ export const bulkMenuItems: BulkMenuItem[] = [
     minQty: 1,
     maxQty: 6,
     dietaryTags: ["Vegetarian"],
+    imageUrl: generalImages[1].imageUrl,
+    imageAlt: "Garlic bread bundle",
   },
   {
     id: "wedges-tray",
@@ -126,6 +134,8 @@ export const bulkMenuItems: BulkMenuItem[] = [
     minQty: 1,
     maxQty: 6,
     dietaryTags: ["Vegetarian", "Gluten-Free Options"],
+    imageUrl: pastaImages[2].imageUrl,
+    imageAlt: "Seasoned potato wedges tray",
   },
   {
     id: "drinks-pack",
@@ -137,6 +147,8 @@ export const bulkMenuItems: BulkMenuItem[] = [
     minQty: 1,
     maxQty: 8,
     dietaryTags: [],
+    imageUrl: pizzaImages[2].imageUrl,
+    imageAlt: "Drinks pack for catering",
   },
 ];
 

@@ -1,4 +1,3 @@
-import { pizzaImages } from "@/data/images";
 import {
   INSTANT_CHECKOUT_MAX,
   LARGE_EVENT_GUEST_THRESHOLD,
@@ -45,8 +44,8 @@ export function bulkToMenuItem(item: BulkMenuItem, quantity: number): MenuItem {
     description: `${quantity}× ${item.description}`,
     price: total,
     category: "catering",
-    imageUrl: pizzaImages[0].imageUrl,
-    imageAlt: item.name,
+    imageUrl: item.imageUrl,
+    imageAlt: item.imageAlt,
     priceNote: `$${item.unitPrice.toFixed(0)} each`,
   };
 }

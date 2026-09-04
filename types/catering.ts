@@ -34,6 +34,8 @@ export interface BulkMenuItem {
   minQty: number;
   maxQty: number;
   dietaryTags: DietaryTag[];
+  imageUrl: string;
+  imageAlt: string;
 }
 
 export interface CateringQuoteFormData {

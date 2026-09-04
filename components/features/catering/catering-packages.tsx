@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
+import { MotionReveal } from "@/components/motion/motion-reveal";
+import { StaggerGrid } from "@/components/motion/stagger-grid";
 import { Button } from "@/components/ui/button";
 import { cateringPackages } from "@/data/catering";
 import { useCart } from "@/lib/cart-context";
@@ -33,7 +35,7 @@ export function CateringPackages({
   };
 
   return (
-    <section className="space-y-6">
+    <MotionReveal as="section" className="space-y-6">
       <div>
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[color:var(--brand-accent,#d81b60)]">
           Pre-Set Packages
@@ -43,7 +45,7 @@ export function CateringPackages({
         </h2>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <StaggerGrid className="grid gap-6 lg:grid-cols-3">
         {cateringPackages.map((pkg) => {
           const instant = packageEligibleForInstantCheckout(pkg);
           const showInstant = flow === "instant" && instant;
@@ -107,8 +109,8 @@ export function CateringPackages({
             </article>
           );
         })}
-      </div>
-    </section>
+      </StaggerGrid>
+    </MotionReveal>
   );
 }
 
