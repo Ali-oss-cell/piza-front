@@ -28,12 +28,12 @@ export function AboutProcess(): React.ReactElement {
             return (
               <article
                 className={cn(
-                  "flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm transition-colors duration-150 ease-out",
+                  "flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white text-center shadow-sm transition-colors duration-150 ease-out",
                   "dark:border-white/10 dark:bg-zinc-900/50"
                 )}
                 key={step.id}
               >
-                <div className="relative aspect-[16/10]">
+                <div className="relative aspect-[16/10] w-full bg-zinc-100 dark:bg-zinc-800">
                   <Image
                     alt={step.imageAlt}
                     className="object-cover"
@@ -42,7 +42,7 @@ export function AboutProcess(): React.ReactElement {
                     src={step.imageUrl}
                   />
                 </div>
-                <div className="flex flex-1 flex-col p-6 text-center">
+                <div className="flex flex-1 flex-col p-6">
                   <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-[color:var(--brand-accent,#d81b60)]/20 bg-[color:var(--brand-accent,#d81b60)]/10 text-[color:var(--brand-accent,#d81b60)]">
                     <Icon className="h-6 w-6" />
                   </div>
