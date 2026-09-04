@@ -1,14 +1,20 @@
 import { BENNY_BOYS_NEXTORDER_URL } from "@/types/brand";
 
+/** Internal path that redirects to NextOrder (bookmarks / old links). */
 export const ORDER_ONLINE_HREF = "/order-online";
 
-export function getNextOrderEmbedUrl(): string {
+export function getNextOrderUrl(): string {
   const configured = process.env.NEXT_PUBLIC_NEXTORDER_URL?.trim();
   return configured || BENNY_BOYS_NEXTORDER_URL;
 }
 
+/** @deprecated Use getNextOrderUrl */
+export function getNextOrderEmbedUrl(): string {
+  return getNextOrderUrl();
+}
+
 export function isNextOrderOrderingEnabled(): boolean {
-  return getNextOrderEmbedUrl().length > 0;
+  return getNextOrderUrl().length > 0;
 }
 
 export function isOrderOnlinePath(pathname: string): boolean {
