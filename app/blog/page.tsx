@@ -1,39 +1,34 @@
 import type { Metadata } from "next";
-import { BlogSection } from "@/components/blog/BlogSection";
+import { BlogPageContent } from "@/components/features/blog/blog-page-content";
 import SeoMetaClient from "@/components/SeoMetaClient";
-import { fetchStoreSettings } from "@/lib/menu-api";
 import {
-  buildSeoMetadata,
-  fetchSeoForPage,
-  resolveBrandSlugForRequest,
-  siteOriginFromHost,
-} from "@/lib/seo-server";
+  generateContentPageMetadata,
+  getContentPageBrandSlug,
+  getContentPageStoreName,
+} from "@/lib/content-page-server";
+import { getRequestHost } from "@/lib/request-host";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { brandSlug, host } = await resolveBrandSlugForRequest();
-  const seo = await fetchSeoForPage(brandSlug, "blog", host);
-  const settings = await fetchStoreSettings(brandSlug);
-  return buildSeoMetadata(
-    seo,
-    {
-      title: `Blog | ${settings.storeName}`,
-      description: `News and updates from ${settings.storeName}`,
-    },
-    siteOriginFromHost(host),
-    { googleSiteVerification: settings.googleSiteVerification },
-  );
+  return generateContentPageMetadata({
+    pageKey: "blog",
+    title: "Blog",
+    description: "News, kitchen stories, and updates from {storeName}.",
+  });
 }
 
 export default async function BlogPage(): Promise<React.ReactElement> {
-  const { brandSlug, host } = await resolveBrandSlugForRequest();
-  const settings = await fetchStoreSettings(brandSlug);
+  const [brandSlug, storeName, host] = await Promise.all([
+    getContentPageBrandSlug(),
+    getContentPageStoreName(),
+    getRequestHost(),
+  ]);
 
   return (
     <>
-      <SeoMetaClient fallbackTitle={`Blog | ${settings.storeName}`} pageKey="blog" />
-      <BlogSection brandSlug={brandSlug} host={host} />
+      <SeoMetaClient fallbackTitle={`Blog | ${storeName}`} pageKey="blog" />
+      <BlogPageContent brandSlug={brandSlug} host={host ?? undefined} />
     </>
   );
 }

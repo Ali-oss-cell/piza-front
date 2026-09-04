@@ -4,8 +4,8 @@ import SeoMetaClient from "@/components/SeoMetaClient";
 import {
   generateContentPageMetadata,
   getContentPageBrandSlug,
+  getContentPageStoreName,
 } from "@/lib/content-page-server";
-import { BENNY_BOYS_NAME } from "@/types/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +18,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CareersPage(): Promise<React.ReactElement> {
-  const brandSlug = await getContentPageBrandSlug();
+  const [brandSlug, storeName] = await Promise.all([
+    getContentPageBrandSlug(),
+    getContentPageStoreName(),
+  ]);
 
   return (
     <>
-      <SeoMetaClient fallbackTitle={`Careers | ${BENNY_BOYS_NAME}`} pageKey="careers" />
+      <SeoMetaClient fallbackTitle={`Careers | ${storeName}`} pageKey="careers" />
       <CareersPageContent brandSlug={brandSlug} />
     </>
   );

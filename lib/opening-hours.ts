@@ -60,13 +60,13 @@ export const DEFAULT_OPENING_HOURS: OpeningHoursConfig = {
   leadTimeMinutes: 45,
   slotIntervalMinutes: 15,
   days: {
-    monday: { open: "17:00", close: "23:00" },
-    tuesday: { open: "17:00", close: "23:00" },
-    wednesday: { open: "17:00", close: "23:00" },
-    thursday: { open: "17:00", close: "23:00" },
-    friday: { open: "17:00", close: "23:00" },
-    saturday: { open: "12:00", close: "23:59" },
-    sunday: { open: "12:00", close: "23:59" },
+    monday: { open: "17:00", close: "22:00" },
+    tuesday: { open: "17:00", close: "22:00" },
+    wednesday: { open: "17:00", close: "22:00" },
+    thursday: { open: "17:00", close: "22:00" },
+    friday: { open: "17:00", close: "22:00" },
+    saturday: { open: "17:00", close: "22:00" },
+    sunday: { open: "17:00", close: "22:00" },
   },
 };
 
@@ -254,7 +254,7 @@ function dayKey(day: DayHours | null): string {
   return `${day.open}-${day.close}`;
 }
 
-/** Compact lines like "Mon — Fri: 5pm – 11pm". */
+/** Compact lines like "Mon — Sun: 5pm – 10pm". */
 export function formatOpeningHoursLines(openingHours: unknown): string[] {
   const config = parseOpeningHours(openingHours);
   if (!config) {

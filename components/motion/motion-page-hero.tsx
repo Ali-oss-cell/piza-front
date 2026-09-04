@@ -96,7 +96,7 @@ export function MotionPageHero({
                     : "bg-[color:var(--brand-accent,#d81b60)] text-white hover:opacity-90"
                 )}
                 href={cta.href}
-                key={cta.href}
+                key={`${cta.label}-${cta.href}`}
               >
                 {cta.label}
               </Link>

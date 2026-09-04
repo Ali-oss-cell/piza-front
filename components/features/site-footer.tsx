@@ -16,10 +16,11 @@ interface SiteFooterProps {
   openingHours?: unknown;
 }
 
-const FALLBACK_HOURS = ["Mon — Fri: 5pm – 11pm", "Sat — Sun: 12pm – 12am"];
+const FALLBACK_HOURS = ["Mon — Sun: 5pm – 10pm"];
 
 const FOOTER_LINKS = {
   order: [
+    { label: "Order", href: ORDER_ONLINE_HREF },
     { label: "Menu", href: ORDER_ONLINE_HREF },
     { label: "Deals", href: "/deals" },
     { label: "Catering", href: "/catering" },
@@ -127,7 +128,7 @@ function FooterColumn({
       </h4>
       <ul className="space-y-2">
         {links.map((link) => (
-          <li key={link.href}>
+          <li key={`${link.label}-${link.href}`}>
             <Link
               className="text-sm text-zinc-600 transition-colors hover:text-[color:var(--brand-accent,#d81b60)] dark:text-zinc-400"
               href={link.href}
