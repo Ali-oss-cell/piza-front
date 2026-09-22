@@ -18,6 +18,7 @@ export const BUNNY_BOYS_SLUG = BENNY_BOYS_SLUG;
 
 export const ADMIN_BRAND_STORAGE_KEY = "marina-admin-brand";
 export const SITE_BRAND_STORAGE_KEY = "marina-site-brand";
+export const SITE_LOCATION_STORAGE_KEY = "marina-site-location";
 
 export interface Brand {
   id: string;

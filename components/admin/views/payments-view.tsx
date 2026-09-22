@@ -31,12 +31,16 @@ export function PaymentsView({
   const [linklyUsername, setLinklyUsername] = useState(settings.linklyUsername ?? "");
   const [linklyPassword, setLinklyPassword] = useState("");
   const [pairCode, setPairCode] = useState("");
+  const [pairLocationId, setPairLocationId] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [isPairing, setIsPairing] = useState(false);
   const [isUnpairing, setIsUnpairing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pairMessage, setPairMessage] = useState<string | null>(null);
+
+  const locations = settings.locations ?? [];
+  const multiLocation = locations.length > 1;
 
   useEffect(() => {
     setCashEnabled(settings.cashEnabled);
@@ -74,7 +78,7 @@ export function PaymentsView({
     }
   };
 
-  const handlePair = async (): Promise<void> => {
+  const handlePair = async (locationId?: string): Promise<void> => {
     setIsPairing(true);
     setError(null);
     setPairMessage(null);
@@ -85,12 +89,17 @@ export function PaymentsView({
         username: linklyUsername.trim(),
         password: linklyPassword,
         pairCode: pairCode.trim(),
+        ...(locationId ? { locationId } : {}),
       });
       onSettingsChange(updated);
       setCardTerminalEnabled(true);
       setLinklyPassword("");
       setPairCode("");
-      setPairMessage("Pinpad paired. Card payments are ready on POS.");
+      setPairMessage(
+        locationId
+          ? "Location pinpad paired. Card payments use this pinpad for that site."
+          : "Brand pinpad paired. Card payments are ready on POS (location overrides still win).",
+      );
     } catch (pairError) {
       setError(
         pairError instanceof Error ? pairError.message : "Unable to pair Linkly pinpad.",
@@ -100,8 +109,13 @@ export function PaymentsView({
     }
   };
 
-  const handleUnpair = async (): Promise<void> => {
-    if (!window.confirm("Unpair this store’s Linkly pinpad? Card will be disabled until re-paired.")) {
+  const handleUnpair = async (locationId?: string): Promise<void> => {
+    const label = locationId ? "this location’s" : "this store’s brand-level";
+    if (
+      !window.confirm(
+        `Unpair ${label} Linkly pinpad? Card will fall back or disable until re-paired.`,
+      )
+    ) {
       return;
     }
 
@@ -110,10 +124,12 @@ export function PaymentsView({
     setPairMessage(null);
 
     try {
-      const updated = await unpairLinklyPinpad(token);
+      const updated = await unpairLinklyPinpad(token, undefined, locationId);
       onSettingsChange(updated);
-      setCardTerminalEnabled(false);
-      setPairMessage("Pinpad unpaired.");
+      if (!locationId) {
+        setCardTerminalEnabled(false);
+      }
+      setPairMessage(locationId ? "Location pinpad unpaired." : "Brand pinpad unpaired.");
     } catch (unpairError) {
       setError(
         unpairError instanceof Error
@@ -132,7 +148,8 @@ export function PaymentsView({
       <div>
         <h2 className={cn("font-display text-2xl font-bold", primaryText)}>Payments</h2>
         <p className={cn("mt-1 text-sm", secondaryText)}>
-          Cash and Linkly Cloud pinpad for this store. Pairing secrets stay on the server.
+          Cash and Linkly Cloud pinpad for this store. Pair a brand default, then optionally
+          override per location when you have more than one site.
         </p>
       </div>
 
@@ -171,7 +188,9 @@ export function PaymentsView({
 
         <div className="border-t border-zinc-200/60 pt-4 dark:border-white/10">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <p className={cn("text-sm font-semibold", primaryText)}>Linkly Cloud pinpad</p>
+            <p className={cn("text-sm font-semibold", primaryText)}>
+              Brand default Linkly pinpad
+            </p>
             <span
               className={cn(
                 "rounded-full px-2.5 py-0.5 text-xs font-semibold",
@@ -184,8 +203,8 @@ export function PaymentsView({
             </span>
           </div>
           <p className={cn("mb-3 text-xs", secondaryText)}>
-            On the pinpad, open Cloud pairing and enter the 6-digit code here with your Linkly
-            Cloud username and password.
+            Used when a location has no override. On the pinpad: Cloud Mode → FUNC 8880 → enter
+            the 6-digit code with your Linkly Cloud username and password.
           </p>
           <div className="space-y-3">
             <div>
@@ -232,7 +251,7 @@ export function PaymentsView({
                 type="button"
               >
                 {isPairing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Pair pinpad
+                Pair brand pinpad
               </Button>
               {paired ? (
                 <Button
@@ -242,12 +261,88 @@ export function PaymentsView({
                   variant="outline"
                 >
                   {isUnpairing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Unpair
+                  Unpair brand
                 </Button>
               ) : null}
             </div>
           </div>
         </div>
+
+        {multiLocation ? (
+          <div className="border-t border-zinc-200/60 pt-4 dark:border-white/10">
+            <p className={cn("mb-1 text-sm font-semibold", primaryText)}>
+              Per-location pinpad override
+            </p>
+            <p className={cn("mb-3 text-xs", secondaryText)}>
+              Pair a different pinpad for a site. POS uses the location override when present,
+              otherwise the brand default above.
+            </p>
+            <ul className="mb-4 space-y-2">
+              {locations.map((loc) => (
+                <li
+                  key={loc.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-200/60 px-3 py-2 dark:border-white/10"
+                >
+                  <span className={cn("text-sm font-medium", primaryText)}>{loc.name}</span>
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-xs font-semibold",
+                      loc.linklyPaired
+                        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                        : "bg-zinc-500/15 text-zinc-500",
+                    )}
+                  >
+                    {loc.linklyPaired ? "Paired override" : "Uses brand default"}
+                  </span>
+                  {loc.linklyPaired ? (
+                    <Button
+                      disabled={isUnpairing}
+                      onClick={() => void handleUnpair(loc.id)}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      Unpair
+                    </Button>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+            <div className="space-y-3">
+              <div>
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                  Location to pair
+                </label>
+                <select
+                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-white/20 dark:bg-zinc-900"
+                  onChange={(event) => setPairLocationId(event.target.value)}
+                  value={pairLocationId}
+                >
+                  <option value="">Select location…</option>
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <Button
+                disabled={
+                  isPairing ||
+                  !pairLocationId ||
+                  !linklyUsername.trim() ||
+                  !linklyPassword ||
+                  !pairCode.trim()
+                }
+                onClick={() => void handlePair(pairLocationId)}
+                type="button"
+              >
+                {isPairing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Pair location pinpad
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         {error ? <p className="text-sm text-[#d81b60]">{error}</p> : null}
         {pairMessage ? (

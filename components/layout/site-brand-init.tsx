@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect } from "react";
-import { setSiteBrandSlug } from "@/lib/brand-storage";
+import { setSiteBrandSlug, setSiteLocationId } from "@/lib/brand-storage";
 
-export function SiteBrandInit({ brandSlug }: { brandSlug: string }): null {
+export function SiteBrandInit({
+  brandSlug,
+  locationId = null,
+}: {
+  brandSlug: string;
+  locationId?: string | null;
+}): null {
   useEffect(() => {
     setSiteBrandSlug(brandSlug);
-  }, [brandSlug]);
+    setSiteLocationId(locationId ?? null);
+  }, [brandSlug, locationId]);
 
   return null;
 }

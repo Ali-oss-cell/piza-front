@@ -511,7 +511,12 @@ export function updatePaymentSettings(
 
 export function pairLinklyPinpad(
   token: string,
-  payload: { username: string; password: string; pairCode: string },
+  payload: {
+    username: string;
+    password: string;
+    pairCode: string;
+    locationId?: string;
+  },
   brandSlug?: string,
 ): Promise<PaymentSettings> {
   return apiRequest<PaymentSettings>("/payment-settings/linkly/pair", {
@@ -525,11 +530,16 @@ export function pairLinklyPinpad(
 export function unpairLinklyPinpad(
   token: string,
   brandSlug?: string,
+  locationId?: string,
 ): Promise<PaymentSettings> {
-  return apiRequest<PaymentSettings>("/payment-settings/linkly/unpair", {
+  const query = locationId
+    ? `?locationId=${encodeURIComponent(locationId)}`
+    : "";
+  return apiRequest<PaymentSettings>(`/payment-settings/linkly/unpair${query}`, {
     method: "POST",
     token,
     brandSlug: withBrand(brandSlug),
+    body: locationId ? JSON.stringify({ locationId }) : undefined,
   });
 }
 

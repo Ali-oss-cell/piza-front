@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { ChunkLoadRecovery } from "@/components/chunk-load-recovery";
 import { AppShell } from "@/components/layout/app-shell";
+import { SiteBrandInit } from "@/components/layout/site-brand-init";
 import { LocalBusinessJsonLd } from "@/components/seo/JsonLd";
 import { CartProvider } from "@/lib/cart-context";
 import { montserrat } from "@/lib/fonts";
@@ -74,6 +75,7 @@ export default async function RootLayout({
   const defaultLogoDarkUrl = BENNY_BOYS_LOGO_DARK;
 
   let brandSlug = DEFAULT_BRAND_SLUG;
+  let locationId: string | null = null;
   let initialBranding = {
     brandSlug: DEFAULT_BRAND_SLUG,
     brandName: BENNY_BOYS_NAME,
@@ -96,6 +98,7 @@ export default async function RootLayout({
       try {
         const store = await resolveStoreByHost(host);
         brandSlug = store.slug;
+        locationId = store.locationId ?? null;
         initialBranding = {
           brandSlug: store.slug,
           brandName: store.name,
@@ -116,7 +119,7 @@ export default async function RootLayout({
       }
     }
 
-    const settings = await fetchStoreSettings(brandSlug);
+    const settings = await fetchStoreSettings(brandSlug, locationId);
     deliveryFee = Number(settings.deliveryFee) || DEFAULT_DELIVERY_FEE;
     initialBranding = {
       brandSlug,
@@ -175,6 +178,7 @@ export default async function RootLayout({
           <AuthProvider>
             <CartProvider deliveryFee={deliveryFee}>
               <ChunkLoadRecovery />
+              <SiteBrandInit brandSlug={brandSlug} locationId={locationId} />
               <AppShell initialBranding={initialBranding}>{children}</AppShell>
             </CartProvider>
           </AuthProvider>

@@ -15,7 +15,10 @@ export default async function Home(): Promise<React.ReactElement> {
   if (data.menuItems.length === 0 && data.categories.length === 0) {
     return (
       <>
-        <SiteBrandInit brandSlug={data.brandSlug} />
+        <SiteBrandInit
+          brandSlug={data.brandSlug}
+          locationId={data.locationId}
+        />
         <HomePage
           brandName={BENNY_BOYS_NAME}
           brandSlug={data.brandSlug}
@@ -30,7 +33,7 @@ export default async function Home(): Promise<React.ReactElement> {
 
   return (
     <>
-      <SiteBrandInit brandSlug={data.brandSlug} />
+      <SiteBrandInit brandSlug={data.brandSlug} locationId={data.locationId} />
       <HomePage
         backgroundDarkColor={data.backgroundDarkColor}
         backgroundLightColor={data.backgroundLightColor}

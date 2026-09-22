@@ -2,6 +2,7 @@ import {
   ADMIN_BRAND_STORAGE_KEY,
   DEFAULT_BRAND_SLUG,
   SITE_BRAND_STORAGE_KEY,
+  SITE_LOCATION_STORAGE_KEY,
 } from "@/types/brand";
 
 export function getAdminBrandSlug(): string | null {
@@ -31,6 +32,33 @@ export function getSiteBrandSlug(): string {
 }
 
 export function setSiteBrandSlug(slug: string): void {
-  window.localStorage.setItem(SITE_BRAND_STORAGE_KEY, slug);
+  const next = slug.trim().toLowerCase();
+  const current = window.localStorage.getItem(SITE_BRAND_STORAGE_KEY);
+  if (current === next) {
+    return;
+  }
+  window.localStorage.setItem(SITE_BRAND_STORAGE_KEY, next);
   window.dispatchEvent(new Event("marina-site-brand-change"));
+}
+
+export function getSiteLocationId(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem(SITE_LOCATION_STORAGE_KEY);
+}
+
+export function setSiteLocationId(locationId: string | null): void {
+  const current = window.localStorage.getItem(SITE_LOCATION_STORAGE_KEY);
+  const next = locationId?.trim() || null;
+  if ((current ?? null) === next) {
+    return;
+  }
+  if (next) {
+    window.localStorage.setItem(SITE_LOCATION_STORAGE_KEY, next);
+  } else {
+    window.localStorage.removeItem(SITE_LOCATION_STORAGE_KEY);
+  }
+  window.dispatchEvent(new Event("marina-site-location-change"));
 }

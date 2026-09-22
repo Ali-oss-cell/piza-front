@@ -37,8 +37,11 @@ export function fetchCrusts(brandSlug?: string): Promise<AdminCrustOption[]> {
   return apiRequest<AdminCrustOption[]>("/customizations/crusts", { brandSlug });
 }
 
-export function fetchStoreSettings(brandSlug?: string): Promise<StoreSettings> {
-  return apiRequest<StoreSettings>("/settings", { brandSlug });
+export function fetchStoreSettings(
+  brandSlug?: string,
+  locationId?: string | null,
+): Promise<StoreSettings> {
+  return apiRequest<StoreSettings>("/settings", { brandSlug, locationId });
 }
 
 export function fetchDeals(brandSlug?: string): Promise<Deal[]> {
@@ -62,6 +65,7 @@ export interface ResolvedStore {
   isActive: boolean;
   pathPrefix?: string | null;
   host?: string | null;
+  locationId?: string | null;
 }
 
 export function resolveStoreByPath(storePath: string): Promise<ResolvedStore> {

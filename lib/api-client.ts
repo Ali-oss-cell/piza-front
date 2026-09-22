@@ -1,5 +1,6 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
 const BRAND_HEADER = "x-brand-slug";
+const LOCATION_HEADER = "x-location-id";
 const NETWORK_RETRY_ATTEMPTS = 3;
 const NETWORK_RETRY_BASE_MS = 350;
 
@@ -94,9 +95,13 @@ async function withNetworkRetry<T>(operation: () => Promise<T>): Promise<T> {
 
 export async function apiRequest<T>(
   path: string,
-  options: RequestInit & { token?: string; brandSlug?: string } = {},
+  options: RequestInit & {
+    token?: string;
+    brandSlug?: string;
+    locationId?: string | null;
+  } = {},
 ): Promise<T> {
-  const { token, brandSlug, headers: initHeaders, ...rest } = options;
+  const { token, brandSlug, locationId, headers: initHeaders, ...rest } = options;
   const headers = new Headers(initHeaders);
 
   if (!headers.has("Content-Type") && rest.body) {
@@ -109,6 +114,10 @@ export async function apiRequest<T>(
 
   if (brandSlug) {
     headers.set(BRAND_HEADER, brandSlug);
+  }
+
+  if (locationId?.trim()) {
+    headers.set(LOCATION_HEADER, locationId.trim());
   }
 
   const requestPath = brandSlug ? appendBrandQuery(path, brandSlug) : path;

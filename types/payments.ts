@@ -29,6 +29,15 @@ export interface PaymentSettings {
     stripeTerminalLocationId: string | null;
     stripeTerminalReaderId: string | null;
   } | null;
+  locations?: Array<{
+    id: string;
+    slug: string;
+    name: string;
+    linklyPaired: boolean;
+    linklyUsername: string | null;
+    cardTerminalEnabled: boolean;
+    provider: StorePaymentProvider;
+  }>;
 }
 
 export interface UpdatePaymentSettingsPayload {
@@ -49,4 +58,5 @@ export interface PairLinklyPayload {
   username: string;
   password: string;
   pairCode: string;
+  locationId?: string;
 }

@@ -1,4 +1,3 @@
-import { SiteBrandInit } from "@/components/layout/site-brand-init";
 import { fetchMenuCategories, fetchMenuItems, fetchStoreSettings, resolveStoreByHost } from "@/lib/menu-api";
 import { mapApiMenuCategories, mapApiMenuItem } from "@/lib/menu-mappers";
 import { getRequestHost, isPrimaryWebHost } from "@/lib/request-host";
@@ -13,6 +12,7 @@ import type { MenuItem } from "@/types/menu";
 
 export interface HomeMenuData {
   brandSlug: string;
+  locationId: string | null;
   menuItems: MenuItem[];
   categories: CategoryTab[];
   brandName: string;
@@ -24,31 +24,38 @@ export interface HomeMenuData {
   backgroundDarkColor?: string | null;
 }
 
-async function resolveHomeBrandSlug(): Promise<string> {
+async function resolveHomeBrand(): Promise<{
+  brandSlug: string;
+  locationId: string | null;
+}> {
   const host = await getRequestHost();
   if (!host || isPrimaryWebHost(host)) {
-    return DEFAULT_BRAND_SLUG;
+    return { brandSlug: DEFAULT_BRAND_SLUG, locationId: null };
   }
   try {
     const store = await resolveStoreByHost(host);
-    return store.slug;
+    return {
+      brandSlug: store.slug,
+      locationId: store.locationId ?? null,
+    };
   } catch {
-    return DEFAULT_BRAND_SLUG;
+    return { brandSlug: DEFAULT_BRAND_SLUG, locationId: null };
   }
 }
 
 export async function fetchHomeMenuData(): Promise<HomeMenuData> {
-  const brandSlug = await resolveHomeBrandSlug();
+  const { brandSlug, locationId } = await resolveHomeBrand();
 
   try {
     const [apiItems, apiCategories, settings] = await Promise.all([
       fetchMenuItems(brandSlug),
       fetchMenuCategories(brandSlug),
-      fetchStoreSettings(brandSlug),
+      fetchStoreSettings(brandSlug, locationId),
     ]);
 
     return {
       brandSlug,
+      locationId,
       menuItems: apiItems.map(mapApiMenuItem),
       categories: mapApiMenuCategories(apiCategories),
       brandName: settings.storeName,
@@ -62,6 +69,7 @@ export async function fetchHomeMenuData(): Promise<HomeMenuData> {
   } catch {
     return {
       brandSlug,
+      locationId,
       menuItems: [],
       categories: [],
       brandName: BENNY_BOYS_NAME,
@@ -71,4 +79,4 @@ export async function fetchHomeMenuData(): Promise<HomeMenuData> {
   }
 }
 
-export { resolveHomeBrandSlug };
+export { resolveHomeBrand };

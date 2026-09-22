@@ -1,5 +1,5 @@
 import { apiRequest } from "@/lib/api-client";
-import { getSiteBrandSlug } from "@/lib/brand-storage";
+import { getSiteBrandSlug, getSiteLocationId } from "@/lib/brand-storage";
 import type { DeliveryMode } from "@/types/menu";
 
 export interface CreateOrderPayload {
@@ -28,6 +28,7 @@ export interface CreateOrderPayload {
   subtotal: number;
   deliveryFee: number;
   total: number;
+  locationId?: string;
 }
 
 export interface CreatedOrder {
@@ -46,10 +47,15 @@ export function createOrder(
   token?: string,
   brandSlug?: string,
 ): Promise<CreatedOrder> {
+  const locationId = payload.locationId ?? getSiteLocationId() ?? undefined;
   return apiRequest<CreatedOrder>("/orders", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      ...payload,
+      ...(locationId ? { locationId } : {}),
+    }),
     token,
     brandSlug: brandSlug ?? getSiteBrandSlug(),
+    locationId,
   });
 }

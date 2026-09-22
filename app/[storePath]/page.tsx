@@ -27,6 +27,7 @@ const RESERVED_STORE_PATHS = new Set([
   "functions",
   "gallery",
   "gift-cards",
+  "help",
   "login",
   "locations",
   "loyalty",
@@ -67,7 +68,10 @@ export default async function DynamicStorefrontPage({
 
     return (
       <>
-        <SiteBrandInit brandSlug={store.slug} />
+        <SiteBrandInit
+          brandSlug={store.slug}
+          locationId={store.locationId ?? null}
+        />
         <HomePage
           brandName={store.name}
           brandSlug={store.slug}
