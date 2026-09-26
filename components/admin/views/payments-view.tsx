@@ -296,9 +296,9 @@ export function PaymentsView({
                   </span>
                   {loc.linklyPaired ? (
                     <Button
+                      className="h-8 px-3 text-xs"
                       disabled={isUnpairing}
                       onClick={() => void handleUnpair(loc.id)}
-                      size="sm"
                       type="button"
                       variant="outline"
                     >
