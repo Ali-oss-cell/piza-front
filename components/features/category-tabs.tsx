@@ -11,6 +11,8 @@ interface CategoryTabsProps {
   onSelectCategory: (category: MenuCategory) => void;
   /** `pills` = rounded chips for menu-first layout */
   variant?: "underline" | "pills";
+  /** Tighter sticky bar heights (menu-first) */
+  compact?: boolean;
 }
 
 export function CategoryTabs({
@@ -18,6 +20,7 @@ export function CategoryTabs({
   categories,
   onSelectCategory,
   variant = "underline",
+  compact = false,
 }: CategoryTabsProps): React.ReactElement {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [isStuck, setIsStuck] = useState(false);
@@ -43,11 +46,17 @@ export function CategoryTabs({
       <div aria-hidden className="h-px" ref={sentinelRef} />
       <section
         className={cn(
-          "sticky top-20 z-50 border-b border-zinc-200/70 bg-white/90 backdrop-blur-lg transition-shadow duration-200 dark:border-white/10 dark:bg-black/90",
+          "sticky z-50 border-b border-zinc-200/70 bg-white/90 backdrop-blur-lg transition-shadow duration-200 dark:border-white/10 dark:bg-black/90",
+          compact ? "top-16 h-12 md:top-[4.5rem] md:h-14" : "top-20",
           isStuck && "shadow-md shadow-zinc-900/5 dark:shadow-black/40"
         )}
       >
-        <div className="mx-auto max-w-container-max overflow-x-auto px-margin-mobile py-3 no-scrollbar md:px-margin-desktop md:py-4">
+        <div
+          className={cn(
+            "mx-auto flex max-w-container-max items-center overflow-x-auto px-margin-mobile no-scrollbar md:px-margin-desktop",
+            compact ? "h-full py-0" : "py-3 md:py-4"
+          )}
+        >
           <div
             className={cn(
               "flex items-center whitespace-nowrap",
