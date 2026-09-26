@@ -171,11 +171,8 @@ export function HeroSection({
                   <Link href={ORDER_ONLINE_HREF}>Order Online</Link>
                 </Button>
               ) : (
-                <Button
-                  className="h-12 px-8 uppercase tracking-[0.15em]"
-                  onClick={onOpenCart}
-                >
-                  Order Online
+                <Button asChild className="h-12 px-8 uppercase tracking-[0.15em]">
+                  <Link href="/menu">Order Online</Link>
                 </Button>
               )}
               <Button

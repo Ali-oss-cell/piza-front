@@ -1,11 +1,16 @@
-import { BENNY_BOYS_NEXTORDER_URL } from "@/types/brand";
+/** Native in-app menu path (cart + checkout). */
+export const MENU_HREF = "/menu";
 
-/** Internal path that redirects to NextOrder (bookmarks / old links). */
+/** Legacy path — redirects to NextOrder only if explicitly enabled. */
 export const ORDER_ONLINE_HREF = "/order-online";
 
+/**
+ * External NextOrder URL when online ordering is delegated.
+ * Opt-in only: set NEXT_PUBLIC_NEXTORDER_URL on the web build.
+ * Empty / unset = use native Marina menu + cart.
+ */
 export function getNextOrderUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_NEXTORDER_URL?.trim();
-  return configured || BENNY_BOYS_NEXTORDER_URL;
+  return process.env.NEXT_PUBLIC_NEXTORDER_URL?.trim() || "";
 }
 
 /** @deprecated Use getNextOrderUrl */
@@ -17,6 +22,11 @@ export function isNextOrderOrderingEnabled(): boolean {
   return getNextOrderUrl().length > 0;
 }
 
+/** Primary “order / browse menu” href for CTAs and nav. */
+export function getOrderingHref(): string {
+  return isNextOrderOrderingEnabled() ? ORDER_ONLINE_HREF : MENU_HREF;
+}
+
 export function isOrderOnlinePath(pathname: string): boolean {
   return pathname === ORDER_ONLINE_HREF || pathname.startsWith(`${ORDER_ONLINE_HREF}/`);
 }
@@ -24,7 +34,7 @@ export function isOrderOnlinePath(pathname: string): boolean {
 export function isMenuOrderingPath(pathname: string): boolean {
   return (
     isOrderOnlinePath(pathname) ||
-    pathname === "/menu" ||
-    pathname.startsWith("/menu/")
+    pathname === MENU_HREF ||
+    pathname.startsWith(`${MENU_HREF}/`)
   );
 }

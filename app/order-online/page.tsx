@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
-import { getNextOrderUrl } from "@/lib/nextorder";
+import { getNextOrderUrl, isNextOrderOrderingEnabled, MENU_HREF } from "@/lib/nextorder";
 
 export default function OrderOnlinePage(): never {
-  redirect(getNextOrderUrl());
+  if (isNextOrderOrderingEnabled()) {
+    redirect(getNextOrderUrl());
+  }
+  redirect(MENU_HREF);
 }

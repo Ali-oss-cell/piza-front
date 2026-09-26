@@ -1,13 +1,20 @@
 import { cn } from "@/lib/utils";
-import { isMenuOrderingPath, ORDER_ONLINE_HREF } from "@/lib/nextorder";
+import {
+  getOrderingHref,
+  isMenuOrderingPath,
+  MENU_HREF,
+  ORDER_ONLINE_HREF,
+} from "@/lib/nextorder";
 
 export interface NavItem {
   label: string;
   href: string;
 }
 
+const orderingHref = getOrderingHref();
+
 export const DESKTOP_NAV_ITEMS: NavItem[] = [
-  { label: "Menu", href: ORDER_ONLINE_HREF },
+  { label: "Menu", href: orderingHref },
   { label: "Deals", href: "/deals" },
   { label: "Catering", href: "/catering" },
   { label: "Locations", href: "/locations" },
@@ -15,7 +22,7 @@ export const DESKTOP_NAV_ITEMS: NavItem[] = [
 ];
 
 export const MOBILE_NAV_ITEMS: NavItem[] = [
-  { label: "Menu", href: ORDER_ONLINE_HREF },
+  { label: "Menu", href: orderingHref },
   { label: "Deals", href: "/deals" },
   { label: "Catering", href: "/catering" },
   { label: "Locations", href: "/locations" },
@@ -27,7 +34,7 @@ export const MOBILE_NAV_ITEMS: NavItem[] = [
 ];
 
 export function isNavLinkActive(pathname: string, href: string): boolean {
-  if (href === ORDER_ONLINE_HREF) {
+  if (href === ORDER_ONLINE_HREF || href === MENU_HREF) {
     return isMenuOrderingPath(pathname);
   }
 
