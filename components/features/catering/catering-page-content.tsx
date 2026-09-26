@@ -7,8 +7,8 @@ import { CateringHero } from "@/components/features/catering/catering-hero";
 import { CateringPackages } from "@/components/features/catering/catering-packages";
 import { CateringQuoteForm } from "@/components/features/catering/catering-quote-form";
 import { CateringTrustFaq } from "@/components/features/catering/catering-trust-faq";
+import { SegmentedToggle } from "@/components/ui/segmented-toggle";
 import type { CateringFlow } from "@/types/catering";
-import { cn } from "@/lib/utils";
 
 interface CateringPageContentProps {
   storeName: string;
@@ -39,15 +39,17 @@ export function CateringPageContent({
         }}
       />
 
-      <div className="mx-auto max-w-7xl space-y-20 px-4 py-16 md:px-8 lg:px-12 lg:py-24">
-        <div
-          className={cn(
-            "flex flex-wrap items-center justify-center gap-3 rounded-2xl border p-2",
-            "border-zinc-200/70 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-900/40"
-          )}
-        >
-          <FlowToggle active={flow === "instant"} label="Instant Checkout (under $500)" onClick={() => setFlow("instant")} />
-          <FlowToggle active={flow === "quote"} label="Custom Event / Quote" onClick={() => setFlow("quote")} />
+      <div className="mx-auto max-w-7xl space-y-16 px-4 py-10 md:space-y-20 md:px-8 md:py-16 lg:px-12 lg:py-24">
+        <div className="flex justify-center">
+          <SegmentedToggle
+            aria-label="Catering flow"
+            onChange={setFlow}
+            options={[
+              { value: "instant", label: "Instant Checkout (under $500)" },
+              { value: "quote", label: "Custom Event / Quote" },
+            ]}
+            value={flow}
+          />
         </div>
 
         <CateringCalculator />
@@ -71,7 +73,7 @@ export function CateringPageContent({
         />
 
         <section
-          className="scroll-mt-28 rounded-2xl border border-zinc-200/70 bg-zinc-50/50 p-6 dark:border-white/10 dark:bg-zinc-900/30 md:p-10"
+          className="scroll-mt-28 rounded-2xl border border-zinc-200/70 bg-zinc-50/50 p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:border-white/[0.08] dark:bg-zinc-900/30 md:p-10"
           id="catering-quote"
           ref={quoteRef}
         >
@@ -93,30 +95,5 @@ export function CateringPageContent({
         <CateringTrustFaq />
       </div>
     </main>
-  );
-}
-
-function FlowToggle({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}): React.ReactElement {
-  return (
-    <button
-      className={cn(
-        "rounded-xl px-5 py-3 text-sm font-semibold transition-colors",
-        active
-          ? "bg-[color:var(--brand-accent,#d81b60)] text-white shadow-md"
-          : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
-      )}
-      onClick={onClick}
-      type="button"
-    >
-      {label}
-    </button>
   );
 }

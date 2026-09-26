@@ -1,33 +1,33 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { ShoppingBag } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useCart } from "@/lib/cart-context";
 
 export default function CartPage(): React.ReactElement {
-  const { setCartOpen } = useCart();
+  const { setCartOpen, cartCount, isCartReady } = useCart();
 
   useEffect(() => {
-    setCartOpen(true);
-  }, [setCartOpen]);
+    if (isCartReady && cartCount > 0) {
+      setCartOpen(true);
+    }
+  }, [setCartOpen, cartCount, isCartReady]);
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-white transition-colors duration-150 ease-out dark:bg-black">
-      <div className="fixed inset-0 opacity-40 grayscale">
-        <div className="flex h-full items-center justify-center">
-          <div className="text-center">
-            <h1 className="font-display text-headline-xl text-zinc-950 transition-colors duration-150 ease-out dark:text-white">
-              Artisanal Dining, Redefined.
-            </h1>
-            <p className="mt-3 text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400">
-              Cart-focused route migrated from the Stitch side panel view.
-            </p>
-            <Button asChild className="mt-6">
-              <Link href="/">Back to Menu</Link>
-            </Button>
-          </div>
-        </div>
+    <main className="min-h-[70vh] bg-white px-margin-mobile py-16 transition-colors duration-150 ease-out dark:bg-black md:px-margin-desktop md:py-24">
+      <div className="mx-auto max-w-lg">
+        <EmptyState
+          actionHref="/menu"
+          actionLabel="Browse menu"
+          description={
+            cartCount > 0
+              ? "Your cart drawer is open — continue checkout from there, or add more from the menu."
+              : "Add something delicious from the menu and your order will show up here."
+          }
+          icon={<ShoppingBag className="h-7 w-7" />}
+          title={cartCount > 0 ? "Cart is ready" : "Your cart is empty"}
+        />
       </div>
     </main>
   );

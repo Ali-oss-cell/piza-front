@@ -312,7 +312,7 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
             <div className="space-y-2">
               <Label htmlFor="scheduledAt">Date & time</Label>
               <select
-                className="flex h-11 w-full rounded-md border border-zinc-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-zinc-950"
+                className="flex h-11 w-full rounded-xl border border-zinc-200/70 bg-white px-3 text-sm outline-none focus-visible:border-[color:var(--brand-accent,#d81b60)] focus-visible:ring-2 focus-visible:ring-[color:var(--brand-accent,#d81b60)]/25 dark:border-white/[0.08] dark:bg-zinc-950"
                 id="scheduledAt"
                 value={form.scheduledAt}
                 onChange={(event) =>

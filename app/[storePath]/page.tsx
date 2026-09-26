@@ -37,6 +37,7 @@ const RESERVED_STORE_PATHS = new Set([
   "order-online",
   "privacy",
   "reviews",
+  "search",
   "seo-dashboard",
   "seo-login",
   "terms",

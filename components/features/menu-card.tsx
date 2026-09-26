@@ -21,7 +21,7 @@ interface MenuCardProps {
 const SIZE_OPTIONS: PizzaSize[] = ["S", "L", "F"];
 
 const cardShellClassName =
-  "group relative flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm transition-all duration-150 ease-out hover:border-[color:var(--brand-accent,#d81b60)]/35 hover:shadow-lg hover:shadow-zinc-900/5 dark:border-zinc-800/60 dark:bg-zinc-900/50 dark:hover:shadow-black/20";
+  "group relative flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-[color:var(--brand-accent,#d81b60)]/35 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:border-white/[0.08] dark:bg-zinc-900/50 dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.45)]";
 
 function formatPrice(price: number): string {
   return `$${price.toFixed(price % 1 === 0 ? 0 : 2)}`;

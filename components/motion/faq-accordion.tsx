@@ -27,12 +27,17 @@ export function FaqAccordion({ items, className = "" }: FaqAccordionProps): Reac
 
         return (
           <div
-            className="overflow-hidden rounded-2xl border border-zinc-200/70 bg-white dark:border-white/10 dark:bg-zinc-900/40"
+            className={cn(
+              "overflow-hidden rounded-2xl border bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-colors dark:bg-zinc-900/40",
+              isOpen
+                ? "border-[color:var(--brand-accent,#d81b60)]/30 border-l-4 border-l-[color:var(--brand-accent,#d81b60)]"
+                : "border-zinc-200/70 dark:border-white/[0.08]"
+            )}
             key={item.question}
           >
             <button
               aria-expanded={isOpen}
-              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left md:px-6 md:py-5"
+              className="flex w-full min-h-11 items-center justify-between gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--brand-accent,#d81b60)] md:px-6 md:py-5"
               onClick={() => setOpenIndex(isOpen ? null : index)}
               type="button"
             >

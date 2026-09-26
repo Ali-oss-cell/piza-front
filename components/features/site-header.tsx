@@ -113,7 +113,7 @@ export function SiteHeader({
           ))}
         </nav>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         {showThemeToggle ? <ThemeToggle /> : null}
         <Button
           aria-label="Open cart"

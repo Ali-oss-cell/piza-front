@@ -32,11 +32,11 @@ export function DealsPageContent({ deals }: DealsPageContentProps): React.ReactE
         </div>
 
         {deals.length === 0 ? (
-          <div className="mt-16 rounded-2xl border border-dashed border-zinc-300/70 p-12 text-center dark:border-white/10">
+          <div className="mt-16 rounded-2xl border border-dashed border-zinc-300/70 bg-white/50 p-12 text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)] dark:border-white/[0.08] dark:bg-zinc-900/30">
             <p className={cn("text-lg font-medium", primaryText)}>No active deals right now</p>
             <p className={cn("mt-2", secondaryText)}>Check back soon for new promotions.</p>
-            <Button asChild className="mt-6">
-              <Link href="/">Browse Menu</Link>
+            <Button asChild className="mt-6 rounded-full" variant="pill">
+              <Link href="/menu">Browse Menu</Link>
             </Button>
           </div>
         ) : (
@@ -85,7 +85,7 @@ function DealCard({
   return (
     <article
       className={cn(
-        "group overflow-hidden rounded-2xl border border-zinc-200/70 bg-white/80 backdrop-blur-md transition-all duration-150 hover:border-[color:var(--brand-accent,#d81b60)]/30 hover:shadow-xl hover:shadow-[color:var(--brand-accent,#d81b60)]/10 dark:border-white/10 dark:bg-zinc-900/40",
+        "group overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[color:var(--brand-accent,#d81b60)]/30 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:border-white/[0.08] dark:bg-zinc-900/40",
         featured ? "lg:flex lg:min-h-[280px]" : ""
       )}
     >
@@ -97,7 +97,7 @@ function DealCard({
           sizes={featured ? "40vw" : "33vw"}
           src={imageUrl}
         />
-        <span className="absolute left-4 top-4 rounded-full bg-[color:var(--brand-accent,#d81b60)] px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+        <span className="absolute left-4 top-4 rounded-full bg-[color:var(--brand-accent,#d81b60)] px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md">
           {formatDealBadge(deal)}
         </span>
       </div>
@@ -118,7 +118,7 @@ function DealCard({
           <p className={cn("mt-3 text-xs italic", secondaryText)}>{deal.termsNote}</p>
         ) : null}
 
-        <Button asChild className="mt-5 w-full uppercase tracking-widest sm:w-auto">
+        <Button asChild className="mt-5 w-full rounded-full uppercase tracking-widest sm:w-auto" variant="pill">
           <Link href={deal.ctaHref}>{deal.ctaLabel}</Link>
         </Button>
       </div>

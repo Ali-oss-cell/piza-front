@@ -7,8 +7,18 @@ import { InfoCards } from "@/components/features/content/info-cards";
 import { FaqAccordion } from "@/components/motion/faq-accordion";
 import { MotionPageHero } from "@/components/motion/motion-page-hero";
 import { MotionReveal } from "@/components/motion/motion-reveal";
+import { Card } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
+import { StatusStepper } from "@/components/ui/status-stepper";
 import { trackOrderFaqs, trackOrderHero, trackOrderSteps } from "@/data/track-order";
 import { getNextOrderUrl, ORDER_ONLINE_HREF } from "@/lib/nextorder";
+
+const STATUS_STEPS = [
+  { id: "received", label: "Received" },
+  { id: "preparing", label: "Preparing" },
+  { id: "out", label: "Out for delivery" },
+  { id: "delivered", label: "Delivered" },
+];
 
 export function TrackOrderPageContent(): React.ReactElement {
   const nextOrderUrl = getNextOrderUrl();
@@ -24,6 +34,19 @@ export function TrackOrderPageContent(): React.ReactElement {
         subtitle={trackOrderHero.subtitle}
         title={trackOrderHero.title}
       />
+
+      <ContentSection
+        description="Typical kitchen progress for delivery and pickup. Exact timing depends on your confirmation."
+        title="Order status"
+      >
+        <Card className="p-6 md:p-8" padded={false}>
+          <StatusStepper currentIndex={1} steps={STATUS_STEPS} />
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <StatCard highlight label="Est. ready" value="25–35 min" />
+            <StatCard label="Order type" value="Pickup / Delivery" />
+          </div>
+        </Card>
+      </ContentSection>
 
       <ContentSection title="How to check your order">
         <InfoCards items={trackOrderSteps} />

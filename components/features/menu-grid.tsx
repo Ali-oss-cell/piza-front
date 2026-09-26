@@ -1,4 +1,6 @@
+import { Pizza } from "lucide-react";
 import { MenuCard } from "@/components/features/menu-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { AddToCartPayload, MenuCategory, MenuItem } from "@/types/menu";
 
 interface MenuGridProps {
@@ -17,13 +19,17 @@ export function MenuGrid({
   const filteredItems = items.filter((item) => item.category === activeCategory);
 
   return (
-    <section className="mx-auto max-w-container-max px-margin-mobile py-16 md:px-margin-desktop md:py-20">
+    <section className="mx-auto max-w-container-max px-margin-mobile py-10 md:px-margin-desktop md:py-16">
       {filteredItems.length === 0 ? (
-        <p className="text-center text-zinc-500 dark:text-zinc-400">
-          No items in this category yet.
-        </p>
+        <EmptyState
+          actionHref="/deals"
+          actionLabel="View deals"
+          description="Try another category or check today’s specials."
+          icon={<Pizza className="h-7 w-7" />}
+          title="Nothing in this category yet"
+        />
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 xl:gap-8">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5 xl:grid-cols-3">
           {filteredItems.map((item) => (
             <MenuCard brandSlug={brandSlug} item={item} key={item.id} onAddToCart={onAddToCart} />
           ))}

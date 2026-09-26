@@ -1,10 +1,19 @@
 import * as React from "react";
-import { cardShell } from "@/lib/theme-classes";
+import { cardPadding, cardShell, cardShellHover } from "@/lib/theme-classes";
 import { cn } from "@/lib/utils";
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn(cardShell, className)} {...props} />
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  hover?: boolean;
+  padded?: boolean;
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, hover = false, padded = false, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(cardShell, hover && cardShellHover, padded && cardPadding, className)}
+      {...props}
+    />
   )
 );
 Card.displayName = "Card";

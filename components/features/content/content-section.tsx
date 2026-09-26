@@ -24,7 +24,7 @@ export function ContentSection({
   return (
     <MotionReveal
       as="section"
-      className={cn("mx-auto max-w-7xl px-4 py-16 md:px-8 lg:px-12 lg:py-20", className)}
+      className={cn("mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-16 lg:px-12 lg:py-24", className)}
       id={id}
     >
       {eyebrow ? (

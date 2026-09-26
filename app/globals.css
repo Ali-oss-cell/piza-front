@@ -34,6 +34,14 @@
     border-color: var(--brand-accent, #d81b60);
   }
 
+  .surface-card {
+    @apply rounded-2xl border border-zinc-200/70 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:border-white/[0.08] dark:bg-zinc-900/50;
+  }
+
+  .section-y {
+    @apply py-10 md:py-16 lg:py-24;
+  }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }

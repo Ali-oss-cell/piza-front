@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Card } from "@/components/ui/card";
 import { pageShell, primaryText, secondaryText } from "@/lib/theme-classes";
 import { cn } from "@/lib/utils";
 
@@ -37,49 +38,54 @@ const STEPS = [
 
 export default function LinklyPairingGuidePage(): React.ReactElement {
   return (
-    <main className={cn("mx-auto max-w-3xl px-4 py-12 sm:px-6", pageShell)}>
-      <p className={cn("text-sm font-semibold uppercase tracking-wide", secondaryText)}>
+    <main className={cn("mx-auto max-w-3xl px-4 py-12 sm:px-6 md:py-16", pageShell)}>
+      <p className={cn("text-[11px] font-semibold uppercase tracking-[0.1em]", secondaryText)}>
         voro POS · Linkly Cloud
       </p>
       <h1 className={cn("mt-2 font-display text-3xl font-bold sm:text-4xl", primaryText)}>
         Pinpad pairing guide
       </h1>
-      <p className={cn("mt-3 text-base leading-relaxed", secondaryText)}>
+      <p className={cn("mt-3 text-[15px] leading-relaxed md:text-[17px] md:leading-[1.6]", secondaryText)}>
         Use this guide to pair a Linkly Cloud pinpad (or Linkly Virtual Pinpad for testing)
         with <strong className={primaryText}>voro POS</strong> for Marina Pizzas / Benny Boy’s.
         Pairing secrets stay on the server — never enter them in the POS register app.
       </p>
 
-      <ol className="mt-10 space-y-8">
+      <ol className="mt-10 space-y-4">
         {STEPS.map((step, index) => (
-          <li key={step.title} className="flex gap-4">
-            <span
-              className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold",
-                "bg-[var(--brand-accent,#E85D04)] text-white",
-              )}
-            >
-              {index + 1}
-            </span>
-            <div>
-              <h2 className={cn("text-lg font-semibold", primaryText)}>{step.title}</h2>
-              <p className={cn("mt-1 text-sm leading-relaxed", secondaryText)}>{step.body}</p>
-            </div>
+          <li key={step.title}>
+            <Card className="flex gap-4 p-5 md:p-6" padded={false}>
+              <span
+                className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold",
+                  "bg-[color:var(--brand-accent,#d81b60)] text-white"
+                )}
+              >
+                {index + 1}
+              </span>
+              <div>
+                <h2 className={cn("text-lg font-semibold", primaryText)}>{step.title}</h2>
+                <p className={cn("mt-1 text-sm leading-relaxed", secondaryText)}>{step.body}</p>
+              </div>
+            </Card>
           </li>
         ))}
       </ol>
 
-      <div className={cn("mt-12 rounded-2xl border border-zinc-200/80 p-5 dark:border-white/10")}>
+      <Card className="mt-12 p-5 md:p-6" padded={false}>
         <h2 className={cn("text-base font-semibold", primaryText)}>Accreditation note</h2>
         <p className={cn("mt-2 text-sm leading-relaxed", secondaryText)}>
           POS software name: <strong className={primaryText}>voro POS</strong>. Integration type:
           Linkly Cloud REST Sync. One shared API hosts all stores; each location may use the brand
           pinpad or its own paired override.
         </p>
-      </div>
+      </Card>
 
       <p className={cn("mt-8 text-sm", secondaryText)}>
-        <Link className="underline underline-offset-2 hover:opacity-80" href="/">
+        <Link
+          className="font-semibold text-[color:var(--brand-accent,#d81b60)] underline-offset-2 hover:underline"
+          href="/"
+        >
           Back to storefront
         </Link>
       </p>

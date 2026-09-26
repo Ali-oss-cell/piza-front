@@ -133,7 +133,7 @@ export function HeroSection({
             variants={staggerContainer}
           >
             <motion.h1
-              className="font-display text-headline-xl leading-none tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white"
+              className="font-display text-[32px] font-bold leading-[1.05] tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white sm:text-headline-lg md:text-headline-xl md:leading-none"
               transition={defaultTransition}
               variants={itemVariants}
             >
@@ -167,17 +167,18 @@ export function HeroSection({
               variants={itemVariants}
             >
               {useNextOrder ? (
-                <Button asChild className="h-12 px-8 uppercase tracking-[0.15em]">
+                <Button asChild className="h-12 min-h-12 px-8 uppercase tracking-[0.15em]" size="lg" variant="pill">
                   <Link href={ORDER_ONLINE_HREF}>Order Online</Link>
                 </Button>
               ) : (
-                <Button asChild className="h-12 px-8 uppercase tracking-[0.15em]">
+                <Button asChild className="h-12 min-h-12 px-8 uppercase tracking-[0.15em]" size="lg" variant="pill">
                   <Link href="/menu">Order Online</Link>
                 </Button>
               )}
               <Button
                 asChild
-                className="h-12 border-[color:var(--brand-accent)] px-8 uppercase tracking-[0.15em] text-[color:var(--brand-accent)] hover:bg-[color:var(--brand-accent)] hover:text-white dark:border-[color:var(--brand-accent)] dark:text-[color:var(--brand-accent)] dark:hover:bg-[color:var(--brand-accent)] dark:hover:text-white"
+                className="h-12 min-h-12 rounded-full border-[color:var(--brand-accent)] px-8 uppercase tracking-[0.15em] text-[color:var(--brand-accent)] hover:bg-[color:var(--brand-accent)] hover:text-white dark:border-[color:var(--brand-accent)] dark:text-[color:var(--brand-accent)] dark:hover:bg-[color:var(--brand-accent)] dark:hover:text-white"
+                size="lg"
                 variant="outline"
               >
                 <Link href="/deals">View Specials</Link>
