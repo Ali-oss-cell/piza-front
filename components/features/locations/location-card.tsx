@@ -5,6 +5,7 @@ import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { LocationStatusBadge } from "@/components/features/locations/location-status-badge";
 import { Button } from "@/components/ui/button";
 import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
+import { toTelHref } from "@/lib/store-contact";
 import { cn } from "@/lib/utils";
 import type { Location } from "@/types/location";
 
@@ -19,7 +20,8 @@ export function LocationCard({
   isActive,
   onSelect,
 }: LocationCardProps): React.ReactElement {
-  const showPhone = Boolean(location.phone.trim());
+  const phoneHref = toTelHref(location.phone);
+  const showPhone = Boolean(phoneHref);
   const showEmail = Boolean(location.email.trim());
 
   return (
@@ -48,10 +50,16 @@ export function LocationCard({
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--brand-accent,#d81b60)]" />
             <span>{location.address}</span>
           </p>
-          {showPhone ? (
+          {showPhone && phoneHref ? (
             <p className="flex items-center gap-3">
               <Phone className="h-4 w-4 shrink-0 text-[color:var(--brand-accent,#d81b60)]" />
-              <span>{location.phone}</span>
+              <a
+                className="underline-offset-2 hover:text-[color:var(--brand-accent,#d81b60)] hover:underline"
+                href={phoneHref}
+                onClick={(event) => event.stopPropagation()}
+              >
+                {location.phone}
+              </a>
             </p>
           ) : null}
           {showEmail ? (
@@ -68,17 +76,21 @@ export function LocationCard({
             Trading Hours
           </p>
           <div className="space-y-2">
-            {location.tradingHours.map((entry) => (
-              <div
-                className="flex flex-col gap-0.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3"
-                key={entry.label}
-              >
-                <span className="text-zinc-500">{entry.label}</span>
-                <span className="text-zinc-700 transition-colors duration-150 ease-out dark:text-zinc-300">
-                  {entry.hours}
-                </span>
-              </div>
-            ))}
+            {location.tradingHours.length > 0 ? (
+              location.tradingHours.map((entry) => (
+                <div
+                  className="flex flex-col gap-0.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+                  key={entry.label}
+                >
+                  <span className="text-zinc-500">{entry.label}</span>
+                  <span className="text-zinc-700 transition-colors duration-150 ease-out dark:text-zinc-300">
+                    {entry.hours}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-zinc-500">Hours not published yet.</p>
+            )}
           </div>
         </div>
       </button>

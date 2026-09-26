@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return generateContentPageMetadata({
     pageKey: "gallery",
     title: "Gallery",
-    description: "Photos of pizza, pasta, and events from {storeName}.",
+    description: "Photos of pizza, pasta, and events from {storeName} in {suburb}.",
   });
 }
 

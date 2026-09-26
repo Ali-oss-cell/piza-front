@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { formatOpeningHoursLines } from "@/lib/opening-hours";
 import { ORDER_ONLINE_HREF } from "@/lib/nextorder";
+import { displayPhone, toTelHref } from "@/lib/store-contact";
 import { BENNY_BOYS_ADDRESS, BENNY_BOYS_NAME, BENNY_BOYS_TAGLINE } from "@/types/brand";
 
 interface SiteFooterProps {
@@ -12,11 +13,10 @@ interface SiteFooterProps {
   logoDarkUrl?: string | null;
   tagline?: string | null;
   address?: string | null;
+  contactPhone?: string | null;
   deliveryFee?: string;
   openingHours?: unknown;
 }
-
-const FALLBACK_HOURS = ["Mon — Sun: 5pm – 10pm"];
 
 const FOOTER_LINKS = {
   order: [
@@ -53,6 +53,7 @@ export function SiteFooter({
   logoDarkUrl = null,
   tagline = BENNY_BOYS_TAGLINE,
   address = BENNY_BOYS_ADDRESS,
+  contactPhone = null,
   deliveryFee = "5",
   openingHours = null,
 }: SiteFooterProps): React.ReactElement {
@@ -60,7 +61,8 @@ export function SiteFooter({
   const resolvedTagline = tagline?.trim() || BENNY_BOYS_TAGLINE;
   const resolvedAddress = address?.trim() || BENNY_BOYS_ADDRESS;
   const hourLines = formatOpeningHoursLines(openingHours);
-  const displayHours = hourLines.length > 0 ? hourLines : FALLBACK_HOURS;
+  const phoneLabel = displayPhone(contactPhone);
+  const phoneHref = toTelHref(contactPhone);
 
   return (
     <footer className="w-full border-t border-zinc-200/70 bg-zinc-50 px-margin-mobile py-16 transition-colors duration-150 ease-out dark:border-white/5 dark:bg-zinc-950 md:px-margin-desktop">
@@ -87,6 +89,16 @@ export function SiteFooter({
             <p className="whitespace-pre-line text-sm leading-loose text-zinc-600 dark:text-zinc-400">
               {resolvedAddress}
             </p>
+            {phoneLabel && phoneHref ? (
+              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <a
+                  className="font-medium text-zinc-800 underline-offset-2 hover:text-[color:var(--brand-accent,#d81b60)] hover:underline dark:text-zinc-200"
+                  href={phoneHref}
+                >
+                  {phoneLabel}
+                </a>
+              </p>
+            ) : null}
             <p className="mt-4 font-bold text-[color:var(--brand-accent,#d81b60)]">
               ${deliveryFee} Flat Delivery
             </p>
@@ -97,16 +109,20 @@ export function SiteFooter({
           <FooterColumn links={FOOTER_LINKS.company} title="Company" />
           <div>
             <FooterColumn links={FOOTER_LINKS.legal} title="Legal" />
-            <h4 className="mb-4 mt-8 text-label-md uppercase tracking-widest text-zinc-950 dark:text-white">
-              Hours
-            </h4>
-            <p className="leading-loose text-zinc-600 dark:text-zinc-400">
-              {displayHours.map((line) => (
-                <span className="block text-sm" key={line}>
-                  {line}
-                </span>
-              ))}
-            </p>
+            {hourLines.length > 0 ? (
+              <>
+                <h4 className="mb-4 mt-8 text-label-md uppercase tracking-widest text-zinc-950 dark:text-white">
+                  Hours
+                </h4>
+                <p className="leading-loose text-zinc-600 dark:text-zinc-400">
+                  {hourLines.map((line) => (
+                    <span className="block text-sm" key={line}>
+                      {line}
+                    </span>
+                  ))}
+                </p>
+              </>
+            ) : null}
           </div>
         </div>
       </div>

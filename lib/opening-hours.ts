@@ -423,3 +423,33 @@ export function formatScheduledAt(value: string, timezone = "Australia/Melbourne
     hour12: true,
   }).format(new Date(value));
 }
+
+function minutesInTimezone(date: Date, timezone: string): number {
+  const parts = new Intl.DateTimeFormat("en-AU", {
+    timeZone: timezone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const lookup = Object.fromEntries(
+    parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]),
+  );
+  return Number(lookup.hour) * 60 + Number(lookup.minute);
+}
+
+/** Whether the store is open at `at` (defaults to now) based on structured hours. */
+export function isOpenNow(openingHours: unknown, at: Date = new Date()): boolean {
+  const config = parseOpeningHours(openingHours);
+  if (!config) {
+    return false;
+  }
+  const weekday = weekdayKeyFromDate(at, config.timezone);
+  const dayHours = config.days[weekday];
+  if (!dayHours) {
+    return false;
+  }
+  const minutes = minutesInTimezone(at, config.timezone);
+  const openMinutes = parseTimeToMinutes(dayHours.open);
+  const closeMinutes = closeMinutesForValidation(dayHours.open, dayHours.close);
+  return minutes >= openMinutes && minutes <= closeMinutes;
+}

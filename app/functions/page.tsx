@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return generateContentPageMetadata({
     pageKey: "functions",
     title: "Functions & Events",
-    description: "Functions and event catering from {storeName}.",
+    description: "Functions and event catering from {storeName} in {suburb}.",
   });
 }
 

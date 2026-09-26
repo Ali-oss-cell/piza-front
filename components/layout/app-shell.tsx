@@ -67,6 +67,7 @@ export interface InitialSiteBranding {
   tagline?: string | null;
   address?: string | null;
   openingHours?: unknown;
+  contactPhone?: string | null;
   primaryColor?: string | null;
   secondaryColor?: string | null;
   backgroundLightColor?: string | null;
@@ -120,6 +121,9 @@ export function AppShell({
   const [openingHours, setOpeningHours] = useState<unknown>(
     initialBranding?.openingHours ?? null,
   );
+  const [contactPhone, setContactPhone] = useState<string | null>(
+    initialBranding?.contactPhone ?? null,
+  );
   const [primaryColor, setPrimaryColor] = useState(
     initialBranding?.primaryColor?.trim() || DEFAULT_PRIMARY,
   );
@@ -172,6 +176,7 @@ export function AppShell({
         setTagline(settings.tagline ?? null);
         setAddress(settings.address ?? null);
         setOpeningHours(settings.openingHours ?? null);
+        setContactPhone(settings.contactPhone?.trim() || null);
         setPrimaryColor(settings.primaryColor?.trim() || DEFAULT_PRIMARY);
         setSecondaryColor(settings.secondaryColor?.trim() || DEFAULT_SECONDARY);
         setBackgroundLightColor(
@@ -196,6 +201,7 @@ export function AppShell({
         setLogoUrl(fallbacks.logoUrl);
         setLogoDarkUrl(fallbacks.logoDarkUrl);
         setOpeningHours(null);
+        setContactPhone(null);
         setPrimaryColor(DEFAULT_PRIMARY);
         setSecondaryColor(DEFAULT_SECONDARY);
         setBackgroundLightColor(DEFAULT_BG_LIGHT_COLOR);
@@ -251,6 +257,7 @@ export function AppShell({
       <SiteFooter
         address={address}
         brandName={brandName}
+        contactPhone={contactPhone}
         deliveryFee={String(deliveryFee)}
         logoDarkUrl={logoDarkUrl}
         logoUrl={logoUrl}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ContactPageContent } from "@/components/features/contact/contact-page-content";
 import SeoMetaClient from "@/components/SeoMetaClient";
+import { fetchStoreSettings } from "@/lib/menu-api";
 import {
   generateContentPageMetadata,
   getContentPageBrandSlug,
@@ -13,7 +14,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return generateContentPageMetadata({
     pageKey: "contact",
     title: "Contact",
-    description: "Contact {storeName} — questions, feedback, catering, and order help.",
+    pageLabel: "Contact Pizza",
+    description:
+      "Contact {storeName} in {suburb}. Call, visit, or send a message about orders, catering, and more.",
   });
 }
 
@@ -23,10 +26,25 @@ export default async function ContactPage(): Promise<React.ReactElement> {
     getContentPageStoreName(),
   ]);
 
+  let address: string | null = null;
+  let contactPhone: string | null = null;
+  try {
+    const settings = await fetchStoreSettings(brandSlug);
+    address = settings.address ?? null;
+    contactPhone = settings.contactPhone ?? null;
+  } catch {
+    // Page still renders without live phone/address.
+  }
+
   return (
     <>
       <SeoMetaClient fallbackTitle={`Contact | ${storeName}`} pageKey="contact" />
-      <ContactPageContent brandSlug={brandSlug} storeName={storeName} />
+      <ContactPageContent
+        address={address}
+        brandSlug={brandSlug}
+        contactPhone={contactPhone}
+        storeName={storeName}
+      />
     </>
   );
 }

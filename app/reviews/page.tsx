@@ -10,7 +10,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return generateContentPageMetadata({
     pageKey: "reviews",
     title: "Reviews",
-    description: "Customer reviews and testimonials for {storeName}.",
+    pageLabel: "Pizza Reviews",
+    description:
+      "Customer reviews for {storeName} in {suburb} — what locals say about our pizza, delivery, and catering.",
   });
 }
 

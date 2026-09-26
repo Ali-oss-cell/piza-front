@@ -1,4 +1,8 @@
 import Script from "next/script";
+import {
+  openingHoursSpecification,
+  parseAustralianAddress,
+} from "@/lib/store-contact";
 
 interface LocalBusinessJsonLdProps {
   name: string;
@@ -6,6 +10,11 @@ interface LocalBusinessJsonLdProps {
   telephone?: string | null;
   address?: string | null;
   image?: string | null;
+  menuUrl?: string | null;
+  openingHours?: unknown;
+  priceRange?: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export function LocalBusinessJsonLd({
@@ -14,23 +23,43 @@ export function LocalBusinessJsonLd({
   telephone,
   address,
   image,
+  menuUrl,
+  openingHours,
+  priceRange = "$$",
+  latitude,
+  longitude,
 }: LocalBusinessJsonLdProps): React.ReactElement {
+  const postal = parseAustralianAddress(address);
+  const hoursSpec = openingHoursSpecification(openingHours);
+
   const schema = {
     "@context": "https://schema.org",
     "@type": "Restaurant",
     name,
     url,
+    servesCuisine: "Pizza",
+    priceRange,
     ...(telephone ? { telephone } : {}),
-    ...(address
+    ...(image ? { image } : {}),
+    ...(menuUrl ? { hasMenu: menuUrl, menu: menuUrl } : {}),
+    ...(postal
       ? {
           address: {
             "@type": "PostalAddress",
-            streetAddress: address,
+            ...postal,
           },
         }
       : {}),
-    ...(image ? { image } : {}),
-    servesCuisine: "Pizza",
+    ...(latitude != null && longitude != null
+      ? {
+          geo: {
+            "@type": "GeoCoordinates",
+            latitude,
+            longitude,
+          },
+        }
+      : {}),
+    ...(hoursSpec.length > 0 ? { openingHoursSpecification: hoursSpec } : {}),
   };
 
   return (

@@ -13,7 +13,9 @@ export async function generateMetadata() {
   return generateContentPageMetadata({
     pageKey: "deals",
     title: "Deals",
-    description: "Special offers from {storeName}",
+    pageLabel: "Pizza Deals",
+    description:
+      "Current pizza deals and specials from {storeName} in {suburb}. Save on pickup and delivery — order online.",
   });
 }
 

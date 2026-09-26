@@ -9,7 +9,8 @@ import {
   resolveBrandSlugForRequest,
   siteOriginFromHost,
 } from "@/lib/seo-server";
-import { BENNY_BOYS_NAME, BENNY_BOYS_TAGLINE } from "@/types/brand";
+import { suburbFromAddress } from "@/lib/store-contact";
+import { BENNY_BOYS_NAME, BENNY_BOYS_TAGLINE, BENNY_BOYS_LOGO_LIGHT } from "@/types/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -20,11 +21,14 @@ export async function generateMetadata(): Promise<Metadata> {
       fetchSeoForPage(brandSlug, "about", host),
       fetchStoreSettings(brandSlug),
     ]);
+    const suburb = suburbFromAddress(settings.address) ?? "Wantirna South";
     return buildSeoMetadata(
       seo,
       {
-        title: `About | ${settings.storeName}`,
-        description: settings.tagline ?? `About ${settings.storeName}`,
+        title: `About ${settings.storeName} | Pizza ${suburb}`,
+        description:
+          settings.tagline ??
+          `Meet ${settings.storeName} in ${suburb} — local pizza made for pickup and delivery.`,
       },
       siteOriginFromHost(host),
     );
@@ -41,26 +45,38 @@ export default async function Page(): Promise<React.ReactElement> {
   const origin = siteOriginFromHost(host);
 
   let storeName = BENNY_BOYS_NAME;
-  let tagline = BENNY_BOYS_TAGLINE;
   let address: string | null = null;
   let contactPhone: string | null = null;
+  let openingHours: unknown = null;
+  let logoUrl: string | null = null;
+  let heroImageUrl: string | null = null;
 
   try {
     const settings = await fetchStoreSettings(brandSlug);
     storeName = settings.storeName || storeName;
-    tagline = settings.tagline ?? tagline;
     address = settings.address ?? null;
     contactPhone = settings.contactPhone ?? null;
+    openingHours = settings.openingHours ?? null;
+    logoUrl = settings.logoUrl ?? null;
+    heroImageUrl = settings.heroImageUrl ?? null;
   } catch {
     // Render static about content when API is briefly unreachable.
   }
+
+  const image =
+    heroImageUrl ||
+    logoUrl ||
+    `${origin}${BENNY_BOYS_LOGO_LIGHT}`;
 
   return (
     <>
       <SeoMetaClient fallbackTitle={`About | ${storeName}`} pageKey="about" />
       <LocalBusinessJsonLd
         address={address}
+        image={image.startsWith("http") ? image : `${origin}${image}`}
+        menuUrl={`${origin}/menu`}
         name={storeName}
+        openingHours={openingHours}
         telephone={contactPhone}
         url={origin}
       />

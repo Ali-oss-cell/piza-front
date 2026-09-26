@@ -26,8 +26,8 @@ export async function generateMetadata({
     return buildSeoMetadata(
       seo,
       {
-        title: `${store.name}${store.tagline ? ` | ${store.tagline}` : ""}`,
-        description: store.tagline ?? `Order from ${store.name}`,
+        title: `Pizza Delivery | ${store.name}`,
+        description: store.tagline ?? `Order pizza delivery or pickup from ${store.name}`,
       },
       siteOriginFromHost(host),
     );

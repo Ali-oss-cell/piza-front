@@ -16,7 +16,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return generateContentPageMetadata({
     pageKey: "menu",
     title: "Menu",
-    description: "Full menu from {storeName} — pizza, pasta, sides, and deals. Order pickup or delivery.",
+    pageLabel: "Pizza Menu",
+    description:
+      "Browse the full pizza menu from {storeName} in {suburb}. Order pickup or delivery online — pizzas, pasta, sides, and more.",
+    preferOgFromSettings: true,
   });
 }
 

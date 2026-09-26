@@ -5,21 +5,33 @@ import { LocationCard } from "@/components/features/locations/location-card";
 import { LocationsMap } from "@/components/features/locations/locations-map";
 import { MotionReveal } from "@/components/motion/motion-reveal";
 import { StaggerGrid } from "@/components/motion/stagger-grid";
-import { locations } from "@/data/locations";
+import { locationsFallback } from "@/data/locations";
+import type { Location } from "@/types/location";
 
-export function LocationsPage(): React.ReactElement {
-  const [activeLocationId, setActiveLocationId] = useState(locations[0].id);
+interface LocationsPageProps {
+  locations?: Location[];
+  storeName?: string;
+}
+
+export function LocationsPage({
+  locations = locationsFallback,
+  storeName,
+}: LocationsPageProps): React.ReactElement {
+  const list = locations.length > 0 ? locations : locationsFallback;
+  const [activeLocationId, setActiveLocationId] = useState(list[0].id);
   const mapRef = useRef<HTMLDivElement>(null);
 
   const activeLocation = useMemo(
-    () => locations.find((location) => location.id === activeLocationId) ?? locations[0],
-    [activeLocationId]
+    () => list.find((location) => location.id === activeLocationId) ?? list[0],
+    [activeLocationId, list]
   );
 
   const handleSelect = useCallback((id: string) => {
     setActiveLocationId(id);
     mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
+
+  const suburbLabel = list[0]?.suburb ?? "your area";
 
   return (
     <main className="min-h-screen bg-white pt-24 text-zinc-950 transition-colors duration-150 ease-out dark:bg-black dark:text-white">
@@ -32,14 +44,15 @@ export function LocationsPage(): React.ReactElement {
             Our Location
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-zinc-600 transition-colors duration-150 ease-out dark:text-zinc-400 md:text-lg">
-            Pick up from our Wantirna South store or order delivery online — bold flavours, fresh bites.
+            Pick up from {storeName ? `${storeName} in ${suburbLabel}` : `our ${suburbLabel} store`}{" "}
+            or order delivery online — bold flavours, fresh bites.
           </p>
         </MotionReveal>
 
         <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-10">
           <div className="order-2 min-w-0 lg:order-1">
             <StaggerGrid className="space-y-4 md:space-y-5">
-              {locations.map((location) => (
+              {list.map((location) => (
                 <LocationCard
                   isActive={location.id === activeLocationId}
                   key={location.id}

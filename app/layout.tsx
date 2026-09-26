@@ -28,6 +28,7 @@ import {
   DEFAULT_BG_LIGHT,
   PLATFORM_ACCENT,
 } from "@/lib/store-theme";
+import { suburbFromAddress } from "@/lib/store-contact";
 import { cn } from "@/lib/utils";
 import {
   BENNY_BOYS_LOGO_DARK,
@@ -43,24 +44,44 @@ const bodyFont = montserrat;
 
 export async function generateMetadata(): Promise<Metadata> {
   const { brandSlug, host } = await resolveBrandSlugForRequest();
+  const origin = siteOriginFromHost(host);
   try {
     const [seo, settings] = await Promise.all([
       fetchSeoForPage(brandSlug, "home", host),
       fetchStoreSettings(brandSlug),
     ]);
+    const suburb = suburbFromAddress(settings.address) ?? "Wantirna South";
+    const ogImage =
+      seo.meta.ogImageUrl ||
+      settings.heroImageUrl ||
+      settings.logoUrl ||
+      undefined;
     return buildSeoMetadata(
-      seo,
       {
-        title: settings.storeName,
-        description: settings.tagline ?? `Order from ${settings.storeName}`,
+        ...seo,
+        meta: {
+          ...seo.meta,
+          ogImageUrl: ogImage,
+        },
       },
-      siteOriginFromHost(host),
-      { googleSiteVerification: settings.googleSiteVerification },
+      {
+        title: `Pizza Delivery ${suburb} | ${settings.storeName}`,
+        description:
+          settings.tagline
+            ? `${settings.tagline} — order pizza delivery or pickup from ${settings.storeName}, ${suburb}.`
+            : `Order pizza delivery or pickup from ${settings.storeName}, ${suburb}. Fresh pizzas, pasta, and deals — order online now.`,
+      },
+      origin,
+      {
+        googleSiteVerification: settings.googleSiteVerification,
+        canonicalPath: "/",
+      },
     );
   } catch {
     return {
-      title: BENNY_BOYS_NAME,
-      description: "Bold flavours · Fresh bites — order online from Wantirna South",
+      title: `Pizza Delivery Wantirna South | ${BENNY_BOYS_NAME}`,
+      description:
+        "Bold flavours · Fresh bites — order pizza delivery or pickup from Benny Boy's, Wantirna South.",
     };
   }
 }
@@ -145,6 +166,13 @@ export default async function RootLayout({
     // keep defaults with bundled logos
   }
 
+  const origin = siteOriginFromHost(await getRequestHost());
+  const absoluteImage = initialBranding.logoUrl
+    ? initialBranding.logoUrl.startsWith("http")
+      ? initialBranding.logoUrl
+      : `${origin}${initialBranding.logoUrl}`
+    : undefined;
+
   return (
     <html
       lang="en"
@@ -163,9 +191,12 @@ export default async function RootLayout({
       >
         <LocalBusinessJsonLd
           address={initialBranding.address}
+          image={absoluteImage}
+          menuUrl={`${origin}/menu`}
           name={initialBranding.brandName}
+          openingHours={initialBranding.openingHours}
           telephone={initialBranding.contactPhone}
-          url={siteOriginFromHost(await getRequestHost())}
+          url={origin}
         />
         <Script
           dangerouslySetInnerHTML={{

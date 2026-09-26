@@ -46,10 +46,14 @@ export function buildSeoMetadata(
   seo: SeoContentResponse,
   fallback: { title: string; description: string },
   baseUrl?: string,
-  extras?: { googleSiteVerification?: string | null },
+  extras?: { googleSiteVerification?: string | null; canonicalPath?: string },
 ): Metadata {
   const title = seo.meta.title || fallback.title;
   const description = seo.meta.description || fallback.description;
+  const canonical =
+    baseUrl && extras?.canonicalPath
+      ? `${baseUrl.replace(/\/$/, "")}${extras.canonicalPath}`
+      : baseUrl;
 
   return {
     metadataBase: baseUrl ? new URL(baseUrl) : undefined,
@@ -64,6 +68,7 @@ export function buildSeoMetadata(
       title,
       description,
       type: "website",
+      url: canonical,
       images: seo.meta.ogImageUrl ? [{ url: seo.meta.ogImageUrl }] : undefined,
     },
     twitter: {

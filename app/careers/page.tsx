@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return generateContentPageMetadata({
     pageKey: "careers",
     title: "Careers",
-    description: "Join the team at {storeName} — kitchen, delivery, and counter roles.",
+    description: "Join the team at {storeName} in {suburb} — kitchen, delivery, and counter roles.",
   });
 }
 
