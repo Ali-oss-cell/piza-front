@@ -10,6 +10,7 @@ import { StoreThemeProvider } from "@/components/layout/store-theme-provider";
 import { getSiteBrandSlug } from "@/lib/brand-storage";
 import { useCart } from "@/lib/cart-context";
 import { fetchStoreSettings } from "@/lib/menu-api";
+import { parseStorefrontLayout, type StorefrontLayoutId } from "@/lib/storefront-layout";
 import {
   DEFAULT_BG_DARK,
   DEFAULT_BG_LIGHT,
@@ -134,6 +135,7 @@ export function AppShell({
   const [darkModeEnabled, setDarkModeEnabled] = useState(
     initialBranding?.darkModeEnabled !== false,
   );
+  const [storefrontLayout, setStorefrontLayout] = useState<StorefrontLayoutId>("classic");
 
   useEffect(() => {
     const onScroll = (): void => setIsScrolled(window.scrollY > 50);
@@ -179,6 +181,7 @@ export function AppShell({
           settings.backgroundDarkColor?.trim() || DEFAULT_BG_DARK_COLOR,
         );
         setDarkModeEnabled(settings.darkModeEnabled !== false);
+        setStorefrontLayout(parseStorefrontLayout(settings.storefrontLayout));
       })
       .catch(() => {
         if (cancelled) {
@@ -198,6 +201,7 @@ export function AppShell({
         setBackgroundLightColor(DEFAULT_BG_LIGHT_COLOR);
         setBackgroundDarkColor(DEFAULT_BG_DARK_COLOR);
         setDarkModeEnabled(true);
+        setStorefrontLayout("classic");
       });
 
     return () => {
@@ -206,6 +210,9 @@ export function AppShell({
   }, [brandSlug, initialBranding?.brandSlug]);
 
   const standalone = isStandaloneRoute(pathname);
+  const isPortfolioHome =
+    storefrontLayout === "portfolio" &&
+    (pathname === "/" || pathname === `/${brandSlug}`);
 
   if (standalone) {
     return (
@@ -229,12 +236,14 @@ export function AppShell({
       <SiteHeader
         brandName={brandName}
         cartCount={cartCount}
+        hideCart={isPortfolioHome}
         homeHref={homeHrefForSlug(brandSlug)}
         isCartReady={isCartReady}
         logoDarkUrl={logoDarkUrl}
         logoUrl={logoUrl}
         onOpenCart={() => setCartOpen(true)}
         onOpenMenu={() => setMenuOpen(true)}
+        overlayMode={isPortfolioHome}
         scrolled={isScrolled}
         showThemeToggle={darkModeEnabled}
       />

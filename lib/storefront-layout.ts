@@ -1,4 +1,8 @@
-export type StorefrontLayoutId = "classic" | "menu_first" | "magazine";
+export type StorefrontLayoutId =
+  | "classic"
+  | "menu_first"
+  | "magazine"
+  | "portfolio";
 
 export const STOREFRONT_LAYOUTS: Array<{
   id: StorefrontLayoutId;
@@ -20,6 +24,11 @@ export const STOREFRONT_LAYOUTS: Array<{
     label: "Magazine",
     blurb: "Deals and featured picks first, then a compact menu list.",
   },
+  {
+    id: "portfolio",
+    label: "Portfolio",
+    blurb: "Cinematic brand showcase — ordering stays quiet until you click through.",
+  },
 ];
 
 export function parseStorefrontLayout(raw: unknown): StorefrontLayoutId {
@@ -29,5 +38,6 @@ export function parseStorefrontLayout(raw: unknown): StorefrontLayoutId {
     .replace(/-/g, "_");
   if (value === "menu_first") return "menu_first";
   if (value === "magazine") return "magazine";
+  if (value === "portfolio" || value === "showcase") return "portfolio";
   return "classic";
 }

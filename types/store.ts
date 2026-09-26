@@ -13,7 +13,7 @@ export interface StoreSettings {
   heroImageUrl?: string | null;
   heroImageDarkUrl?: string | null;
   darkModeEnabled?: boolean;
-  storefrontLayout?: "classic" | "menu_first" | "magazine";
+  storefrontLayout?: "classic" | "menu_first" | "magazine" | "portfolio";
   googleSiteVerification?: string | null;
   deliveryFee: string | number;
   minOrderAmount: string | number;
@@ -55,7 +55,7 @@ export interface UpdateStoreSettingsPayload {
   heroImageUrl?: string | null;
   heroImageDarkUrl?: string | null;
   darkModeEnabled?: boolean;
-  storefrontLayout?: "classic" | "menu_first" | "magazine";
+  storefrontLayout?: "classic" | "menu_first" | "magazine" | "portfolio";
   deliveryFee?: number;
   minOrderAmount?: number;
   contactEmail?: string;

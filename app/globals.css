@@ -71,6 +71,15 @@
   }
 }
 
+@keyframes portfolio-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 ::selection {
   background: var(--brand-accent, #d81b60);
   color: #fff;

@@ -35,6 +35,10 @@ interface SiteHeaderProps {
   logoDarkUrl?: string | null;
   homeHref?: string;
   showThemeToggle?: boolean;
+  /** Portfolio home: transparent until scroll */
+  overlayMode?: boolean;
+  /** Hide cart control (portfolio showcase home) */
+  hideCart?: boolean;
 }
 
 export function SiteHeader({
@@ -48,6 +52,8 @@ export function SiteHeader({
   logoDarkUrl,
   homeHref = "/",
   showThemeToggle = true,
+  overlayMode = false,
+  hideCart = false,
 }: SiteHeaderProps): React.ReactElement {
   const pathname = usePathname();
   const [cartBump, setCartBump] = useState(false);
@@ -70,13 +76,16 @@ export function SiteHeader({
 
   const displayCount = isCartReady ? cartCount : 0;
   const hasLogo = Boolean(logoUrl || logoDarkUrl);
+  const overlayTransparent = overlayMode && !scrolled;
 
   return (
     <header
       className={cn(
         "fixed left-0 top-0 z-50 flex w-full items-center justify-between px-margin-mobile md:px-margin-desktop",
-        headerShell,
-        scrolled ? "py-3" : "py-4"
+        overlayTransparent
+          ? "border-b border-transparent bg-transparent py-5 text-white backdrop-blur-0"
+          : cn(headerShell, scrolled ? "py-3" : "py-4"),
+        overlayMode && scrolled && "bg-zinc-950/90 text-white dark:bg-zinc-950/90"
       )}
     >
       <div className="flex items-center gap-8">
@@ -96,7 +105,12 @@ export function SiteHeader({
               logoUrl={logoUrl}
             />
           ) : (
-            <span className="font-display text-headline-md font-bold uppercase tracking-tight text-zinc-950 transition-colors duration-150 ease-out dark:text-white">
+            <span
+              className={cn(
+                "font-display text-headline-md font-bold uppercase tracking-tight transition-colors duration-150 ease-out",
+                overlayTransparent ? "text-white" : "text-zinc-950 dark:text-white"
+              )}
+            >
               {brandName}
             </span>
           )}
@@ -104,7 +118,10 @@ export function SiteHeader({
         <nav className="hidden items-center gap-8 md:flex">
           {DESKTOP_NAV_ITEMS.map((item) => (
             <Link
-              className={getDesktopNavLinkClass(isNavLinkActive(pathname, item.href))}
+              className={cn(
+                getDesktopNavLinkClass(isNavLinkActive(pathname, item.href)),
+                overlayTransparent && "border-transparent text-white/80 hover:text-white"
+              )}
               href={item.href}
               key={item.href}
             >
@@ -114,30 +131,40 @@ export function SiteHeader({
         </nav>
       </div>
       <div className="flex items-center gap-4">
-        {showThemeToggle ? <ThemeToggle /> : null}
-        <Button
-          aria-label="Open cart"
-          className={cn(
-            "relative text-zinc-950 transition-colors duration-150 ease-out hover:bg-zinc-100 dark:text-white dark:hover:bg-white/10",
-            cartBump && "animate-cartBump"
-          )}
-          onClick={onOpenCart}
-          size="icon"
-          variant="ghost"
-        >
-          <ShoppingCart className="h-5 w-5" />
-          <span
+        {showThemeToggle && !overlayTransparent ? <ThemeToggle /> : null}
+        {!hideCart ? (
+          <Button
+            aria-label="Open cart"
             className={cn(
-              "absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[color:var(--brand-accent,#d81b60)] text-[10px] font-bold text-white transition-opacity duration-300",
-              cartBump && "animate-cartBump",
-              isCartReady ? "opacity-100" : "opacity-0"
+              "relative transition-colors duration-150 ease-out",
+              overlayTransparent
+                ? "text-white hover:bg-white/10"
+                : "text-zinc-950 hover:bg-zinc-100 dark:text-white dark:hover:bg-white/10",
+              cartBump && "animate-cartBump"
             )}
+            onClick={onOpenCart}
+            size="icon"
+            variant="ghost"
           >
-            {displayCount}
-          </span>
-        </Button>
+            <ShoppingCart className="h-5 w-5" />
+            <span
+              className={cn(
+                "absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[color:var(--brand-accent,#d81b60)] text-[10px] font-bold text-white transition-opacity duration-300",
+                cartBump && "animate-cartBump",
+                isCartReady ? "opacity-100" : "opacity-0"
+              )}
+            >
+              {displayCount}
+            </span>
+          </Button>
+        ) : null}
         <Button
-          className="text-zinc-950 transition-colors duration-150 ease-out hover:bg-zinc-100 dark:text-white dark:hover:bg-white/10"
+          className={cn(
+            "transition-colors duration-150 ease-out",
+            overlayTransparent
+              ? "text-white hover:bg-white/10"
+              : "text-zinc-950 hover:bg-zinc-100 dark:text-white dark:hover:bg-white/10"
+          )}
           onClick={onOpenMenu}
           size="icon"
           variant="ghost"

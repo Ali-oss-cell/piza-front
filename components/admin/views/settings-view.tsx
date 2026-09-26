@@ -124,6 +124,21 @@ function LayoutSketch({
     );
   }
 
+  if (layout === "portfolio") {
+    return (
+      <div className="flex h-16 flex-col gap-1 rounded-md bg-zinc-950 p-1.5" aria-hidden>
+        <div className={cn("h-7 w-full rounded-sm opacity-80", bar)} />
+        <div className="grid flex-1 grid-cols-[1.2fr_0.8fr] gap-1">
+          <div className={cn("rounded-sm", block)} />
+          <div className="flex flex-col justify-center gap-0.5">
+            <div className={cn("h-1 w-full rounded-sm", line)} />
+            <div className={cn("h-1 w-2/3 rounded-sm", line)} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-16 flex-col gap-1 rounded-md bg-zinc-50 p-1.5 dark:bg-zinc-900/80" aria-hidden>
       <div className={cn("h-6 w-full rounded-sm", bar)} />
