@@ -11,6 +11,11 @@ import {
   validateOpeningHoursForSave,
   type OpeningHoursConfig,
 } from "@/lib/opening-hours";
+import {
+  parseStorefrontLayout,
+  STOREFRONT_LAYOUTS,
+  type StorefrontLayoutId,
+} from "@/lib/storefront-layout";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import type { HqReadiness } from "@/types/hq";
 import type { StoreDomain } from "@/types/payments";
@@ -40,6 +45,7 @@ interface SettingsFormState {
   heroImageUrl: string;
   heroImageDarkUrl: string;
   darkModeEnabled: boolean;
+  storefrontLayout: StorefrontLayoutId;
   googleSiteVerification: string;
   deliveryFee: string;
   minOrderAmount: string;
@@ -61,6 +67,7 @@ function formFromSettings(settings: StoreSettings): SettingsFormState {
     heroImageUrl: settings.heroImageUrl ?? "",
     heroImageDarkUrl: settings.heroImageDarkUrl ?? "",
     darkModeEnabled: settings.darkModeEnabled !== false,
+    storefrontLayout: parseStorefrontLayout(settings.storefrontLayout),
     googleSiteVerification: settings.googleSiteVerification ?? "",
     deliveryFee: String(settings.deliveryFee),
     minOrderAmount: String(settings.minOrderAmount),
@@ -69,6 +76,68 @@ function formFromSettings(settings: StoreSettings): SettingsFormState {
     address: settings.address ?? "",
     openingHours: mergeOpeningHours(settings.openingHours),
   };
+}
+
+function LayoutSketch({
+  layout,
+  selected,
+}: {
+  layout: StorefrontLayoutId;
+  selected: boolean;
+}): React.ReactElement {
+  const bar = selected ? "bg-[color:var(--brand-accent,#d81b60)]/40" : "bg-zinc-300 dark:bg-zinc-600";
+  const block = selected ? "bg-[color:var(--brand-accent,#d81b60)]/25" : "bg-zinc-200 dark:bg-zinc-700";
+  const line = selected ? "bg-[color:var(--brand-accent,#d81b60)]/35" : "bg-zinc-200 dark:bg-zinc-700";
+
+  if (layout === "menu_first") {
+    return (
+      <div className="flex h-16 flex-col gap-1 rounded-md bg-zinc-50 p-1.5 dark:bg-zinc-900/80" aria-hidden>
+        <div className={cn("h-2.5 w-full rounded-sm", bar)} />
+        <div className="flex gap-1">
+          <div className={cn("h-1.5 w-6 rounded-full", bar)} />
+          <div className={cn("h-1.5 w-6 rounded-full", line)} />
+          <div className={cn("h-1.5 w-6 rounded-full", line)} />
+        </div>
+        <div className="grid flex-1 grid-cols-3 gap-1">
+          <div className={cn("rounded-sm", block)} />
+          <div className={cn("rounded-sm", block)} />
+          <div className={cn("rounded-sm", block)} />
+        </div>
+      </div>
+    );
+  }
+
+  if (layout === "magazine") {
+    return (
+      <div className="flex h-16 flex-col gap-1 rounded-md bg-zinc-50 p-1.5 dark:bg-zinc-900/80" aria-hidden>
+        <div className={cn("h-4 w-full rounded-sm", bar)} />
+        <div className="flex gap-1">
+          <div className={cn("h-3 flex-1 rounded-sm", block)} />
+          <div className={cn("h-3 flex-1 rounded-sm", block)} />
+          <div className={cn("h-3 flex-1 rounded-sm", block)} />
+        </div>
+        <div className="flex flex-1 flex-col justify-end gap-0.5">
+          <div className={cn("h-1 w-full rounded-sm", line)} />
+          <div className={cn("h-1 w-[80%] rounded-sm", line)} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-16 flex-col gap-1 rounded-md bg-zinc-50 p-1.5 dark:bg-zinc-900/80" aria-hidden>
+      <div className={cn("h-6 w-full rounded-sm", bar)} />
+      <div className="flex gap-1">
+        <div className={cn("h-1.5 flex-1 rounded-sm", line)} />
+        <div className={cn("h-1.5 flex-1 rounded-sm", line)} />
+        <div className={cn("h-1.5 flex-1 rounded-sm", line)} />
+      </div>
+      <div className="grid flex-1 grid-cols-2 gap-1">
+        <div className={cn("rounded-sm", block)} />
+        <div className={cn("rounded-sm", block)} />
+      </div>
+    </div>
+  );
 }
 
 export function SettingsView({
@@ -136,6 +205,7 @@ export function SettingsView({
       heroImageUrl: form.heroImageUrl.trim() || null,
       heroImageDarkUrl: form.heroImageDarkUrl.trim() || null,
       darkModeEnabled: form.darkModeEnabled,
+      storefrontLayout: form.storefrontLayout,
       googleSiteVerification: form.googleSiteVerification.trim() || null,
       deliveryFee: Number(form.deliveryFee),
       minOrderAmount: Number(form.minOrderAmount),
@@ -342,6 +412,40 @@ export function SettingsView({
           <p className={cn("mt-1 text-xs", secondaryText)}>
             When off, customers always see light mode and the theme toggle is hidden.
           </p>
+
+          <div className="mt-6 border-t border-zinc-200/70 pt-5 dark:border-white/10">
+            <h4 className={cn("mb-1 text-sm font-semibold", primaryText)}>Storefront layout</h4>
+            <p className={cn("mb-3 text-xs", secondaryText)}>
+              Choose how the home and menu pages are structured. Colours and menu items stay the
+              same.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {STOREFRONT_LAYOUTS.map((layout) => {
+                const selected = form.storefrontLayout === layout.id;
+                return (
+                  <button
+                    className={cn(
+                      "rounded-xl border p-3 text-left transition-colors",
+                      selected
+                        ? "border-[color:var(--brand-accent,#d81b60)] bg-[color:var(--brand-accent,#d81b60)]/5 ring-1 ring-[color:var(--brand-accent,#d81b60)]"
+                        : "border-zinc-200/80 hover:border-zinc-300 dark:border-white/10 dark:hover:border-white/20"
+                    )}
+                    key={layout.id}
+                    onClick={() =>
+                      setForm((current) => ({ ...current, storefrontLayout: layout.id }))
+                    }
+                    type="button"
+                  >
+                    <LayoutSketch layout={layout.id} selected={selected} />
+                    <p className={cn("mt-2 text-sm font-semibold", primaryText)}>{layout.label}</p>
+                    <p className={cn("mt-0.5 text-xs leading-snug", secondaryText)}>
+                      {layout.blurb}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2">

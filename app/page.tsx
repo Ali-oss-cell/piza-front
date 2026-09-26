@@ -25,6 +25,7 @@ export default async function Home(): Promise<React.ReactElement> {
           categories={[]}
           menuItems={[]}
           primaryColor={BENNY_BOYS_PRIMARY_COLOR}
+          storefrontLayout={data.storefrontLayout}
           tagline={BENNY_BOYS_TAGLINE}
         />
       </>
@@ -35,15 +36,21 @@ export default async function Home(): Promise<React.ReactElement> {
     <>
       <SiteBrandInit brandSlug={data.brandSlug} locationId={data.locationId} />
       <HomePage
+        address={data.address}
         backgroundDarkColor={data.backgroundDarkColor}
         backgroundLightColor={data.backgroundLightColor}
         brandName={data.brandName}
         brandSlug={data.brandSlug}
         categories={data.categories}
+        deliveryFee={data.deliveryFee}
         heroImageDarkUrl={data.heroImageDarkUrl}
         heroImageUrl={data.heroImageUrl}
+        logoDarkUrl={data.logoDarkUrl}
+        logoUrl={data.logoUrl}
         menuItems={data.menuItems}
+        openingHours={data.openingHours}
         primaryColor={data.primaryColor}
+        storefrontLayout={data.storefrontLayout}
         tagline={data.tagline}
       />
     </>

@@ -22,6 +22,12 @@ export interface HomeMenuData {
   primaryColor?: string | null;
   backgroundLightColor?: string | null;
   backgroundDarkColor?: string | null;
+  storefrontLayout?: string;
+  logoUrl?: string | null;
+  logoDarkUrl?: string | null;
+  address?: string | null;
+  deliveryFee?: string | number;
+  openingHours?: unknown;
 }
 
 async function resolveHomeBrand(): Promise<{
@@ -65,6 +71,12 @@ export async function fetchHomeMenuData(): Promise<HomeMenuData> {
       primaryColor: settings.primaryColor,
       backgroundLightColor: settings.backgroundLightColor,
       backgroundDarkColor: settings.backgroundDarkColor,
+      storefrontLayout: settings.storefrontLayout ?? "classic",
+      logoUrl: settings.logoUrl,
+      logoDarkUrl: settings.logoDarkUrl,
+      address: settings.address,
+      deliveryFee: settings.deliveryFee,
+      openingHours: settings.openingHours,
     };
   } catch {
     return {
@@ -75,6 +87,7 @@ export async function fetchHomeMenuData(): Promise<HomeMenuData> {
       brandName: BENNY_BOYS_NAME,
       tagline: BENNY_BOYS_TAGLINE,
       primaryColor: BENNY_BOYS_PRIMARY_COLOR,
+      storefrontLayout: "classic",
     };
   }
 }

@@ -4,6 +4,7 @@ import { HomePage } from "@/components/features/home-page";
 import {
   fetchMenuCategories,
   fetchMenuItems,
+  fetchStoreSettings,
   resolveStoreByPath,
 } from "@/lib/menu-api";
 import { mapApiMenuCategories, mapApiMenuItem } from "@/lib/menu-mappers";
@@ -61,9 +62,10 @@ export default async function DynamicStorefrontPage({
 
   try {
     const store = await resolveStoreByPath(normalized);
-    const [apiItems, apiCategories] = await Promise.all([
+    const [apiItems, apiCategories, settings] = await Promise.all([
       fetchMenuItems(store.slug),
       fetchMenuCategories(store.slug),
+      fetchStoreSettings(store.slug, store.locationId).catch(() => null),
     ]);
 
     return (
@@ -73,16 +75,26 @@ export default async function DynamicStorefrontPage({
           locationId={store.locationId ?? null}
         />
         <HomePage
-          brandName={store.name}
+          address={settings?.address ?? null}
+          backgroundDarkColor={
+            settings?.backgroundDarkColor ?? store.backgroundDarkColor
+          }
+          backgroundLightColor={
+            settings?.backgroundLightColor ?? store.backgroundLightColor
+          }
+          brandName={settings?.storeName ?? store.name}
           brandSlug={store.slug}
           categories={mapApiMenuCategories(apiCategories)}
-          heroImageUrl={store.heroImageUrl}
-          heroImageDarkUrl={store.heroImageDarkUrl}
+          deliveryFee={settings?.deliveryFee}
+          heroImageDarkUrl={settings?.heroImageDarkUrl ?? store.heroImageDarkUrl}
+          heroImageUrl={settings?.heroImageUrl ?? store.heroImageUrl}
+          logoDarkUrl={settings?.logoDarkUrl ?? store.logoDarkUrl}
+          logoUrl={settings?.logoUrl ?? store.logoUrl}
           menuItems={apiItems.map(mapApiMenuItem)}
-          primaryColor={store.primaryColor}
-          backgroundLightColor={store.backgroundLightColor}
-          backgroundDarkColor={store.backgroundDarkColor}
-          tagline={store.tagline ?? undefined}
+          openingHours={settings?.openingHours}
+          primaryColor={settings?.primaryColor ?? store.primaryColor}
+          storefrontLayout={settings?.storefrontLayout ?? "classic"}
+          tagline={settings?.tagline ?? store.tagline ?? undefined}
         />
       </>
     );
