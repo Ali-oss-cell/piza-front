@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SmartImage } from "@/components/ui/smart-image";
 import { getMenuDisplayDescription } from "@/lib/menu-display-copy";
 import { resolveMediaUrl } from "@/lib/media-url";
 import { formatCurrency } from "@/lib/pricing";
@@ -32,7 +32,6 @@ function DenseCard({
   onOpenItem: (item: MenuItem) => void;
 }): React.ReactElement {
   const [justAdded, setJustAdded] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
   const resetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const imageSrc = resolveMediaUrl(item.imageUrl) ?? item.imageUrl;
   const desc = getMenuDisplayDescription(item, brandSlug);
@@ -74,20 +73,12 @@ function DenseCard({
         onClick={() => onOpenItem(item)}
         type="button"
       >
-        {!imageLoaded ? (
-          <span
-            aria-hidden
-            className="absolute inset-0 animate-pulse bg-gradient-to-br from-zinc-200 via-zinc-100 to-zinc-200 dark:from-zinc-800 dark:via-zinc-700 dark:to-zinc-800"
-          />
-        ) : null}
-        <Image
+        <SmartImage
           alt={item.imageAlt}
-          className={cn(
-            "object-cover transition-opacity duration-300",
-            imageLoaded ? "opacity-100" : "opacity-0"
-          )}
+          blurHash={item.imageBlurHash}
+          className="object-cover"
           fill
-          onLoad={() => setImageLoaded(true)}
+          frameClassName="absolute inset-0"
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           src={imageSrc}
         />

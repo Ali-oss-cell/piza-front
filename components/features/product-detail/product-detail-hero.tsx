@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { MenuItemBadges } from "@/components/features/menu-item-badges";
+import { SmartImage } from "@/components/ui/smart-image";
 import { resolveMediaUrl } from "@/lib/media-url";
 import type { MenuItem } from "@/types/menu";
 
@@ -10,17 +10,17 @@ interface ProductDetailHeroProps {
 export function ProductDetailHero({ item }: ProductDetailHeroProps): React.ReactElement {
   return (
     <div className="relative md:sticky md:top-24 md:self-start">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-zinc-200/60 bg-zinc-100 transition-colors duration-150 ease-out dark:border-white/10 dark:bg-zinc-900">
-        <Image
-          alt={item.imageAlt}
-          className="h-full w-full object-cover"
-          fill
-          priority
-          sizes="(max-width: 768px) 100vw, 50vw"
-          src={resolveMediaUrl(item.imageUrl) ?? item.imageUrl}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-white/50 via-transparent to-transparent transition-colors duration-150 ease-out dark:from-black/50" />
-      </div>
+      <SmartImage
+        alt={item.imageAlt}
+        blurHash={item.imageBlurHash}
+        className="h-full w-full object-cover"
+        fill
+        frameClassName="relative aspect-[4/5] overflow-hidden rounded-2xl border border-zinc-200/60 bg-zinc-100 transition-colors duration-150 ease-out dark:border-white/10 dark:bg-zinc-900"
+        priority
+        sizes="(max-width: 768px) 100vw, 50vw"
+        src={resolveMediaUrl(item.imageUrl) ?? item.imageUrl}
+      />
+      <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-t from-white/50 via-transparent to-transparent transition-colors duration-150 ease-out dark:from-black/50" />
 
       {item.badges?.length ? (
         <div className="absolute left-4 top-4 max-w-[calc(100%-2rem)]">

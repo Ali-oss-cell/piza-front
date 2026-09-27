@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -11,6 +10,7 @@ import { QuantitySelector } from "@/components/features/product-detail/quantity-
 import { SizeSelector } from "@/components/features/product-detail/size-selector";
 import { ToppingsGrid } from "@/components/features/product-detail/toppings-grid";
 import { Button } from "@/components/ui/button";
+import { SmartImage } from "@/components/ui/smart-image";
 import { useCart } from "@/lib/cart-context";
 import { fetchCrusts, fetchToppings } from "@/lib/menu-api";
 import { getMenuDisplayDescription } from "@/lib/menu-display-copy";
@@ -48,7 +48,6 @@ export function ItemDetailSheet({
   const [crustOptions, setCrustOptions] = useState<CrustOption[]>([]);
   const [toppingCategories, setToppingCategories] = useState<ToppingCategory[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   const hasSizeOptions = Boolean(item?.sizePricing);
   const ingredients = useMemo(
@@ -66,7 +65,6 @@ export function ItemDetailSheet({
 
   useEffect(() => {
     if (!open || !item) return;
-    setImageLoaded(false);
     setConfiguration({
       size: "S",
       crustId: "",
@@ -171,19 +169,15 @@ export function ItemDetailSheet({
             <span className="sr-only">Close</span>
           </Dialog.Close>
 
-          <div className="relative aspect-[16/10] w-full shrink-0 bg-zinc-100 dark:bg-zinc-800 md:aspect-[5/3]">
-            {!imageLoaded ? (
-              <span aria-hidden className="absolute inset-0 animate-pulse bg-zinc-200 dark:bg-zinc-700" />
-            ) : null}
-            <Image
-              alt={item.imageAlt}
-              className={cn("object-cover", imageLoaded ? "opacity-100" : "opacity-0")}
-              fill
-              onLoad={() => setImageLoaded(true)}
-              sizes="(max-width: 768px) 100vw, 512px"
-              src={imageSrc}
-            />
-          </div>
+          <SmartImage
+            alt={item.imageAlt}
+            blurHash={item.imageBlurHash}
+            className="object-cover"
+            fill
+            frameClassName="relative aspect-[16/10] w-full shrink-0 bg-zinc-100 dark:bg-zinc-800 md:aspect-[5/3]"
+            sizes="(max-width: 768px) 100vw, 512px"
+            src={imageSrc}
+          />
 
           <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4 md:px-5">
             <div>

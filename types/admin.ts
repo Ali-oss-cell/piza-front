@@ -118,6 +118,7 @@ export interface AdminMenuItem {
   categorySlug: string;
   imageUrl: string;
   imageAlt: string;
+  imageBlurHash?: string | null;
   badges: MenuItemBadge[];
   priceNote?: string | null;
   ingredients: string[];
@@ -167,6 +168,7 @@ export interface CreateMenuItemPayload {
   categorySlug: string;
   imageUrl: string;
   imageAlt: string;
+  imageBlurHash?: string | null;
   badges?: MenuItemBadge[];
   priceNote?: string | null;
   ingredients?: string[];

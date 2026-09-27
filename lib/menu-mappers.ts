@@ -87,6 +87,7 @@ export function mapApiMenuItem(item: AdminMenuItem): MenuItem {
     category: item.categorySlug,
     imageUrl: item.imageUrl,
     imageAlt: item.imageAlt,
+    imageBlurHash: item.imageBlurHash ?? undefined,
     badges: item.badges,
     sizePricing,
     priceNote: item.priceNote ?? undefined,

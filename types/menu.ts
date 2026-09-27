@@ -31,6 +31,8 @@ export interface MenuItem {
   category: MenuCategory;
   imageUrl: string;
   imageAlt: string;
+  /** BlurHash placeholder shown while the full image loads */
+  imageBlurHash?: string | null;
   badges?: MenuItemBadge[];
   sizePricing?: SizePricing;
   priceNote?: string;

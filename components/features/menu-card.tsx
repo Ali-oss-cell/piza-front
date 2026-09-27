@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Check, Plus } from "lucide-react";
 import { MenuItemBadges } from "@/components/features/menu-item-badges";
 import { Button } from "@/components/ui/button";
+import { SmartImage } from "@/components/ui/smart-image";
 import { getMenuDisplayDescription } from "@/lib/menu-display-copy";
 import { isNextOrderOrderingEnabled, ORDER_ONLINE_HREF } from "@/lib/nextorder";
 import { resolveMediaUrl } from "@/lib/media-url";
@@ -63,10 +63,12 @@ function ImagePanel({
       className="relative aspect-[4/3] w-full shrink-0 overflow-hidden"
       href={detailHref}
     >
-      <Image
+      <SmartImage
         alt={item.imageAlt}
+        blurHash={item.imageBlurHash}
         className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
         fill
+        frameClassName="absolute inset-0"
         sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
         src={imageSrc}
       />

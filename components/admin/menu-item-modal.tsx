@@ -249,6 +249,10 @@ export function MenuItemModal({
       } else if (item) {
         await onUpdate(item.id, {
           ...payloadBase,
+          // Keep existing color placeholder when the image URL is unchanged.
+          ...(form.imageUrl.trim() === item.imageUrl && item.imageBlurHash
+            ? { imageBlurHash: item.imageBlurHash }
+            : {}),
           sizeOptions: showSizeOptions ? form.sizeOptions : null,
         });
       }
