@@ -5,7 +5,7 @@ import { Loader2, MapPin, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fetchAdminLocations, createAdminLocation, updateAdminLocation } from "@/lib/admin-api";
+import { fetchAdminLocations, createAdminLocation, updateAdminLocation, fetchLocationShift, openLocationShift, closeLocationShift } from "@/lib/admin-api";
 import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
 import type { AdminLocation } from "@/types/hq";
 import { cn } from "@/lib/utils";
@@ -37,6 +37,9 @@ export function LocationsView({ token, brandSlug }: LocationsViewProps): React.R
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<LocationFormState>(emptyForm);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [shifts, setShifts] = useState<Record<string, { id: string } | null>>({});
+  const [floatByLocation, setFloatByLocation] = useState<Record<string, string>>({});
+  const [countedByLocation, setCountedByLocation] = useState<Record<string, string>>({});
 
   const loadLocations = async (): Promise<void> => {
     setIsLoading(true);
@@ -44,6 +47,17 @@ export function LocationsView({ token, brandSlug }: LocationsViewProps): React.R
     try {
       const data = await fetchAdminLocations(token, brandSlug);
       setLocations(data);
+      const nextShifts: Record<string, { id: string } | null> = {};
+      await Promise.all(
+        data.map(async (location) => {
+          try {
+            nextShifts[location.id] = await fetchLocationShift(token, brandSlug, location.id);
+          } catch {
+            nextShifts[location.id] = null;
+          }
+        }),
+      );
+      setShifts(nextShifts);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Unable to load locations.");
     } finally {
@@ -111,7 +125,7 @@ export function LocationsView({ token, brandSlug }: LocationsViewProps): React.R
         <div>
           <h2 className={cn("font-display text-2xl font-bold", primaryText)}>Locations</h2>
           <p className={cn("mt-1 text-sm", secondaryText)}>
-            Store locations for delivery zones and staff assignment
+            Locations and the POS shift for each store. Staff cannot open or close a shift on the register.
           </p>
         </div>
         <Button onClick={() => setIsModalOpen(true)}>
@@ -146,7 +160,86 @@ export function LocationsView({ token, brandSlug }: LocationsViewProps): React.R
                   {location.address || "No address"}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {shifts[location.id] ? (
+                  <>
+                    <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-600">
+                      Shift open
+                    </span>
+                    <Input
+                      className="h-9 w-24"
+                      placeholder="Counted"
+                      type="number"
+                      value={countedByLocation[location.id] ?? ""}
+                      onChange={(event) =>
+                        setCountedByLocation((current) => ({
+                          ...current,
+                          [location.id]: event.target.value,
+                        }))
+                      }
+                    />
+                    <button
+                      className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-700"
+                      disabled={busyId === location.id}
+                      type="button"
+                      onClick={() => {
+                        const shift = shifts[location.id];
+                        if (!shift) return;
+                        setBusyId(location.id);
+                        void closeLocationShift(
+                          token,
+                          shift.id,
+                          brandSlug,
+                          location.id,
+                          Number(countedByLocation[location.id] || 0),
+                        )
+                          .then(() => loadLocations())
+                          .catch((err: unknown) =>
+                            setError(err instanceof Error ? err.message : "Could not close shift"),
+                          )
+                          .finally(() => setBusyId(null));
+                      }}
+                    >
+                      Close shift
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      className="h-9 w-24"
+                      placeholder="Float"
+                      type="number"
+                      value={floatByLocation[location.id] ?? "100"}
+                      onChange={(event) =>
+                        setFloatByLocation((current) => ({
+                          ...current,
+                          [location.id]: event.target.value,
+                        }))
+                      }
+                    />
+                    <button
+                      className="rounded-full bg-[#d81b60]/15 px-3 py-1 text-xs font-medium text-[#d81b60]"
+                      disabled={busyId === location.id}
+                      type="button"
+                      onClick={() => {
+                        setBusyId(location.id);
+                        void openLocationShift(
+                          token,
+                          brandSlug,
+                          location.id,
+                          Number(floatByLocation[location.id] || 100),
+                        )
+                          .then(() => loadLocations())
+                          .catch((err: unknown) =>
+                            setError(err instanceof Error ? err.message : "Could not open shift"),
+                          )
+                          .finally(() => setBusyId(null));
+                      }}
+                    >
+                      Open shift
+                    </button>
+                  </>
+                )}
                 <button
                   className={cn(
                     "rounded-full px-3 py-1 text-xs font-medium",

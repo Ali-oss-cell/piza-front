@@ -994,6 +994,7 @@ export function inviteTeamMember(
     brandSlug: string;
     temporaryPassword?: string;
     locationId?: string;
+    posPin?: string;
   },
 ): Promise<{
   membership: import("@/types/hq").TeamMembership;
@@ -1003,6 +1004,49 @@ export function inviteTeamMember(
     method: "POST",
     token,
     body: JSON.stringify(payload),
+  });
+}
+
+export function fetchLocationShift(
+  token: string,
+  brandSlug: string,
+  locationId: string,
+): Promise<{ id: string } | null> {
+  return apiRequest("/pos/shifts/current", {
+    token,
+    brandSlug,
+    locationId,
+  });
+}
+
+export function openLocationShift(
+  token: string,
+  brandSlug: string,
+  locationId: string,
+  openingFloat: number,
+): Promise<unknown> {
+  return apiRequest("/pos/shifts/open", {
+    method: "POST",
+    token,
+    brandSlug,
+    locationId,
+    body: JSON.stringify({ openingFloat }),
+  });
+}
+
+export function closeLocationShift(
+  token: string,
+  shiftId: string,
+  brandSlug: string,
+  locationId: string,
+  closingCountedCash: number,
+): Promise<unknown> {
+  return apiRequest(`/pos/shifts/${shiftId}/close`, {
+    method: "POST",
+    token,
+    brandSlug,
+    locationId,
+    body: JSON.stringify({ closingCountedCash }),
   });
 }
 

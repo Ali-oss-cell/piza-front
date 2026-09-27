@@ -20,6 +20,7 @@ interface InviteFormState {
   firstName: string;
   lastName: string;
   role: string;
+  posPin: string;
 }
 
 function emptyForm(): InviteFormState {
@@ -28,6 +29,7 @@ function emptyForm(): InviteFormState {
     firstName: "",
     lastName: "",
     role: "STAFF",
+    posPin: "",
   };
 }
 
@@ -69,6 +71,7 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
         lastName: form.lastName.trim(),
         role: form.role,
         brandSlug,
+        ...(form.posPin.trim() ? { posPin: form.posPin.trim() } : {}),
       });
       await loadTeam();
       setIsModalOpen(false);
@@ -222,6 +225,26 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
                   Use Staff for floor tablets so they only access this store&apos;s POS.
                 </p>
               </div>
+              <div>
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                  Starting POS code
+                </label>
+                <Input
+                  inputMode="numeric"
+                  maxLength={6}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      posPin: event.target.value.replace(/\D/g, "").slice(0, 6),
+                    }))
+                  }
+                  placeholder="4–6 digits"
+                  value={form.posPin}
+                />
+                <p className={cn("mt-1 text-xs", secondaryText)}>
+                  Give this code to the employee. They must change it the first time they log in.
+                </p>
+              </div>
               {error ? <p className="text-sm text-red-500">{error}</p> : null}
             </div>
             <div className="mt-6 flex justify-end gap-3">
@@ -233,7 +256,8 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
                   isSaving ||
                   !form.email.trim() ||
                   !form.firstName.trim() ||
-                  !form.lastName.trim()
+                  !form.lastName.trim() ||
+                  (form.role === "STAFF" && form.posPin.length < 4)
                 }
                 onClick={() => void handleInvite()}
               >
