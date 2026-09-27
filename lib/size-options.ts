@@ -33,23 +33,30 @@ export function sizeOptionsFromLegacyPricing(pricing?: {
   );
 }
 
-export function sizeOptionsFromApi(value: SizeOptions | null | undefined): SizeOptions {
+export function sizeOptionsFromApi(
+  value: SizeOptions | Record<string, SizeOptionValue> | null | undefined
+): SizeOptions {
   if (!value) {
     return createDefaultSizeOptions();
   }
 
+  const raw = value as Record<string, SizeOptionValue | undefined>;
+  const small = raw.small ?? raw.SMALL;
+  const large = raw.large ?? raw.LARGE;
+  const family = raw.family ?? raw.FAMILY;
+
   return {
     small: {
-      enabled: value.small?.enabled ?? true,
-      price: Number(value.small?.price ?? 0),
+      enabled: small?.enabled ?? true,
+      price: Number(small?.price ?? 0),
     },
     large: {
-      enabled: value.large?.enabled ?? true,
-      price: Number(value.large?.price ?? 0),
+      enabled: large?.enabled ?? true,
+      price: Number(large?.price ?? 0),
     },
     family: {
-      enabled: value.family?.enabled ?? true,
-      price: Number(value.family?.price ?? 0),
+      enabled: family?.enabled ?? true,
+      price: Number(family?.price ?? 0),
     },
   };
 }

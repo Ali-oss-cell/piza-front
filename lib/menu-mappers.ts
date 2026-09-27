@@ -22,26 +22,55 @@ function toLegacySizePricing(sizeOptions: SizeOptions): SizePricing {
   };
 }
 
+function isBrokenSizePricing(pricing: SizePricing | undefined): boolean {
+  if (!pricing) {
+    return true;
+  }
+  return pricing.small <= 0 && pricing.large <= 0 && pricing.family <= 0;
+}
+
 function resolveSizePricing(item: AdminMenuItem): SizePricing | undefined {
-  if (item.sizePricing) {
-    return {
-      small: Number(item.sizePricing.small ?? item.price),
-      large: Number(item.sizePricing.large ?? item.price),
-      family: Number(item.sizePricing.family ?? item.price),
-    };
+  const fromOptions = item.sizeOptions
+    ? sizeOptionsFromApi(item.sizeOptions as SizeOptions)
+    : null;
+
+  const optionsPricing =
+    fromOptions &&
+    (fromOptions.small.enabled || fromOptions.large.enabled || fromOptions.family.enabled)
+      ? toLegacySizePricing(fromOptions)
+      : undefined;
+
+  const legacyPricing = item.sizePricing
+    ? {
+        small: Number(item.sizePricing.small ?? 0),
+        large: Number(item.sizePricing.large ?? 0),
+        family: Number(item.sizePricing.family ?? 0),
+      }
+    : undefined;
+
+  // Prefer sizeOptions when sizePricing is missing or all zeros (bad import).
+  let resolved =
+    optionsPricing && !isBrokenSizePricing(optionsPricing)
+      ? optionsPricing
+      : legacyPricing && !isBrokenSizePricing(legacyPricing)
+        ? legacyPricing
+        : optionsPricing ?? legacyPricing;
+
+  if (!resolved) {
+    return undefined;
   }
 
-  if (item.sizeOptions) {
-    const options = sizeOptionsFromApi(item.sizeOptions);
-    const hasEnabled =
-      options.small.enabled || options.large.enabled || options.family.enabled;
-
-    if (hasEnabled) {
-      return toLegacySizePricing(options);
-    }
+  // Last resort: fill zeros from the item base price so cards never show $0.
+  const fallback = Number(item.price) > 0 ? Number(item.price) : 0;
+  if (fallback > 0 && isBrokenSizePricing(resolved)) {
+    return { small: fallback, large: fallback, family: fallback };
   }
 
-  return undefined;
+  return {
+    small: resolved.small > 0 ? resolved.small : fallback,
+    large: resolved.large > 0 ? resolved.large : fallback,
+    family: resolved.family > 0 ? resolved.family : fallback,
+  };
 }
 
 export function mapApiMenuItem(item: AdminMenuItem): MenuItem {

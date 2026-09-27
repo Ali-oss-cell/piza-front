@@ -19,6 +19,7 @@ export const DESKTOP_NAV_ITEMS: NavItem[] = [
   { label: "Catering", href: "/catering" },
   { label: "Locations", href: "/locations" },
   { label: "About", href: "/about" },
+  { label: "Blog", href: "/blog" },
 ];
 
 export const MOBILE_NAV_ITEMS: NavItem[] = [

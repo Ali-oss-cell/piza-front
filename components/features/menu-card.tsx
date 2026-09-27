@@ -32,14 +32,20 @@ function getPriceForSize(item: MenuItem, size: PizzaSize): number {
     return item.price;
   }
 
+  let value = item.price;
   switch (size) {
     case "S":
-      return item.sizePricing.small;
+      value = item.sizePricing.small;
+      break;
     case "L":
-      return item.sizePricing.large;
+      value = item.sizePricing.large;
+      break;
     case "F":
-      return item.sizePricing.family;
+      value = item.sizePricing.family;
+      break;
   }
+
+  return value > 0 ? value : item.price;
 }
 
 function ImagePanel({

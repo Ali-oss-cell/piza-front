@@ -17,13 +17,8 @@ import {
 import { isNextOrderOrderingEnabled, ORDER_ONLINE_HREF } from "@/lib/nextorder";
 import { resolveMediaUrl } from "@/lib/media-url";
 import { PLATFORM_ACCENT } from "@/lib/store-theme";
+import { parseHeroHeadline } from "@/lib/hero-headline";
 import { cn } from "@/lib/utils";
-import {
-  BENNY_BOYS_HERO_LINE_1,
-  BENNY_BOYS_HERO_LINE_2,
-  BENNY_BOYS_TAGLINE,
-  DEFAULT_BRAND_SLUG,
-} from "@/types/brand";
 import type { MenuItem } from "@/types/menu";
 
 const DEFAULT_HERO =
@@ -63,9 +58,6 @@ export function HeroSection({
 }: HeroSectionProps): React.ReactElement {
   const reduceMotion = useReducedMotion();
   const { resolvedTheme } = useTheme();
-  const slug = brandSlug?.toLowerCase() ?? DEFAULT_BRAND_SLUG;
-  const isBennyBoys = slug.includes("benny") || slug.includes("bunny");
-
   const brandPrimary = primaryColor?.trim() || PLATFORM_ACCENT;
   const bgLight = backgroundLightColor?.trim() || "#ffffff";
   const bgDark = backgroundDarkColor?.trim() || "#000000";
@@ -83,13 +75,13 @@ export function HeroSection({
     "--brand-bg-dark": bgDark,
   } as React.CSSProperties;
 
+  const headline = parseHeroHeadline(tagline);
   const subtitle =
     variant === "menu"
-      ? tagline?.trim() || "Browse our full menu — pickup and delivery available."
-      : tagline?.trim() ||
-        (isBennyBoys
-          ? `${BENNY_BOYS_TAGLINE} — order pickup & delivery online.`
-          : "Artisanal sourdough foundations, heritage recipes, and contemporary culinary precision delivered to your urban doorstep.");
+      ? "Browse our full menu — pickup and delivery available."
+      : tagline?.trim()
+        ? "Order pickup & delivery online."
+        : "Artisanal sourdough foundations, heritage recipes, and contemporary culinary precision delivered to your urban doorstep.";
 
   const promos = featuredDeals.slice(0, 3);
   const useNextOrder = isNextOrderOrderingEnabled();
@@ -137,16 +129,13 @@ export function HeroSection({
               transition={defaultTransition}
               variants={itemVariants}
             >
-              {variant === "menu" ? (
+              {headline?.line2 ? (
                 <>
-                  OUR <br />
-                  <span className="text-[color:var(--brand-accent)]">MENU</span>
+                  {headline.line1} <br />
+                  <span className="text-[color:var(--brand-accent)]">{headline.line2}</span>
                 </>
-              ) : isBennyBoys ? (
-                <>
-                  {BENNY_BOYS_HERO_LINE_1} <br />
-                  <span className="text-[color:var(--brand-accent)]">{BENNY_BOYS_HERO_LINE_2}</span>
-                </>
+              ) : headline ? (
+                <>{headline.line1}</>
               ) : (
                 <>
                   PIZZA & <br />

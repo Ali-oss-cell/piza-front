@@ -278,9 +278,18 @@ export function SettingsView({
           />
         </div>
         <div>
-          <label className={cn("mb-1 block text-sm font-medium", primaryText)}>Tagline</label>
-          <Input
+          <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+            Tagline / hero headline
+          </label>
+          <p className={cn("mb-2 text-xs", secondaryText)}>
+            Shown as the Classic home and menu hero. Use two lines (or separate with · / |) —
+            the second line uses the brand accent colour. Example: BOLD FLAVOURS · FRESH BITES
+          </p>
+          <textarea
+            className="min-h-[4.5rem] w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-950 shadow-sm outline-none transition focus:border-[color:var(--brand-accent,#d81b60)] focus:ring-2 focus:ring-[color:var(--brand-accent,#d81b60)]/20 dark:border-white/10 dark:bg-zinc-950 dark:text-white"
             onChange={(event) => setForm((current) => ({ ...current, tagline: event.target.value }))}
+            placeholder={"BOLD FLAVOURS\nFRESH BITES"}
+            rows={2}
             value={form.tagline}
           />
         </div>
