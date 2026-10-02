@@ -1,5 +1,8 @@
+"use client";
+
 import { Pizza } from "lucide-react";
 import { MenuCard } from "@/components/features/menu-card";
+import { StaggerGrid } from "@/components/motion/stagger-grid";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { AddToCartPayload, MenuCategory, MenuItem } from "@/types/menu";
 
@@ -29,11 +32,11 @@ export function MenuGrid({
           title="Nothing in this category yet"
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5 xl:grid-cols-3">
+        <StaggerGrid className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5 xl:grid-cols-3">
           {filteredItems.map((item) => (
             <MenuCard brandSlug={brandSlug} item={item} key={item.id} onAddToCart={onAddToCart} />
           ))}
-        </div>
+        </StaggerGrid>
       )}
     </section>
   );

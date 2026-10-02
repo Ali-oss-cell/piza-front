@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Plus } from "lucide-react";
+import { StaggerGrid } from "@/components/motion/stagger-grid";
 import { Button } from "@/components/ui/button";
 import { SmartImage } from "@/components/ui/smart-image";
 import { getMenuDisplayDescription } from "@/lib/menu-display-copy";
@@ -154,7 +155,7 @@ export function MenuDenseGrid({
           No items in this category yet.
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
+        <StaggerGrid className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
           {filtered.map((item) => (
             <DenseCard
               brandSlug={brandSlug}
@@ -164,7 +165,7 @@ export function MenuDenseGrid({
               onOpenItem={onOpenItem}
             />
           ))}
-        </div>
+        </StaggerGrid>
       )}
     </section>
   );

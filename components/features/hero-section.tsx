@@ -131,11 +131,53 @@ export function HeroSection({
             >
               {headline?.line2 ? (
                 <>
-                  {headline.line1} <br />
-                  <span className="text-[color:var(--brand-accent)]">{headline.line2}</span>
+                  {(headline.line1 ?? "").split(/\s+/).filter(Boolean).map((word, index) => (
+                    <motion.span
+                      className="mr-[0.28em] inline-block"
+                      initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      key={`l1-${word}-${index}`}
+                      transition={{
+                        ...defaultTransition,
+                        delay: reduceMotion ? 0 : 0.05 + index * 0.06,
+                      }}
+                    >
+                      {word}
+                    </motion.span>
+                  ))}
+                  <br />
+                  {(headline.line2 ?? "").split(/\s+/).filter(Boolean).map((word, index) => (
+                    <motion.span
+                      className="mr-[0.28em] inline-block text-[color:var(--brand-accent)]"
+                      initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      key={`l2-${word}-${index}`}
+                      transition={{
+                        ...defaultTransition,
+                        delay: reduceMotion
+                          ? 0
+                          : 0.2 + index * 0.06,
+                      }}
+                    >
+                      {word}
+                    </motion.span>
+                  ))}
                 </>
               ) : headline ? (
-                <>{headline.line1}</>
+                (headline.line1 ?? "").split(/\s+/).filter(Boolean).map((word, index) => (
+                  <motion.span
+                    className="mr-[0.28em] inline-block"
+                    initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    key={`h-${word}-${index}`}
+                    transition={{
+                      ...defaultTransition,
+                      delay: reduceMotion ? 0 : 0.05 + index * 0.06,
+                    }}
+                  >
+                    {word}
+                  </motion.span>
+                ))
               ) : (
                 <>
                   PIZZA & <br />

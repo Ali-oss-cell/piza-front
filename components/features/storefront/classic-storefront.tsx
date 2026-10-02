@@ -6,6 +6,7 @@ import { CtaBand } from "@/components/features/content/cta-band";
 import { HeroSection } from "@/components/features/hero-section";
 import { MenuGrid } from "@/components/features/menu-grid";
 import type { StorefrontProps } from "@/components/features/storefront/types";
+import { MotionReveal } from "@/components/motion/motion-reveal";
 import { useCart } from "@/lib/cart-context";
 import { isNextOrderOrderingEnabled, ORDER_ONLINE_HREF } from "@/lib/nextorder";
 import type { MenuItem } from "@/types/menu";
@@ -33,7 +34,7 @@ export function ClassicStorefront({
       menuItems
         .filter((item) => item.category === "deals")
         .sort((a, b) => a.number - b.number),
-    [menuItems]
+    [menuItems],
   );
 
   const scrollToMenu = useCallback(() => {
@@ -45,7 +46,7 @@ export function ClassicStorefront({
       setActiveCategory(deal.category);
       requestAnimationFrame(() => scrollToMenu());
     },
-    [scrollToMenu]
+    [scrollToMenu],
   );
 
   return (
@@ -65,29 +66,33 @@ export function ClassicStorefront({
         variant={variant}
       />
       {useNextOrder ? (
-        <CtaBand
-          className="mx-auto max-w-7xl px-4 py-16 md:px-8 lg:px-12"
-          description="Pizza, pasta, deals, and sides — order pickup or delivery through our online menu."
-          primaryHref={ORDER_ONLINE_HREF}
-          primaryLabel="Browse Full Menu"
-          secondaryHref="/deals"
-          secondaryLabel="View Specials"
-          title="Ready to order?"
-        />
+        <MotionReveal as="div">
+          <CtaBand
+            className="mx-auto max-w-7xl px-4 py-16 md:px-8 lg:px-12"
+            description="Pizza, pasta, deals, and sides — order pickup or delivery through our online menu."
+            primaryHref={ORDER_ONLINE_HREF}
+            primaryLabel="Browse Full Menu"
+            secondaryHref="/deals"
+            secondaryLabel="View Specials"
+            title="Ready to order?"
+          />
+        </MotionReveal>
       ) : (
-        <div ref={menuSectionRef}>
-          <CategoryTabs
-            activeCategory={activeCategory}
-            categories={categories}
-            onSelectCategory={setActiveCategory}
-          />
-          <MenuGrid
-            activeCategory={activeCategory}
-            brandSlug={brandSlug}
-            items={menuItems}
-            onAddToCart={addToCart}
-          />
-        </div>
+        <MotionReveal as="div" delay={0.05}>
+          <div ref={menuSectionRef}>
+            <CategoryTabs
+              activeCategory={activeCategory}
+              categories={categories}
+              onSelectCategory={setActiveCategory}
+            />
+            <MenuGrid
+              activeCategory={activeCategory}
+              brandSlug={brandSlug}
+              items={menuItems}
+              onAddToCart={addToCart}
+            />
+          </div>
+        </MotionReveal>
       )}
     </main>
   );

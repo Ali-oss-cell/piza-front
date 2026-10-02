@@ -7,6 +7,7 @@ import { ItemDetailSheet } from "@/components/features/storefront/item-detail-sh
 import { MenuDenseGrid } from "@/components/features/storefront/menu-dense-grid";
 import { StickyCartBar } from "@/components/features/storefront/sticky-cart-bar";
 import type { StorefrontProps } from "@/components/features/storefront/types";
+import { MotionReveal } from "@/components/motion/motion-reveal";
 import { useCart } from "@/lib/cart-context";
 import { formatOpeningHoursLines } from "@/lib/opening-hours";
 import { formatCurrency } from "@/lib/pricing";
@@ -56,17 +57,19 @@ export function MenuFirstStorefront(props: StorefrontProps): React.ReactElement 
 
   return (
     <main className="pt-16 transition-colors duration-150 ease-out md:pt-[4.5rem]">
-      <div className="h-12 border-b border-zinc-200/70 bg-zinc-50/90 px-margin-mobile dark:border-white/10 dark:bg-zinc-950/80 md:h-14 md:px-margin-desktop">
-        <div className="mx-auto flex h-full max-w-container-max items-center justify-between gap-3">
-          <p className="truncate text-xs font-medium text-zinc-600 dark:text-zinc-300 md:text-sm">
-            <span className="font-semibold text-zinc-900 dark:text-white">
-              {brandName ?? "Menu"}
-            </span>
-            <span className="mx-2 text-zinc-300 dark:text-zinc-600">·</span>
-            {status}
-          </p>
+      <MotionReveal as="div">
+        <div className="h-12 border-b border-zinc-200/70 bg-zinc-50/90 px-margin-mobile dark:border-white/10 dark:bg-zinc-950/80 md:h-14 md:px-margin-desktop">
+          <div className="mx-auto flex h-full max-w-container-max items-center justify-between gap-3">
+            <p className="truncate text-xs font-medium text-zinc-600 dark:text-zinc-300 md:text-sm">
+              <span className="font-semibold text-zinc-900 dark:text-white">
+                {brandName ?? "Menu"}
+              </span>
+              <span className="mx-2 text-zinc-300 dark:text-zinc-600">·</span>
+              {status}
+            </p>
+          </div>
         </div>
-      </div>
+      </MotionReveal>
 
       {useNextOrder ? (
         <CtaBand

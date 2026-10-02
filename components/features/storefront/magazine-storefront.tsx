@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown, Plus, ShoppingBag } from "lucide-react";
 import type { StorefrontProps } from "@/components/features/storefront/types";
+import { DealsCarousel } from "@/components/layout-e/deals-carousel";
 import { MotionReveal } from "@/components/motion/motion-reveal";
+import { StaggerGrid } from "@/components/motion/stagger-grid";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-context";
 import { getMenuDisplayDescription } from "@/lib/menu-display-copy";
@@ -33,74 +35,6 @@ function needsCustomize(item: MenuItem): boolean {
     item.category.endsWith("-pizzas") ||
     item.category === "deals" ||
     (item.ingredients?.length ?? 0) > 0
-  );
-}
-
-function useInViewOnce(threshold = 0.15): {
-  ref: React.RefObject<HTMLElement | null>;
-  visible: boolean;
-} {
-  const ref = useRef<HTMLElement | null>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const node = ref.current;
-    if (!node || visible) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [visible, threshold]);
-
-  return { ref, visible };
-}
-
-function DealStripCard({ item }: { item: MenuItem }): React.ReactElement {
-  const src = resolveMediaUrl(item.imageUrl) ?? item.imageUrl;
-  const { ref, visible } = useInViewOnce();
-
-  return (
-    <div
-      className={cn(
-        "shrink-0 transition duration-500",
-        visible ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
-      )}
-      ref={ref as React.RefObject<HTMLDivElement>}
-    >
-      <Link
-        className="group relative block w-[260px] overflow-hidden rounded-2xl bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:bg-zinc-900/50 sm:w-[320px]"
-        href={itemHref(item)}
-      >
-        <div className="relative h-[200px] w-full bg-zinc-100 dark:bg-zinc-800 sm:h-[260px]">
-          <Image
-            alt={item.imageAlt}
-            className="object-cover brightness-[1.02] contrast-[1.05] transition-transform duration-500 group-hover:scale-105"
-            fill
-            sizes="320px"
-            src={src}
-          />
-          <span
-            aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-zinc-950/35 via-transparent to-transparent"
-          />
-        </div>
-        <div className="p-4">
-          <p className="line-clamp-2 text-base font-bold text-zinc-950 dark:text-white">
-            {item.name}
-          </p>
-          <p className="mt-1 text-base font-semibold text-[color:var(--brand-accent,#d81b60)]">
-            {formatCurrency(item.price)}
-          </p>
-        </div>
-      </Link>
-    </div>
   );
 }
 
@@ -450,17 +384,16 @@ export function MagazineStorefront({
                 See all
               </Link>
             </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar md:gap-5">
-              {deals.map((item) => (
-                <DealStripCard item={item} key={item.id} />
-              ))}
-            </div>
+            <DealsCarousel items={deals} />
           </div>
         </MotionReveal>
       ) : null}
 
       {isHome && featured.length > 0 ? (
-        <section className="border-b border-zinc-200/70 py-12 dark:border-white/10 md:py-24">
+        <MotionReveal
+          as="section"
+          className="border-b border-zinc-200/70 py-12 dark:border-white/10 md:py-24"
+        >
           <div className="mx-auto max-w-container-max px-margin-mobile md:px-margin-desktop">
             <h2 className="mb-6 font-display text-xl font-bold text-zinc-950 dark:text-white md:mb-8 md:text-2xl">
               Featured picks
@@ -469,11 +402,11 @@ export function MagazineStorefront({
               {largeFeature ? (
                 <FeaturedLarge brandSlug={brandSlug} item={largeFeature} />
               ) : null}
-              <div className="flex flex-col gap-4">
+              <StaggerGrid className="flex flex-col gap-4" itemClassName="">
                 {smallFeatures.map((item) => (
                   <FeaturedSmall brandSlug={brandSlug} item={item} key={item.id} />
                 ))}
-              </div>
+              </StaggerGrid>
             </div>
             <div className="mt-8 flex justify-center md:mt-10">
               <Button
@@ -484,7 +417,7 @@ export function MagazineStorefront({
               </Button>
             </div>
           </div>
-        </section>
+        </MotionReveal>
       ) : null}
 
       {!isHome && !useNextOrder ? (
@@ -507,7 +440,10 @@ export function MagazineStorefront({
       ) : null}
 
       {isHome && (tagline || address) ? (
-        <section className="border-t border-zinc-200/70 bg-zinc-50/80 py-12 dark:border-white/10 dark:bg-zinc-950/50 md:py-20">
+        <MotionReveal
+          as="section"
+          className="border-t border-zinc-200/70 bg-zinc-50/80 py-12 dark:border-white/10 dark:bg-zinc-950/50 md:py-20"
+        >
           <div className="mx-auto max-w-container-max px-margin-mobile md:px-margin-desktop">
             <h2 className="font-display text-xl font-bold text-zinc-950 dark:text-white md:text-2xl">
               About {brandName}
@@ -529,7 +465,7 @@ export function MagazineStorefront({
               Our story →
             </Link>
           </div>
-        </section>
+        </MotionReveal>
       ) : null}
 
       {isHome || !useNextOrder ? <OrderNowFab /> : null}
