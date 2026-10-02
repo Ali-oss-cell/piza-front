@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Plus, ShoppingBag } from "lucide-react";
 import type { StorefrontProps } from "@/components/features/storefront/types";
+import { MotionReveal } from "@/components/motion/motion-reveal";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-context";
 import { getMenuDisplayDescription } from "@/lib/menu-display-copy";
@@ -388,17 +389,19 @@ export function MagazineStorefront({
             <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/92 via-zinc-950/70 to-zinc-950/35" />
           </div>
           <div className="relative mx-auto flex min-h-[60vh] max-w-container-max flex-col justify-end gap-5 px-margin-mobile pb-12 pt-24 md:min-h-[70vh] md:px-margin-desktop md:pb-20 md:pt-28">
-            <p className="font-label-md text-xs font-semibold uppercase tracking-[0.22em] text-white/70 animate-in fade-in duration-700">
-              {brandName}
-            </p>
-            <h1 className="max-w-2xl font-display text-[32px] font-bold leading-[1.1] tracking-tight text-white animate-in fade-in slide-in-from-bottom-2 duration-700 md:text-[52px] lg:text-[56px]">
-              {tagline?.trim() || "Deals worth scrolling for"}
-            </h1>
-            <p className="max-w-md text-[15px] leading-relaxed text-white/75 md:text-[17px] md:leading-[1.6]">
-              {topDeal
-                ? `This week: ${topDeal.name} from ${formatCurrency(topDeal.price)}.`
-                : "Browse specials, featured picks, and the full menu."}
-            </p>
+            <MotionReveal as="div" className="space-y-5" delay={0}>
+              <p className="font-label-md text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+                {brandName}
+              </p>
+              <h1 className="max-w-2xl font-display text-[32px] font-bold leading-[1.1] tracking-tight text-white md:text-[52px] lg:text-[56px]">
+                {tagline?.trim() || "Deals worth scrolling for"}
+              </h1>
+              <p className="max-w-md text-[15px] leading-relaxed text-white/75 md:text-[17px] md:leading-[1.6]">
+                {topDeal
+                  ? `This week: ${topDeal.name} from ${formatCurrency(topDeal.price)}.`
+                  : "Browse specials, featured picks, and the full menu."}
+              </p>
+            </MotionReveal>
             <div className="flex flex-wrap gap-3">
               <Button
                 asChild
@@ -431,7 +434,10 @@ export function MagazineStorefront({
       ) : null}
 
       {isHome && deals.length > 0 ? (
-        <section className="border-b border-zinc-200/70 py-12 dark:border-white/10 md:py-24">
+        <MotionReveal
+          as="section"
+          className="border-b border-zinc-200/70 py-12 dark:border-white/10 md:py-24"
+        >
           <div className="mx-auto max-w-container-max px-margin-mobile md:px-margin-desktop">
             <div className="mb-6 flex items-end justify-between gap-3 md:mb-8">
               <h2 className="font-display text-xl font-bold text-zinc-950 dark:text-white md:text-2xl">
@@ -450,7 +456,7 @@ export function MagazineStorefront({
               ))}
             </div>
           </div>
-        </section>
+        </MotionReveal>
       ) : null}
 
       {isHome && featured.length > 0 ? (

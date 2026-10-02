@@ -23,6 +23,14 @@ interface InviteFormState {
   posPin: string;
 }
 
+interface EditFormState {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  posPin: string;
+}
+
 function emptyForm(): InviteFormState {
   return {
     email: "",
@@ -40,6 +48,9 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<InviteFormState>(emptyForm);
+  const [editing, setEditing] = useState<TeamMembership | null>(null);
+  const [editForm, setEditForm] = useState<EditFormState | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const loadTeam = async (): Promise<void> => {
@@ -93,6 +104,40 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
     }
   };
 
+  const openEdit = (member: TeamMembership): void => {
+    setEditing(member);
+    setEditError(null);
+    setEditForm({
+      firstName: member.user.firstName,
+      lastName: member.user.lastName,
+      email: member.user.email,
+      role: member.role,
+      posPin: "",
+    });
+  };
+
+  const handleSaveEdit = async (): Promise<void> => {
+    if (!editing || !editForm) return;
+    setIsSaving(true);
+    setEditError(null);
+    try {
+      await updateTeamMember(token, editing.id, {
+        firstName: editForm.firstName.trim(),
+        lastName: editForm.lastName.trim(),
+        email: editForm.email.trim(),
+        ...(editing.role === "PLATFORM_ADMIN" ? {} : { role: editForm.role }),
+        ...(editForm.posPin.trim() ? { posPin: editForm.posPin.trim() } : {}),
+      });
+      await loadTeam();
+      setEditing(null);
+      setEditForm(null);
+    } catch (saveError) {
+      setEditError(saveError instanceof Error ? saveError.message : "Unable to update member.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
@@ -139,9 +184,23 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
                 <p className={cn("mt-1 text-xs", secondaryText)}>
                   {member.user.email}
                   {member.location ? ` · ${member.location.name}` : ""}
+                  {member.role === "STAFF" && member.user.hasPin === false
+                    ? " · No POS code"
+                    : ""}
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full border border-zinc-200/70 px-3 py-1 text-xs font-medium dark:border-white/10",
+                    primaryText,
+                  )}
+                  onClick={() => openEdit(member)}
+                  type="button"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit
+                </button>
                 <button
                   className={cn(
                     "rounded-full px-3 py-1 text-xs font-medium",
@@ -242,7 +301,7 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
                   value={form.posPin}
                 />
                 <p className={cn("mt-1 text-xs", secondaryText)}>
-                  Give this code to the employee. They must change it the first time they log in.
+                  This is their register sign-in. Give it to them, and they choose their own code the first time they sign in.
                 </p>
               </div>
               {error ? <p className="text-sm text-red-500">{error}</p> : null}
@@ -263,6 +322,149 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
               >
                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Send Invite
+              </Button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <Dialog.Root
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditing(null);
+            setEditForm(null);
+            setEditError(null);
+          }
+        }}
+        open={Boolean(editing && editForm)}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
+          <Dialog.Content
+            className={cn(
+              "fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(96vw,32rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl p-6 shadow-2xl",
+              dashboardGlass,
+            )}
+          >
+            <Dialog.Title className={cn("font-display text-xl font-bold", primaryText)}>
+              Edit team member
+            </Dialog.Title>
+            {editForm ? (
+              <div className="mt-6 space-y-4">
+                <div>
+                  <label className={cn("mb-1 block text-sm font-medium", primaryText)}>Email</label>
+                  <Input
+                    onChange={(event) =>
+                      setEditForm((current) =>
+                        current ? { ...current, email: event.target.value } : current,
+                      )
+                    }
+                    type="email"
+                    value={editForm.email}
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                      First name
+                    </label>
+                    <Input
+                      onChange={(event) =>
+                        setEditForm((current) =>
+                          current ? { ...current, firstName: event.target.value } : current,
+                        )
+                      }
+                      value={editForm.firstName}
+                    />
+                  </div>
+                  <div>
+                    <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                      Last name
+                    </label>
+                    <Input
+                      onChange={(event) =>
+                        setEditForm((current) =>
+                          current ? { ...current, lastName: event.target.value } : current,
+                        )
+                      }
+                      value={editForm.lastName}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className={cn("mb-1 block text-sm font-medium", primaryText)}>Role</label>
+                  {editing?.role === "PLATFORM_ADMIN" ? (
+                    <p className={cn("text-sm", secondaryText)}>Platform admin</p>
+                  ) : (
+                    <select
+                      className="flex h-11 w-full rounded-xl border border-zinc-200/70 bg-white px-4 text-sm dark:border-white/10 dark:bg-zinc-900"
+                      onChange={(event) =>
+                        setEditForm((current) =>
+                          current ? { ...current, role: event.target.value } : current,
+                        )
+                      }
+                      value={editForm.role}
+                    >
+                      <option value="STAFF">Staff (POS only for this store)</option>
+                      <option value="STORE_ADMIN">Store Admin</option>
+                      <option value="SEO">SEO Editor (content/blog only — no full admin)</option>
+                    </select>
+                  )}
+                </div>
+                <div>
+                  <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                    New POS code
+                  </label>
+                  <Input
+                    inputMode="numeric"
+                    maxLength={6}
+                    onChange={(event) =>
+                      setEditForm((current) =>
+                        current
+                          ? {
+                              ...current,
+                              posPin: event.target.value.replace(/\D/g, "").slice(0, 6),
+                            }
+                          : current,
+                      )
+                    }
+                    placeholder={editing?.user.hasPin ? "Leave blank to keep current code" : "4–6 digits"}
+                    value={editForm.posPin}
+                  />
+                  <p className={cn("mt-1 text-xs", secondaryText)}>
+                    {editing?.user.hasPin
+                      ? "Enter a new code only to reset their register sign-in. They must change it the next time they sign in."
+                      : "They do not have a register code yet. Set one so they can sign in."}
+                  </p>
+                </div>
+                {editError ? <p className="text-sm text-red-500">{editError}</p> : null}
+              </div>
+            ) : null}
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                onClick={() => {
+                  setEditing(null);
+                  setEditForm(null);
+                }}
+                variant="ghost"
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={
+                  isSaving ||
+                  !editForm ||
+                  !editForm.email.trim() ||
+                  !editForm.firstName.trim() ||
+                  !editForm.lastName.trim() ||
+                  (editForm.role === "STAFF" &&
+                    editing?.user.hasPin === false &&
+                    editForm.posPin.length < 4)
+                }
+                onClick={() => void handleSaveEdit()}
+              >
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Save
               </Button>
             </div>
           </Dialog.Content>

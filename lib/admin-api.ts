@@ -1053,7 +1053,15 @@ export function closeLocationShift(
 export function updateTeamMember(
   token: string,
   id: string,
-  payload: { role?: string; isActive?: boolean; locationId?: string | null },
+  payload: {
+    role?: string;
+    isActive?: boolean;
+    locationId?: string | null;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    posPin?: string;
+  },
 ): Promise<import("@/types/hq").TeamMembership> {
   return apiRequest(`/team/${id}`, {
     method: "PATCH",

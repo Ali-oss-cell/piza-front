@@ -27,7 +27,8 @@ export const STOREFRONT_LAYOUTS: Array<{
   {
     id: "portfolio",
     label: "Portfolio",
-    blurb: "Cinematic brand showcase — ordering stays quiet until you click through.",
+    blurb:
+      "Cinematic showcase with smooth scroll, pinned hero, and shared dish transitions — ordering stays quiet until you click through.",
   },
 ];
 

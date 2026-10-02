@@ -185,6 +185,7 @@ export interface TeamMembership {
     firstName: string;
     lastName: string;
     role: string;
+    hasPin?: boolean;
   };
   location: { id: string; slug: string; name: string } | null;
   store?: { id: string; slug: string; name: string };
