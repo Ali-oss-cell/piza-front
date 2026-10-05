@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<BulkMenuItem["category"], string> = {
   pizzas: "Pizza Multipacks",
-  pasta: "Pasta Trays",
+  pasta: "Pasta",
   sides: "Sides & Drinks",
   salads: "Salads",
 };
@@ -79,7 +79,7 @@ export function CateringBulkMenu({
           Build your own spread
         </h2>
         <p className="mt-2 max-w-2xl text-zinc-600 dark:text-zinc-400">
-          Mix and match trays and multipacks. Totals under $500 checkout online — larger orders go
+          Mix and match multipacks and sides. Totals under $500 checkout online — larger orders go
           through our quote form.
         </p>
       </div>

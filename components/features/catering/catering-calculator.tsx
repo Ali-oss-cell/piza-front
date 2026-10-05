@@ -43,8 +43,8 @@ export function CateringCalculator(): React.ReactElement {
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Large pizzas" value={String(recommendation.largePizzas)} />
-        <StatCard label="Side trays" value={String(recommendation.sides)} />
-        <StatCard label="Drink packs" value={String(recommendation.drinks)} />
+        <StatCard label="Sides" value={String(recommendation.sides)} />
+        <StatCard label="1.25L drinks" value={String(recommendation.drinks)} />
         <StatCard
           highlight
           label="Est. per person"
@@ -55,8 +55,8 @@ export function CateringCalculator(): React.ReactElement {
       <p className="mt-6 rounded-xl border border-zinc-200/60 bg-white/80 px-4 py-3 text-sm text-zinc-600 dark:border-white/[0.08] dark:bg-black/30 dark:text-zinc-400">
         Recommended spread:{" "}
         <strong className="text-zinc-900 dark:text-white">
-          {recommendation.largePizzas} large pizzas, {recommendation.sides} side trays,{" "}
-          {recommendation.drinks} drink packs
+          {recommendation.largePizzas} large pizzas, {recommendation.sides} sides,{" "}
+          {recommendation.drinks}× 1.25L drinks
         </strong>{" "}
         — estimated total{" "}
         <strong className="text-zinc-900 dark:text-white">

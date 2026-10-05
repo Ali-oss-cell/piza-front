@@ -66,7 +66,7 @@ export const marketingPages: Record<MarketingPageKey, MarketingPageContent> = {
       },
       {
         title: "Off-site catering",
-        body: "We deliver full catering packages to your venue. Packages start from $165 for 10–20 guests, with vegetarian options and clear allergen guidance on request.",
+        body: "We deliver full catering packages to your venue. Packages start from about $90 for 10–20 guests, with vegetarian options and gluten-free bases available on request.",
       },
       {
         title: "What we need from you",
