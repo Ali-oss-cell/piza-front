@@ -222,21 +222,24 @@ export function DealsView({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className={cn("font-display text-2xl font-bold", primaryText)}>Deals & Promotions</h2>
+          <h2 className={cn("font-display text-2xl font-bold", primaryText)}>Promo deals</h2>
           <p className={cn("mt-1 text-sm", secondaryText)}>
-            Create limited-time offers, promo codes, and featured specials for the storefront.
+            Discount codes and %/$ off promotions. Combo meals like Single Deal live under Menu →
+            Deals.
           </p>
         </div>
         <Button onClick={openCreateModal}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Deal
+          Add promo
         </Button>
       </div>
 
       <div className="space-y-3">
         {sortedDeals.length === 0 ? (
           <div className="rounded-xl border border-dashed border-zinc-300/70 p-8 text-center dark:border-white/10">
-            <p className={cn("text-sm", secondaryText)}>No deals yet. Add your first promotion.</p>
+            <p className={cn("text-sm", secondaryText)}>
+              No promo deals yet. Add a discount or promo code here — combo meal deals are in Menu.
+            </p>
           </div>
         ) : (
           sortedDeals.map((deal) => (
@@ -376,7 +379,7 @@ export function DealsView({
             )}
           >
             <Dialog.Title className={cn("font-display text-xl font-bold", primaryText)}>
-              {modalMode === "create" ? "Add Deal" : "Edit Deal"}
+              {modalMode === "create" ? "Add promo" : "Edit promo"}
             </Dialog.Title>
             <div className="mt-6 space-y-4">
               <div>

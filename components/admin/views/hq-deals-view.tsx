@@ -90,9 +90,9 @@ export function HqDealsView({ token, brands }: HqDealsViewProps): React.ReactEle
   return (
     <div className="space-y-8">
       <div>
-        <h2 className={cn("font-display text-2xl font-bold", primaryText)}>Deals push</h2>
+        <h2 className={cn("font-display text-2xl font-bold", primaryText)}>Promo push</h2>
         <p className={cn("mt-1 text-sm", secondaryText)}>
-          Pick a deal from one store and push it to other stores
+          Pick a promo deal from one store and push it to other stores
         </p>
       </div>
 
@@ -169,7 +169,7 @@ export function HqDealsView({ token, brands }: HqDealsViewProps): React.ReactEle
               </div>
             ) : deals.length === 0 ? (
               <p className={cn("text-sm", secondaryText)}>
-                No deals in this store. Create one in the store admin Deals screen first.
+                No promo deals in this store. Create one in the store admin Promo deals screen first.
               </p>
             ) : (
               <div className="max-h-[24rem] space-y-2 overflow-y-auto">

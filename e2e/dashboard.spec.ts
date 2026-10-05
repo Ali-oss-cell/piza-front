@@ -164,12 +164,12 @@ test.describe("Admin dashboard", () => {
     await expect(crustDialog).toBeHidden({ timeout: 15_000 });
     await expect(page.getByText(crustName)).toBeVisible();
 
-    // --- Deals ---
-    await goNav(page, "Deals");
+    // --- Promo deals ---
+    await goNav(page, "Promo deals");
     await expect(
-      page.getByRole("heading", { name: "Deals & Promotions" }),
+      page.getByRole("heading", { name: "Promo deals" }),
     ).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add Deal" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add promo" })).toBeVisible();
 
     // --- Payments (read-only assert — do not save/pair) ---
     await goNav(page, "Payments");

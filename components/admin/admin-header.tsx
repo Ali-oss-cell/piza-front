@@ -31,7 +31,7 @@ const VIEW_LABELS: Record<AdminView, string> = {
   ingredients: "Ingredients",
   categories: "Topping Categories",
   crusts: "Crust Management",
-  deals: "Deals & Promotions",
+  deals: "Promo deals",
   payments: "Payments",
   settings: "System Settings",
   team: "Team",
