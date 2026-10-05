@@ -24,14 +24,9 @@ interface ProductDetailPageProps {
 }
 
 function resolveDefaultIngredients(item: MenuItem): string[] {
-  if (item.ingredients && item.ingredients.length > 0) {
-    return item.ingredients;
-  }
-
-  return item.description
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
+  // Only show removable ingredients when the catalog has explicit entries.
+  // Never split the description — that turns deal includes into fake toppings.
+  return item.ingredients ?? [];
 }
 
 export function ProductDetailPage({
@@ -41,12 +36,16 @@ export function ProductDetailPage({
   extrasLabel = "Add Extras",
 }: ProductDetailPageProps): React.ReactElement {
   const { addToCart } = useCart();
-  const hasSizeOptions = Boolean(item.sizePricing);
+  const isPizzaItem = item.category.endsWith("-pizzas");
+  const hasSizeOptions = isPizzaItem && Boolean(item.sizePricing);
   const sizeOptions = useMemo(
-    () => (item.sizePricing ? buildSizeOptions(item.sizePricing) : []),
-    [item.sizePricing]
+    () => (hasSizeOptions && item.sizePricing ? buildSizeOptions(item.sizePricing) : []),
+    [hasSizeOptions, item.sizePricing]
   );
-  const ingredients = useMemo(() => resolveDefaultIngredients(item), [item]);
+  const ingredients = useMemo(
+    () => (isPizzaItem ? resolveDefaultIngredients(item) : []),
+    [item, isPizzaItem]
+  );
 
   const [configuration, setConfiguration] = useState<ProductConfiguration>({
     size: "S",

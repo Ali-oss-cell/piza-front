@@ -29,13 +29,9 @@ interface ItemDetailSheetProps {
 }
 
 function resolveDefaultIngredients(item: MenuItem): string[] {
-  if (item.ingredients && item.ingredients.length > 0) {
-    return item.ingredients;
-  }
-  return item.description
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
+  // Only show removable ingredients when the catalog has explicit entries.
+  // Never split the description — that turns deal includes into fake toppings.
+  return item.ingredients ?? [];
 }
 
 export function ItemDetailSheet({
@@ -49,10 +45,11 @@ export function ItemDetailSheet({
   const [toppingCategories, setToppingCategories] = useState<ToppingCategory[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
-  const hasSizeOptions = Boolean(item?.sizePricing);
+  const isPizzaItem = Boolean(item?.category?.endsWith("-pizzas"));
+  const hasSizeOptions = isPizzaItem && Boolean(item?.sizePricing);
   const ingredients = useMemo(
-    () => (item ? resolveDefaultIngredients(item) : []),
-    [item]
+    () => (item && isPizzaItem ? resolveDefaultIngredients(item) : []),
+    [item, isPizzaItem]
   );
 
   const [configuration, setConfiguration] = useState<ProductConfiguration>({
@@ -79,10 +76,9 @@ export function ItemDetailSheet({
       .then(([apiCrusts, toppingGroups]) => {
         if (cancelled) return;
         const crusts = hasSizeOptions ? mapApiCrusts(apiCrusts) : [];
-        const toppings = filterToppingsForItem(
-          toppingGroups,
-          item.allowedToppingIds ?? []
-        );
+        const toppings = isPizzaItem
+          ? filterToppingsForItem(toppingGroups, item.allowedToppingIds ?? [])
+          : [];
         setCrustOptions(crusts);
         setToppingCategories(toppings);
         setConfiguration((current) => ({
@@ -102,7 +98,7 @@ export function ItemDetailSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, item, brandSlug, hasSizeOptions]);
+  }, [open, item, brandSlug, hasSizeOptions, isPizzaItem]);
 
   const sizeOptions = useMemo(
     () => (item?.sizePricing ? buildSizeOptions(item.sizePricing) : []),

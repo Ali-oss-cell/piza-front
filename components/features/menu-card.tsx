@@ -166,11 +166,10 @@ export function MenuCard({
   const [selectedSize, setSelectedSize] = useState<PizzaSize>("S");
   const [justAdded, setJustAdded] = useState(false);
   const addResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasSizePricing = Boolean(item.sizePricing);
+  const hasSizePricing = Boolean(item.sizePricing) && item.category.endsWith("-pizzas");
   const showCustomize =
     hasSizePricing ||
     item.category.endsWith("-pizzas") ||
-    item.category === "deals" ||
     (item.ingredients?.length ?? 0) > 0;
   const selectedPrice = hasSizePricing ? getPriceForSize(item, selectedSize) : item.price;
   const detailHref = isNextOrderOrderingEnabled() ? ORDER_ONLINE_HREF : `/menu/${item.id}`;

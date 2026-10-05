@@ -37,9 +37,7 @@ function DenseCard({
   const imageSrc = resolveMediaUrl(item.imageUrl) ?? item.imageUrl;
   const desc = getMenuDisplayDescription(item, brandSlug);
   const needsCustomize =
-    Boolean(item.sizePricing) ||
     item.category.endsWith("-pizzas") ||
-    item.category === "deals" ||
     (item.ingredients?.length ?? 0) > 0;
 
   const handleQuickAdd = (event: React.MouseEvent): void => {

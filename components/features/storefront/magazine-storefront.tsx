@@ -31,9 +31,7 @@ function quickAddPrice(item: MenuItem): { price: number; size?: PizzaSize } {
 
 function needsCustomize(item: MenuItem): boolean {
   return (
-    Boolean(item.sizePricing) ||
     item.category.endsWith("-pizzas") ||
-    item.category === "deals" ||
     (item.ingredients?.length ?? 0) > 0
   );
 }

@@ -49,23 +49,19 @@ function resolveSizePricing(item: AdminMenuItem): SizePricing | undefined {
     : undefined;
 
   // Prefer sizeOptions when sizePricing is missing or all zeros (bad import).
-  let resolved =
+  const resolved =
     optionsPricing && !isBrokenSizePricing(optionsPricing)
       ? optionsPricing
       : legacyPricing && !isBrokenSizePricing(legacyPricing)
         ? legacyPricing
-        : optionsPricing ?? legacyPricing;
+        : undefined;
 
+  // Never invent Small/Large/Family from base price alone (breaks deals/sides).
   if (!resolved) {
     return undefined;
   }
 
-  // Last resort: fill zeros from the item base price so cards never show $0.
   const fallback = Number(item.price) > 0 ? Number(item.price) : 0;
-  if (fallback > 0 && isBrokenSizePricing(resolved)) {
-    return { small: fallback, large: fallback, family: fallback };
-  }
-
   return {
     small: resolved.small > 0 ? resolved.small : fallback,
     large: resolved.large > 0 ? resolved.large : fallback,
