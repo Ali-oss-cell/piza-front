@@ -25,10 +25,14 @@ jobs:
           command_timeout: 80m
           script: |
             set -euo pipefail
+            # Droplet clone is deploy-only: discard any local drift so ff-only
+            # cannot block shipping (this is what kept Stripe checkout offline).
             cd ~/piza/piza-front
             git fetch origin main
-            git checkout main
-            git pull --ff-only origin main
+            git checkout -B main origin/main
+            git reset --hard origin/main
+            git clean -fd
+            git rev-parse --short HEAD
 
             cd ~/piza/piza-api
             export COMPOSE_BAKE=false
