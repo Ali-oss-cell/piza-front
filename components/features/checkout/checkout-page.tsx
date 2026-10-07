@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/lib/cart-context";
 import { buildTimeSlots, formatScheduledAt } from "@/lib/opening-hours";
 import { createOrder, toApiDeliveryMode } from "@/lib/orders-api";
+import { roundMoney } from "@/lib/pricing";
 import {
   brandPink,
   cardShell,
@@ -82,9 +83,13 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
     [settings.openingHours],
   );
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const deliveryFeeAmount = deliveryMode === "delivery" ? deliveryFee : 0;
-  const total = subtotal + deliveryFeeAmount;
+  const subtotal = roundMoney(
+    items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+  );
+  const deliveryFeeAmount = roundMoney(
+    deliveryMode === "delivery" ? deliveryFee : 0,
+  );
+  const total = roundMoney(subtotal + deliveryFeeAmount);
   const minOrderAmount = Number(settings.minOrderAmount);
   const belowMinimum = subtotal < minOrderAmount;
 
@@ -162,7 +167,7 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
             menuItemId: item.menuItemId,
             name: item.name,
             description: item.description,
-            price: item.price,
+            price: roundMoney(item.price),
             quantity: item.quantity,
             size: item.size,
             crust: item.crust,

@@ -70,6 +70,11 @@ export function calculatePriceBreakdown(
   };
 }
 
+/** Round AUD money to 2 decimals (avoids float noise failing API maxDecimalPlaces). */
+export function roundMoney(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
 export function formatCurrency(price: number): string {
   return `$${price.toFixed(price % 1 === 0 ? 0 : 2)}`;
 }
