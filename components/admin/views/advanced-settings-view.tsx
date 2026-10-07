@@ -809,8 +809,9 @@ function StripeOnlineSection({
       {isOpen ? (
         <div className="mt-5 space-y-4">
           <div className="rounded-xl bg-zinc-50 px-4 py-3 text-xs text-zinc-500 dark:bg-zinc-900/50">
-            Stripe keys are shared with Terminal — enter them once in the Terminal section above.
-            Enable online checkout here when the website checkout is ready.
+            Stripe keys are shared with Terminal — enter them once in the Terminal section above
+            (publishable + secret). Turn this on to show card payment on the website checkout.
+            Paid online orders appear on POS kitchen as channel Online.
           </div>
           <label className="flex items-start gap-3">
             <input

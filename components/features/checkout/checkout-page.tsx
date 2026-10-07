@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarClock,
   MapPin,
@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/lib/cart-context";
 import { buildTimeSlots, formatScheduledAt } from "@/lib/opening-hours";
+import { StripePaymentForm } from "@/components/features/checkout/stripe-payment-form";
 import { createOrder, toApiDeliveryMode } from "@/lib/orders-api";
 import { roundMoney } from "@/lib/pricing";
 import {
@@ -32,6 +33,12 @@ import {
   EMPTY_CHECKOUT_DETAILS,
   type CheckoutFormState,
 } from "@/types/checkout";
+
+interface PendingPayment {
+  orderId: string;
+  clientSecret: string;
+  publishableKey: string;
+}
 
 interface CheckoutPageProps {
   settings: StoreSettings;
@@ -77,6 +84,11 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingPayment, setPendingPayment] = useState<PendingPayment | null>(
+    null,
+  );
+  /** Prevent empty-cart redirect from racing past confirmation after Place order. */
+  const orderPlacedRef = useRef(false);
 
   const timeSlots = useMemo(
     () => buildTimeSlots(settings.openingHours),
@@ -94,14 +106,14 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
   const belowMinimum = subtotal < minOrderAmount;
 
   useEffect(() => {
-    if (!isCartReady) {
+    if (!isCartReady || orderPlacedRef.current || submitting) {
       return;
     }
 
     if (items.length === 0) {
       router.replace("/");
     }
-  }, [isCartReady, items.length, router]);
+  }, [isCartReady, items.length, router, submitting]);
 
   useEffect(() => {
     if (!isAuthReady || !user) {
@@ -166,7 +178,7 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
           items: items.map((item) => ({
             menuItemId: item.menuItemId,
             name: item.name,
-            description: item.description,
+            description: item.description ?? "",
             price: roundMoney(item.price),
             quantity: item.quantity,
             size: item.size,
@@ -206,8 +218,20 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
         token ?? undefined,
       );
 
-      clearCart();
-      router.push(`/checkout/confirmation?orderId=${order.id}`);
+      if (
+        order.requiresPayment &&
+        order.clientSecret &&
+        order.publishableKey
+      ) {
+        setPendingPayment({
+          orderId: order.id,
+          clientSecret: order.clientSecret,
+          publishableKey: order.publishableKey,
+        });
+        return;
+      }
+
+      finishCheckout(order.id);
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -219,7 +243,39 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
     }
   }
 
-  if (!isCartReady || items.length === 0) {
+  function finishCheckout(orderId: string): void {
+    orderPlacedRef.current = true;
+    clearCart();
+    router.push(`/checkout/confirmation?orderId=${orderId}`);
+  }
+
+  if (pendingPayment) {
+    return (
+      <main className="mx-auto max-w-lg px-4 pb-20 pt-28">
+        <h1 className={cn("font-display text-3xl font-bold", primaryText)}>
+          Pay securely
+        </h1>
+        <p className={cn("mt-2 text-sm", secondaryText)}>
+          Complete card payment to send your order to the kitchen.
+        </p>
+        <div className={cn("mt-8 p-6", cardShell)}>
+          {error ? (
+            <p className="mb-4 text-sm text-red-500">{error}</p>
+          ) : null}
+          <StripePaymentForm
+            amountLabel={`$${total.toFixed(2)}`}
+            clientSecret={pendingPayment.clientSecret}
+            orderId={pendingPayment.orderId}
+            publishableKey={pendingPayment.publishableKey}
+            onError={(message) => setError(message || null)}
+            onPaid={finishCheckout}
+          />
+        </div>
+      </main>
+    );
+  }
+
+  if (!isCartReady || (items.length === 0 && !orderPlacedRef.current)) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <p className={secondaryText}>Loading checkout…</p>
@@ -520,11 +576,12 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
             disabled={submitting || belowMinimum}
             onClick={() => void handleSubmit()}
           >
-            {submitting ? "Placing order…" : "Place order"}
+            {submitting ? "Placing order…" : "Continue to payment"}
           </Button>
 
           <p className={cn("mt-4 text-center text-xs", secondaryText)}>
-            Pay on pickup or delivery for now. Card payments coming soon.
+            Card payment via Stripe when enabled for this store. Otherwise pay on
+            pickup or delivery.
           </p>
         </aside>
       </div>
