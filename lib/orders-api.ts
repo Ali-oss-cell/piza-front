@@ -100,3 +100,14 @@ export function fetchCheckoutOrderStatus(
     brandSlug: brandSlug ?? getSiteBrandSlug(),
   });
 }
+
+/** Sync order PAID from Stripe PaymentIntent (webhook backup). */
+export function confirmCheckoutPayment(
+  orderId: string,
+  brandSlug?: string,
+): Promise<CheckoutOrderStatus> {
+  return apiRequest<CheckoutOrderStatus>(`/orders/${orderId}/confirm-payment`, {
+    method: "POST",
+    brandSlug: brandSlug ?? getSiteBrandSlug(),
+  });
+}
