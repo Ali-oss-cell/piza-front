@@ -577,7 +577,15 @@ function StripeTerminalSection({
   flash: (type: "ok" | "err", text: string) => void;
 }) {
   const loc = paymentSettings.location;
-  const configured = !!(loc?.stripeTerminalLocationId && loc?.stripeTerminalReaderId);
+  const keysSaved = Boolean(
+    paymentSettings.hasStripeSecretRef &&
+      paymentSettings.stripePublishableKey?.trim(),
+  );
+  const configured = !!(
+    keysSaved &&
+    loc?.stripeTerminalLocationId &&
+    loc?.stripeTerminalReaderId
+  );
 
   const [form, setForm] = useState({
     locationId: loc?.stripeTerminalLocationId ?? "",
@@ -639,7 +647,13 @@ function StripeTerminalSection({
         badge={
           <StatusBadge
             ok={configured && paymentSettings.cardTerminalEnabled}
-            label={configured ? "Configured" : "Not set up"}
+            label={
+              configured && paymentSettings.cardTerminalEnabled
+                ? "Configured"
+                : keysSaved
+                  ? "Keys saved"
+                  : "Not set up"
+            }
           />
         }
         onToggle={onToggle}
@@ -772,23 +786,59 @@ function StripeOnlineSection({
   onToggle: () => void;
   flash: (type: "ok" | "err", text: string) => void;
 }) {
-  const configured = paymentSettings.hasStripeSecretRef && paymentSettings.cardOnlineEnabled;
+  const configured =
+    paymentSettings.hasStripeSecretRef &&
+    Boolean(paymentSettings.stripePublishableKey?.trim()) &&
+    paymentSettings.cardOnlineEnabled;
   const [enabled, setEnabled] = useState(paymentSettings.cardOnlineEnabled);
+  const [publishableKey, setPublishableKey] = useState(
+    paymentSettings.stripePublishableKey ?? "",
+  );
+  const [secretKey, setSecretKey] = useState("");
+  const [webhookSecret, setWebhookSecret] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setEnabled(paymentSettings.cardOnlineEnabled);
+    setPublishableKey(paymentSettings.stripePublishableKey ?? "");
+    setSecretKey("");
+    setWebhookSecret("");
   }, [paymentSettings]);
 
   const save = async () => {
     setSaving(true);
     try {
-      const updated = await updatePaymentSettings(token, {
+      const payload: UpdatePaymentSettingsPayload = {
         cardOnlineEnabled: enabled,
+        stripePublishableKey: publishableKey.trim() || null,
         provider: enabled ? "STRIPE" : undefined,
-      });
+      };
+      if (secretKey.trim()) {
+        payload.stripeSecretKeyRef = secretKey.trim();
+      }
+      if (webhookSecret.trim()) {
+        payload.stripeWebhookSecretRef = webhookSecret.trim();
+      }
+
+      if (enabled && !publishableKey.trim()) {
+        flash("err", "Publishable key (pk_…) is required for online checkout.");
+        return;
+      }
+      if (enabled && !paymentSettings.hasStripeSecretRef && !secretKey.trim()) {
+        flash("err", "Secret key (sk_…) is required the first time you enable online cards.");
+        return;
+      }
+
+      const updated = await updatePaymentSettings(token, payload);
       onPaymentSettingsChange(updated);
-      flash("ok", "Online card settings saved.");
+      if (updated.cardOnlineEnabled && updated.hasStripeSecretRef) {
+        flash(
+          "ok",
+          "Online card payments enabled. Redeploy web if checkout still says “coming soon”.",
+        );
+      } else {
+        flash("ok", "Online card settings saved.");
+      }
     } catch (e) {
       flash("err", e instanceof Error ? e.message : "Save failed.");
     } finally {
@@ -802,16 +852,27 @@ function StripeOnlineSection({
         open={isOpen}
         icon={CreditCard}
         title="Stripe Online (website checkout)"
-        subtitle="Accept card payments on the customer website. Uses same Stripe account as Terminal."
-        badge={<StatusBadge ok={!!configured} label={configured ? "Enabled" : "Disabled"} />}
+        subtitle="Card payments on bennyboyspizza.com.au checkout. Keys can be entered here."
+        badge={
+          <StatusBadge
+            ok={!!configured}
+            label={
+              configured
+                ? "Enabled"
+                : paymentSettings.cardOnlineEnabled
+                  ? "Missing keys"
+                  : "Disabled"
+            }
+          />
+        }
         onToggle={onToggle}
       />
       {isOpen ? (
         <div className="mt-5 space-y-4">
           <div className="rounded-xl bg-zinc-50 px-4 py-3 text-xs text-zinc-500 dark:bg-zinc-900/50">
-            Stripe keys are shared with Terminal — enter them once in the Terminal section above
-            (publishable + secret). Turn this on to show card payment on the website checkout.
-            Paid online orders appear on POS kitchen as channel Online.
+            Paste your Stripe <strong>test</strong> or <strong>live</strong> keys below, tick
+            Enable, then Save. Terminal Location/Reader IDs are <em>not</em> required for
+            website checkout. Paid orders show on POS as channel Online.
           </div>
           <label className="flex items-start gap-3">
             <input
@@ -825,13 +886,65 @@ function StripeOnlineSection({
                 Enable online card payments
               </span>
               <span className={cn("block text-xs", secondaryText)}>
-                Requires Stripe secret key to be saved in the Terminal section above.
+                Turns on Stripe Payment Element at checkout for this store.
               </span>
             </span>
           </label>
+          <div>
+            <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+              Stripe publishable key
+            </label>
+            <Input
+              onChange={(e) => setPublishableKey(e.target.value)}
+              placeholder="pk_test_… or pk_live_…"
+              value={publishableKey}
+            />
+          </div>
+          <div>
+            <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+              Stripe secret key{" "}
+              <span className={cn("font-normal", secondaryText)}>
+                {paymentSettings.hasStripeSecretRef
+                  ? "(stored — leave blank to keep)"
+                  : "(not set)"}
+              </span>
+            </label>
+            <Input
+              autoComplete="new-password"
+              onChange={(e) => setSecretKey(e.target.value)}
+              placeholder={
+                paymentSettings.hasStripeSecretRef
+                  ? "sk_… (replace)"
+                  : "sk_test_… or sk_live_…"
+              }
+              type="password"
+              value={secretKey}
+            />
+          </div>
+          <div>
+            <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+              Webhook secret{" "}
+              <span className={cn("font-normal", secondaryText)}>
+                {paymentSettings.hasStripeWebhookSecretRef
+                  ? "(stored)"
+                  : "(optional but needed for POS paid status)"}
+              </span>
+            </label>
+            <Input
+              autoComplete="new-password"
+              onChange={(e) => setWebhookSecret(e.target.value)}
+              placeholder={
+                paymentSettings.hasStripeWebhookSecretRef
+                  ? "whsec_… (replace)"
+                  : "whsec_…"
+              }
+              type="password"
+              value={webhookSecret}
+            />
+          </div>
           <Button disabled={saving} onClick={() => void save()} type="button">
             {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Save
+            Save Stripe Online
           </Button>
         </div>
       ) : null}
