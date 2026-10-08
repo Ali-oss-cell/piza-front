@@ -28,6 +28,8 @@ export interface HomeMenuData {
   address?: string | null;
   deliveryFee?: string | number;
   openingHours?: unknown;
+  contactPhone?: string | null;
+  minOrderAmount?: string | number | null;
 }
 
 async function resolveHomeBrand(): Promise<{
@@ -77,6 +79,8 @@ export async function fetchHomeMenuData(): Promise<HomeMenuData> {
       address: settings.address,
       deliveryFee: settings.deliveryFee,
       openingHours: settings.openingHours,
+      contactPhone: settings.contactPhone ?? null,
+      minOrderAmount: settings.minOrderAmount ?? null,
     };
   } catch {
     return {

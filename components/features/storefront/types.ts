@@ -18,6 +18,8 @@ export interface StorefrontProps {
   address?: string | null;
   deliveryFee?: string | number | null;
   openingHours?: unknown;
+  contactPhone?: string | null;
+  minOrderAmount?: string | number | null;
   variant?: "home" | "menu";
 }
 

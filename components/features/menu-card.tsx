@@ -56,26 +56,38 @@ function ImagePanel({
   detailHref: string;
 }): React.ReactElement {
   const imageSrc = resolveMediaUrl(item.imageUrl) ?? item.imageUrl;
+  /* Deal artwork has prices and text baked in: show all of it, never crop. */
+  const isDeal = item.category === "deals";
 
   return (
     <Link
       aria-label={`View ${item.name} details`}
-      className="relative aspect-[4/3] w-full shrink-0 overflow-hidden"
+      className={cn(
+        "relative aspect-[4/3] w-full shrink-0 overflow-hidden",
+        isDeal && "bg-[color:var(--brand-accent,#d81b60)]/10",
+      )}
       href={detailHref}
     >
       <SmartImage
         alt={item.imageAlt}
         blurHash={item.imageBlurHash}
-        className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+        className={cn(
+          "transition-transform duration-500",
+          isDeal
+            ? "object-contain object-center group-hover:scale-[1.02]"
+            : "object-cover object-center group-hover:scale-105",
+        )}
         fill
         frameClassName="absolute inset-0"
         sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
         src={imageSrc}
       />
-      <span
-        aria-hidden
-        className="absolute inset-0 block bg-gradient-to-t from-zinc-950/25 via-transparent to-transparent"
-      />
+      {isDeal ? null : (
+        <span
+          aria-hidden
+          className="absolute inset-0 block bg-gradient-to-t from-zinc-950/25 via-transparent to-transparent"
+        />
+      )}
     </Link>
   );
 }

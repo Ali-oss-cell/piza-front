@@ -453,3 +453,34 @@ export function isOpenNow(openingHours: unknown, at: Date = new Date()): boolean
   const closeMinutes = closeMinutesForValidation(dayHours.open, dayHours.close);
   return minutes >= openMinutes && minutes <= closeMinutes;
 }
+
+export interface OpenStatus {
+  isOpen: boolean;
+  /** e.g. "Open now · until 10pm", "Opens 5pm today", "Closed today". */
+  label: string;
+}
+
+/** Customer-facing open/closed line for today, in the store's timezone. */
+export function describeOpenStatus(
+  openingHours: unknown,
+  at: Date = new Date(),
+): OpenStatus | null {
+  const config = parseOpeningHours(openingHours);
+  if (!config) {
+    return null;
+  }
+  const today = config.days[weekdayKeyFromDate(at, config.timezone)];
+  if (!today) {
+    return { isOpen: false, label: "Closed today" };
+  }
+  const minutes = minutesInTimezone(at, config.timezone);
+  const openMinutes = parseTimeToMinutes(today.open);
+  const closeMinutes = closeMinutesForValidation(today.open, today.close);
+  if (minutes < openMinutes) {
+    return { isOpen: false, label: `Opens ${formatClock(today.open)} today` };
+  }
+  if (minutes <= closeMinutes) {
+    return { isOpen: true, label: `Open now · until ${formatClock(today.close)}` };
+  }
+  return { isOpen: false, label: "Closed for today" };
+}
