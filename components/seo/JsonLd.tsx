@@ -1,13 +1,13 @@
 import Script from "next/script";
 import {
+  openingHoursSpecification,
+  parseAustralianAddress,
+} from "@/lib/store-contact";
 
 /** JSON for an inline <script>: escape "<" so store/blog text can't close the tag. */
 function jsonLdString(schema: unknown): string {
   return JSON.stringify(schema).replace(/</g, "\\u003c");
 }
-  openingHoursSpecification,
-  parseAustralianAddress,
-} from "@/lib/store-contact";
 
 interface LocalBusinessJsonLdProps {
   name: string;
