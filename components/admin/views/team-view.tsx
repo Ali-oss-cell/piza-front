@@ -52,6 +52,8 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
   const [editForm, setEditForm] = useState<EditFormState | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  /** Login for a just-created account; the API only returns the password once. */
+  const [newLogin, setNewLogin] = useState<{ email: string; password: string } | null>(null);
 
   const loadTeam = async (): Promise<void> => {
     setIsLoading(true);
@@ -76,7 +78,7 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
     setError(null);
 
     try {
-      await inviteTeamMember(token, {
+      const result = await inviteTeamMember(token, {
         email: form.email.trim(),
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
@@ -84,6 +86,9 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
         brandSlug,
         ...(form.posPin.trim() ? { posPin: form.posPin.trim() } : {}),
       });
+      if (result.temporaryPassword) {
+        setNewLogin({ email: form.email.trim(), password: result.temporaryPassword });
+      }
       await loadTeam();
       setIsModalOpen(false);
       setForm(emptyForm());
@@ -124,7 +129,8 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
       await updateTeamMember(token, editing.id, {
         firstName: editForm.firstName.trim(),
         lastName: editForm.lastName.trim(),
-        email: editForm.email.trim(),
+        /* Only send login details that changed: changing them needs extra permission. */
+        ...(editForm.email.trim() !== editing.user.email ? { email: editForm.email.trim() } : {}),
         ...(editing.role === "PLATFORM_ADMIN" ? {} : { role: editForm.role }),
         ...(editForm.posPin.trim() ? { posPin: editForm.posPin.trim() } : {}),
       });
@@ -160,6 +166,31 @@ export function TeamView({ token, brandSlug }: TeamViewProps): React.ReactElemen
           Invite Member
         </Button>
       </div>
+
+      {newLogin ? (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-100">
+          <p className="font-semibold">Give these sign-in details to the new team member</p>
+          <p className="mt-2">
+            Email: <span className="font-mono">{newLogin.email}</span>
+          </p>
+          <p>
+            Temporary password: <span className="font-mono select-all">{newLogin.password}</span>
+          </p>
+          <p className="mt-2 text-xs">This password is shown only once.</p>
+          <div className="mt-3 flex gap-2">
+            <Button
+              onClick={() => void navigator.clipboard?.writeText(newLogin.password)}
+              type="button"
+              variant="secondary"
+            >
+              Copy password
+            </Button>
+            <Button onClick={() => setNewLogin(null)} type="button" variant="ghost">
+              Done
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="space-y-3">
         {members.length === 0 ? (

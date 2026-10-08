@@ -1,5 +1,10 @@
 import Script from "next/script";
 import {
+
+/** JSON for an inline <script>: escape "<" so store/blog text can't close the tag. */
+function jsonLdString(schema: unknown): string {
+  return JSON.stringify(schema).replace(/</g, "\\u003c");
+}
   openingHoursSpecification,
   parseAustralianAddress,
 } from "@/lib/store-contact";
@@ -64,7 +69,7 @@ export function LocalBusinessJsonLd({
 
   return (
     <Script
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: jsonLdString(schema) }}
       id="local-business-jsonld"
       type="application/ld+json"
     />
@@ -107,7 +112,7 @@ export function MenuItemJsonLd({
 
   return (
     <Script
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: jsonLdString(schema) }}
       id="menu-item-jsonld"
       type="application/ld+json"
     />
@@ -144,7 +149,7 @@ export function BlogPostingJsonLd({
 
   return (
     <Script
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: jsonLdString(schema) }}
       id="blog-post-jsonld"
       type="application/ld+json"
     />
@@ -169,7 +174,7 @@ export function BreadcrumbJsonLd({ items }: BreadcrumbJsonLdProps): React.ReactE
 
   return (
     <Script
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: jsonLdString(schema) }}
       id="breadcrumb-jsonld"
       type="application/ld+json"
     />
