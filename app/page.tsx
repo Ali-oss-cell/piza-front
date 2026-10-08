@@ -42,12 +42,14 @@ export default async function Home(): Promise<React.ReactElement> {
         brandName={data.brandName}
         brandSlug={data.brandSlug}
         categories={data.categories}
+        contactPhone={data.contactPhone}
         deliveryFee={data.deliveryFee}
         heroImageDarkUrl={data.heroImageDarkUrl}
         heroImageUrl={data.heroImageUrl}
         logoDarkUrl={data.logoDarkUrl}
         logoUrl={data.logoUrl}
         menuItems={data.menuItems}
+        minOrderAmount={data.minOrderAmount}
         openingHours={data.openingHours}
         primaryColor={data.primaryColor}
         storefrontLayout={data.storefrontLayout}

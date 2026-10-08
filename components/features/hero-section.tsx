@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { useTheme } from "next-themes";
+import { StoreInfoChips } from "@/components/features/storefront/store-info-chips";
 import { Button } from "@/components/ui/button";
 import { getMenuDisplayDescription } from "@/lib/menu-display-copy";
 import {
@@ -36,6 +37,9 @@ interface HeroSectionProps {
   primaryColor?: string | null;
   backgroundLightColor?: string | null;
   backgroundDarkColor?: string | null;
+  openingHours?: unknown;
+  deliveryFee?: string | number | null;
+  minOrderAmount?: string | number | null;
   variant?: "home" | "menu";
 }
 
@@ -54,6 +58,9 @@ export function HeroSection({
   primaryColor,
   backgroundLightColor,
   backgroundDarkColor,
+  openingHours,
+  deliveryFee,
+  minOrderAmount,
   variant = "home",
 }: HeroSectionProps): React.ReactElement {
   const reduceMotion = useReducedMotion();
@@ -79,9 +86,7 @@ export function HeroSection({
   const subtitle =
     variant === "menu"
       ? "Browse our full menu — pickup and delivery available."
-      : tagline?.trim()
-        ? "Order pickup & delivery online."
-        : "Artisanal sourdough foundations, heritage recipes, and contemporary culinary precision delivered to your urban doorstep.";
+      : "Hot pizzas, pasta and family deals, made fresh to order. Order online for pickup or delivery.";
 
   const promos = featuredDeals.slice(0, 3);
   const useNextOrder = isNextOrderOrderingEnabled();
@@ -90,7 +95,10 @@ export function HeroSection({
 
   return (
     <section
-      className="relative flex min-h-[min(100vh,920px)] min-h-[680px] flex-col justify-center overflow-hidden px-margin-mobile transition-colors duration-150 ease-out md:min-h-[min(100vh,960px)] md:px-margin-desktop"
+      className={cn(
+        "relative flex flex-col justify-center overflow-hidden px-margin-mobile transition-colors duration-150 ease-out md:px-margin-desktop",
+        variant === "menu" ? "min-h-[440px] md:min-h-[520px]" : "min-h-[600px] md:min-h-[min(100vh,880px)]",
+      )}
       style={heroStyle}
     >
       <motion.div
@@ -106,12 +114,20 @@ export function HeroSection({
           className="h-full w-full scale-105 object-cover object-center opacity-95"
           src={heroSrc}
         />
+        {/* Scrim so the headline stays readable on any photo. color-mix accepts any
+            CSS colour (the old hex+alpha suffix broke for #000 / rgb()). Phones get
+            an even wash because the text sits over the middle of the image. */}
         <div
           className="absolute inset-0 transition-colors duration-150 ease-out"
           style={{
-            backgroundImage: isDark
-              ? `linear-gradient(to bottom, ${bgDark}dd 0%, ${bgDark}88 35%, ${bgDark}44 55%, ${bgDark}22 72%, transparent 88%), linear-gradient(to right, ${bgDark}cc 0%, ${bgDark}66 28%, transparent 52%)`
-              : `linear-gradient(to bottom, ${bgLight}dd 0%, ${bgLight}88 35%, ${bgLight}55 55%, ${bgLight}22 72%, transparent 88%), linear-gradient(to right, ${bgLight}cc 0%, ${bgLight}66 28%, transparent 52%)`,
+            backgroundImage: `linear-gradient(to right, color-mix(in srgb, ${isDark ? bgDark : bgLight} 92%, transparent) 0%, color-mix(in srgb, ${isDark ? bgDark : bgLight} 70%, transparent) 38%, color-mix(in srgb, ${isDark ? bgDark : bgLight} 15%, transparent) 70%, transparent 100%), linear-gradient(to top, ${isDark ? bgDark : bgLight} 0%, transparent 22%)`,
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 lg:hidden"
+          style={{
+            backgroundColor: `color-mix(in srgb, ${isDark ? bgDark : bgLight} 45%, transparent)`,
           }}
         />
       </motion.div>
@@ -215,6 +231,15 @@ export function HeroSection({
                 <Link href="/deals">View Specials</Link>
               </Button>
             </motion.div>
+            {variant === "home" ? (
+              <motion.div transition={defaultTransition} variants={itemVariants}>
+                <StoreInfoChips
+                  deliveryFee={deliveryFee}
+                  minOrderAmount={minOrderAmount}
+                  openingHours={openingHours}
+                />
+              </motion.div>
+            ) : null}
           </motion.div>
 
           {promos.length > 0 ? (

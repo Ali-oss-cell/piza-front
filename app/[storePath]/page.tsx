@@ -86,7 +86,9 @@ export default async function DynamicStorefrontPage({
           brandName={settings?.storeName ?? store.name}
           brandSlug={store.slug}
           categories={mapApiMenuCategories(apiCategories)}
+          contactPhone={settings?.contactPhone ?? null}
           deliveryFee={settings?.deliveryFee}
+          minOrderAmount={settings?.minOrderAmount ?? null}
           heroImageDarkUrl={settings?.heroImageDarkUrl ?? store.heroImageDarkUrl}
           heroImageUrl={settings?.heroImageUrl ?? store.heroImageUrl}
           logoDarkUrl={settings?.logoDarkUrl ?? store.logoDarkUrl}
