@@ -8,7 +8,9 @@ import {
   MapPin,
   Pencil,
   ShoppingBag,
+  Tag,
   User,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +18,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/lib/cart-context";
 import { buildTimeSlots, formatScheduledAt } from "@/lib/opening-hours";
+import { AddressPicker } from "@/components/features/checkout/address-picker";
 import { StripePaymentForm } from "@/components/features/checkout/stripe-payment-form";
-import { createOrder, toApiDeliveryMode } from "@/lib/orders-api";
+import { isValidAuPostcode } from "@/lib/geocoding";
+import {
+  createOrder,
+  toApiDeliveryMode,
+  validatePromoCode,
+  type AppliedPromo,
+} from "@/lib/orders-api";
 import { roundMoney } from "@/lib/pricing";
 import {
   brandPink,
@@ -87,6 +96,10 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
   const [pendingPayment, setPendingPayment] = useState<PendingPayment | null>(
     null,
   );
+  const [promoInput, setPromoInput] = useState("");
+  const [promo, setPromo] = useState<AppliedPromo | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [applyingPromo, setApplyingPromo] = useState(false);
   /** Prevent empty-cart redirect from racing past confirmation after Place order. */
   const orderPlacedRef = useRef(false);
 
@@ -101,7 +114,20 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
   const deliveryFeeAmount = roundMoney(
     deliveryMode === "delivery" ? deliveryFee : 0,
   );
-  const total = roundMoney(subtotal + deliveryFeeAmount);
+  // Mirrors the server calculation so the summary updates as the cart changes.
+  const discountAmount = promo
+    ? roundMoney(
+        Math.min(
+          subtotal,
+          promo.discountType === "PERCENTAGE"
+            ? (subtotal * promo.discountValue) / 100
+            : promo.discountValue,
+        ),
+      )
+    : 0;
+  const total = roundMoney(
+    Math.max(0, subtotal + deliveryFeeAmount - discountAmount),
+  );
   const minOrderAmount = Number(settings.minOrderAmount);
   const belowMinimum = subtotal < minOrderAmount;
 
@@ -136,6 +162,38 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
     }
   }, [form.scheduledAt, timeSlots]);
 
+  async function applyPromo(): Promise<void> {
+    const code = promoInput.trim();
+
+    if (!code) {
+      return;
+    }
+
+    setApplyingPromo(true);
+    setPromoError(null);
+
+    try {
+      const applied = await validatePromoCode(code, subtotal);
+      setPromo(applied);
+      setPromoInput(applied.code);
+    } catch (promoErr) {
+      setPromo(null);
+      setPromoError(
+        promoErr instanceof Error
+          ? promoErr.message
+          : "Could not apply this promo code.",
+      );
+    } finally {
+      setApplyingPromo(false);
+    }
+  }
+
+  function removePromo(): void {
+    setPromo(null);
+    setPromoInput("");
+    setPromoError(null);
+  }
+
   async function handleSubmit(): Promise<void> {
     setError(null);
 
@@ -161,6 +219,14 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
         !form.address.deliveryPostcode.trim())
     ) {
       setError("Please add your delivery address.");
+      return;
+    }
+
+    if (
+      deliveryMode === "delivery" &&
+      !isValidAuPostcode(form.address.deliveryPostcode)
+    ) {
+      setError("Please enter a valid 4-digit postcode.");
       return;
     }
 
@@ -209,6 +275,15 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
             deliveryMode === "delivery"
               ? form.address.deliveryPostcode.trim()
               : undefined,
+          deliveryLatitude:
+            deliveryMode === "delivery"
+              ? form.address.deliveryLatitude ?? undefined
+              : undefined,
+          deliveryLongitude:
+            deliveryMode === "delivery"
+              ? form.address.deliveryLongitude ?? undefined
+              : undefined,
+          promoCode: promo?.code,
           scheduledAt: form.scheduledAt,
           notes: form.notes.trim() || undefined,
           subtotal,
@@ -408,77 +483,18 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
                     Delivery address
                   </h2>
                   <p className={cn("text-sm", secondaryText)}>
-                    Where should we deliver your order?
+                    Search, use your location, or drop a pin on the map.
                   </p>
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="addressLine1">Street address</Label>
-                  <Input
-                    id="addressLine1"
-                    value={form.address.deliveryAddressLine1}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        address: {
-                          ...current.address,
-                          deliveryAddressLine1: event.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="addressLine2">Unit / apartment (optional)</Label>
-                  <Input
-                    id="addressLine2"
-                    value={form.address.deliveryAddressLine2}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        address: {
-                          ...current.address,
-                          deliveryAddressLine2: event.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="suburb">Suburb</Label>
-                  <Input
-                    id="suburb"
-                    value={form.address.deliverySuburb}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        address: {
-                          ...current.address,
-                          deliverySuburb: event.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="postcode">Postcode</Label>
-                  <Input
-                    id="postcode"
-                    value={form.address.deliveryPostcode}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        address: {
-                          ...current.address,
-                          deliveryPostcode: event.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </div>
-              </div>
+              <AddressPicker
+                address={form.address}
+                storeAddress={settings.address}
+                onChange={(address) =>
+                  setForm((current) => ({ ...current, address }))
+                }
+              />
             </section>
           ) : null}
 
@@ -541,6 +557,58 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
             ))}
           </ul>
 
+          <div className="mt-4 border-b border-zinc-200/70 pb-4 dark:border-white/10">
+            {promo ? (
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm dark:bg-emerald-500/10">
+                <span className="inline-flex items-center gap-2 font-medium text-emerald-700 dark:text-emerald-300">
+                  <Tag className="h-4 w-4" />
+                  {promo.code} · {promo.title}
+                </span>
+                <button
+                  aria-label="Remove promo code"
+                  className={cn("rounded-full p-1 hover:bg-black/5 dark:hover:bg-white/10", secondaryText)}
+                  type="button"
+                  onClick={removePromo}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <form
+                className="flex gap-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void applyPromo();
+                }}
+              >
+                <Label className="sr-only" htmlFor="promoCode">
+                  Promo code
+                </Label>
+                <Input
+                  autoCapitalize="characters"
+                  className="uppercase placeholder:normal-case"
+                  id="promoCode"
+                  placeholder="Promo code"
+                  value={promoInput}
+                  onChange={(event) => {
+                    setPromoInput(event.target.value);
+                    setPromoError(null);
+                  }}
+                />
+                <Button
+                  disabled={applyingPromo || !promoInput.trim()}
+                  type="submit"
+                  variant="outline"
+                >
+                  {applyingPromo ? "Applying…" : "Apply"}
+                </Button>
+              </form>
+            )}
+            {promoError ? (
+              <p className="mt-2 text-sm text-red-500">{promoError}</p>
+            ) : null}
+          </div>
+
           <div className="mt-4 space-y-2 text-sm">
             <div className={cn("flex justify-between", secondaryText)}>
               <span>Subtotal</span>
@@ -550,6 +618,12 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
               <span>Delivery fee</span>
               <span className={primaryText}>${deliveryFeeAmount.toFixed(2)}</span>
             </div>
+            {promo ? (
+              <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                <span>Discount ({promo.code})</span>
+                <span>−${discountAmount.toFixed(2)}</span>
+              </div>
+            ) : null}
             <div
               className={cn(
                 "flex justify-between border-t border-zinc-200/70 pt-3 text-base font-semibold dark:border-white/10",

@@ -10,6 +10,9 @@ export interface CheckoutAddress {
   deliverySuburb: string;
   deliveryState: string;
   deliveryPostcode: string;
+  /** Pin dropped on the map / found by search. */
+  deliveryLatitude: number | null;
+  deliveryLongitude: number | null;
 }
 
 export interface CheckoutFormState {
@@ -31,6 +34,8 @@ export const EMPTY_CHECKOUT_ADDRESS: CheckoutAddress = {
   deliverySuburb: "",
   deliveryState: "VIC",
   deliveryPostcode: "",
+  deliveryLatitude: null,
+  deliveryLongitude: null,
 };
 
 export const EMPTY_CHECKOUT_FORM: CheckoutFormState = {

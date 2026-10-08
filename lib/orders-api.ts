@@ -23,6 +23,9 @@ export interface CreateOrderPayload {
   deliverySuburb?: string;
   deliveryState?: string;
   deliveryPostcode?: string;
+  deliveryLatitude?: number;
+  deliveryLongitude?: number;
+  promoCode?: string;
   scheduledAt: string;
   notes?: string;
   subtotal: number;
@@ -108,6 +111,27 @@ export function confirmCheckoutPayment(
 ): Promise<CheckoutOrderStatus> {
   return apiRequest<CheckoutOrderStatus>(`/orders/${orderId}/confirm-payment`, {
     method: "POST",
+    brandSlug: brandSlug ?? getSiteBrandSlug(),
+  });
+}
+
+export interface AppliedPromo {
+  code: string;
+  dealId: string;
+  title: string;
+  discountType: "PERCENTAGE" | "FIXED_AMOUNT";
+  discountValue: number;
+  discountAmount: number;
+}
+
+export function validatePromoCode(
+  code: string,
+  subtotal: number,
+  brandSlug?: string,
+): Promise<AppliedPromo> {
+  return apiRequest<AppliedPromo>("/deals/promo/validate", {
+    method: "POST",
+    body: JSON.stringify({ code, subtotal }),
     brandSlug: brandSlug ?? getSiteBrandSlug(),
   });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Loader2, Mail, MapPin, Phone } from "lucide-react";
+import { ChevronRight, Loader2, Mail, MapPin, Navigation, Phone, Tag } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { formatScheduledAt } from "@/lib/opening-hours";
@@ -42,6 +42,12 @@ export function OrderCard({ order, onAdvance }: OrderCardProps): React.ReactElem
   ]
     .filter(Boolean)
     .join(", ");
+
+  const directionsUrl =
+    order.deliveryLatitude != null && order.deliveryLongitude != null
+      ? `https://www.google.com/maps/dir/?api=1&destination=${order.deliveryLatitude},${order.deliveryLongitude}`
+      : null;
+  const discount = Number(order.discountAmount ?? 0);
 
   const handleAdvance = async (): Promise<void> => {
     if (!nextStatus) {
@@ -96,6 +102,24 @@ export function OrderCard({ order, onAdvance }: OrderCardProps): React.ReactElem
           <p className={cn("flex items-start gap-2", secondaryText)}>
             <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             {deliveryAddress}
+          </p>
+        ) : null}
+        {order.deliveryMode === "DELIVERY" && directionsUrl ? (
+          <a
+            className="flex items-center gap-2 font-medium text-[#d81b60] hover:underline"
+            href={directionsUrl}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <Navigation className="h-3.5 w-3.5 shrink-0" />
+            Open pinned location in Maps
+          </a>
+        ) : null}
+        {order.promoCode ? (
+          <p className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+            <Tag className="h-3.5 w-3.5 shrink-0" />
+            {order.promoCode}
+            {discount > 0 ? ` (−${formatMoney(discount)})` : ""}
           </p>
         ) : null}
         {order.notes ? (

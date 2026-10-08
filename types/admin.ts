@@ -97,6 +97,10 @@ export interface AdminOrder {
   deliverySuburb?: string | null;
   deliveryState?: string | null;
   deliveryPostcode?: string | null;
+  deliveryLatitude?: string | number | null;
+  deliveryLongitude?: string | number | null;
+  discountAmount?: string | number | null;
+  promoCode?: string | null;
   scheduledAt?: string | null;
   notes?: string | null;
   createdAt: string;
