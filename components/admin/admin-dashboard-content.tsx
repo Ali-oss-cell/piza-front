@@ -10,6 +10,7 @@ import { BrandPicker } from "@/components/admin/brand-picker";
 import { MenuView } from "@/components/admin/views/menu-view";
 import { CategoriesView } from "@/components/admin/views/categories-view";
 import { CrustsView } from "@/components/admin/views/crusts-view";
+import { ComboDealsView } from "@/components/admin/views/combo-deals-view";
 import { DealsView } from "@/components/admin/views/deals-view";
 import { InquiriesView } from "@/components/admin/views/inquiries-view";
 import { IngredientsView } from "@/components/admin/views/ingredients-view";
@@ -33,6 +34,7 @@ import { ActivityView } from "@/components/admin/views/activity-view";
 import { AdvancedSettingsView } from "@/components/admin/views/advanced-settings-view";
 import { PlatformSecretsView } from "@/components/admin/views/platform-secrets-view";
 import {
+  fetchAdminComboDeals,
   fetchAdminCrusts,
   fetchAdminDeals,
   fetchAdminIngredients,
@@ -62,6 +64,7 @@ import type {
 import { canAccessAdminDashboard, isPlatformAdmin } from "@/types/auth";
 import type { PaymentSettings, StoreDomain } from "@/types/payments";
 import type { AdminCrustOption, StoreSettings } from "@/types/store";
+import type { ComboDeal } from "@/types/combo-deals";
 import type { Deal } from "@/types/deals";
 import { cn } from "@/lib/utils";
 
@@ -82,6 +85,7 @@ export function AdminDashboardContent(): React.ReactElement {
   const [menuCategories, setMenuCategories] = useState<AdminMenuCategoryRecord[]>([]);
   const [crusts, setCrusts] = useState<AdminCrustOption[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [comboDeals, setComboDeals] = useState<ComboDeal[]>([]);
   const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
   const [storeDomains, setStoreDomains] = useState<StoreDomain[]>([]);
@@ -147,6 +151,7 @@ export function AdminDashboardContent(): React.ReactElement {
         nextMenuCategories,
         nextCrusts,
         nextDeals,
+        nextComboDeals,
         nextSettings,
         nextDomains,
       ] = await Promise.all([
@@ -159,6 +164,7 @@ export function AdminDashboardContent(): React.ReactElement {
         fetchMenuCategories(token, brandSlug),
         fetchAdminCrusts(token, brandSlug),
         fetchAdminDeals(token, brandSlug),
+        fetchAdminComboDeals(token, brandSlug),
         fetchStoreSettings(token, brandSlug),
         fetchStoreDomains(token, brandSlug),
       ]);
@@ -176,6 +182,7 @@ export function AdminDashboardContent(): React.ReactElement {
       setMenuCategories(nextMenuCategories);
       setCrusts(nextCrusts);
       setDeals(nextDeals);
+      setComboDeals(nextComboDeals);
       setStoreSettings(nextSettings);
       setPaymentSettings(nextPayments);
       setStoreDomains(nextDomains);
@@ -421,6 +428,15 @@ export function AdminDashboardContent(): React.ReactElement {
                 ) : null}
                 {activeView === "crusts" ? (
                   <CrustsView crusts={crusts} onCrustsChange={setCrusts} token={token!} />
+                ) : null}
+                {activeView === "combo-deals" ? (
+                  <ComboDealsView
+                    comboDeals={comboDeals}
+                    menuCategories={menuCategories}
+                    menuItems={menuItems}
+                    onComboDealsChange={setComboDeals}
+                    token={token!}
+                  />
                 ) : null}
                 {activeView === "deals" ? (
                   <DealsView

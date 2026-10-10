@@ -241,17 +241,36 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
       const order = await createOrder(
         {
           deliveryMode: toApiDeliveryMode(deliveryMode),
-          items: items.map((item) => ({
-            menuItemId: item.menuItemId,
-            name: item.name,
-            description: item.description ?? "",
-            price: roundMoney(item.price),
-            quantity: item.quantity,
-            size: item.size,
-            crust: item.crust,
-            toppings: item.toppings,
-            removedIngredients: item.removedIngredients,
-          })),
+          items: items.flatMap((item) => {
+            if (item.type === "COMBO" || item.comboDealId) {
+              return Array.from({ length: item.quantity }, () => ({
+                type: "COMBO" as const,
+                comboDealId: item.comboDealId,
+                selections: (item.selections ?? []).map((selection) => ({
+                  slotId: selection.slotId,
+                  menuItemId: selection.menuItemId,
+                  size: selection.size,
+                  crust: selection.crust,
+                  toppingIds: selection.toppingIds,
+                  removedIngredients: selection.removedIngredients,
+                })),
+              }));
+            }
+            return [
+              {
+                type: "ITEM" as const,
+                menuItemId: item.menuItemId,
+                name: item.name,
+                description: item.description ?? "",
+                price: roundMoney(item.price),
+                quantity: item.quantity,
+                size: item.size,
+                crust: item.crust,
+                toppings: item.toppings,
+                removedIngredients: item.removedIngredients,
+              },
+            ];
+          }),
           guestName: form.details.guestName.trim(),
           guestEmail: form.details.guestEmail.trim(),
           guestPhone: form.details.guestPhone.trim(),

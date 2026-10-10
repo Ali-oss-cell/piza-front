@@ -4,17 +4,36 @@ import type { DeliveryMode } from "@/types/menu";
 
 export interface CreateOrderPayload {
   deliveryMode: "DELIVERY" | "PICKUP";
-  items: Array<{
-    menuItemId?: string;
-    name: string;
-    description: string;
-    price: number;
-    quantity: number;
-    size?: string;
-    crust?: string;
-    toppings?: string[];
-    removedIngredients?: string[];
-  }>;
+  items: Array<
+    | {
+        type?: "ITEM";
+        menuItemId?: string;
+        name: string;
+        description: string;
+        price: number;
+        quantity: number;
+        size?: string;
+        crust?: string;
+        toppings?: string[];
+        removedIngredients?: string[];
+      }
+    | {
+        type: "COMBO";
+        comboDealId?: string;
+        selections?: Array<{
+          slotId: string;
+          menuItemId: string;
+          size?: string;
+          crust?: string;
+          toppingIds?: string[];
+          removedIngredients?: string[];
+        }>;
+        name?: string;
+        description?: string;
+        price?: number;
+        quantity?: number;
+      }
+  >;
   guestName?: string;
   guestEmail?: string;
   guestPhone?: string;
@@ -71,6 +90,18 @@ export function createOrder(
 ): Promise<CreatedOrder> {
   const locationId = payload.locationId ?? getSiteLocationId() ?? undefined;
   const items = payload.items.map((item) => {
+    if (item.type === "COMBO") {
+      return {
+        type: "COMBO" as const,
+        comboDealId: item.comboDealId,
+        selections: (item.selections ?? []).map((selection) => ({
+          ...selection,
+          menuItemId: UUID_RE.test(selection.menuItemId)
+            ? selection.menuItemId
+            : selection.menuItemId,
+        })),
+      };
+    }
     const menuItemId =
       item.menuItemId && UUID_RE.test(item.menuItemId)
         ? item.menuItemId

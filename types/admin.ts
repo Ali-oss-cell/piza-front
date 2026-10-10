@@ -147,6 +147,7 @@ export type AdminView =
   | "menu-categories"
   | "crusts"
   | "deals"
+  | "combo-deals"
   | "payments"
   | "settings"
   | "hq"

@@ -2,31 +2,35 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SmartImage } from "@/components/ui/smart-image";
+import { ComboConfiguratorModal } from "@/components/features/deals/combo-configurator-modal";
 import { resolveMediaUrl } from "@/lib/media-url";
 import { formatCurrency } from "@/lib/pricing";
 import { formatDealBadge } from "@/types/deals";
+import type { ComboDeal } from "@/types/combo-deals";
 import type { Deal } from "@/types/deals";
 import type { MenuItem } from "@/types/menu";
 import { pageShell, primaryText, secondaryText } from "@/lib/theme-classes";
 import { cn } from "@/lib/utils";
 
 interface DealsPageContentProps {
-  /** Promo codes / %-$ off from Admin → Promo deals */
   promoDeals: Deal[];
-  /** Combo meal deals from Menu → Deals category */
-  menuDeals: MenuItem[];
+  comboDeals: ComboDeal[];
+  menuItems: MenuItem[];
 }
 
 export function DealsPageContent({
   promoDeals,
-  menuDeals,
+  comboDeals,
+  menuItems,
 }: DealsPageContentProps): React.ReactElement {
   const featured = promoDeals.filter((deal) => deal.isFeatured);
   const regular = promoDeals.filter((deal) => !deal.isFeatured);
-  const hasAny = menuDeals.length > 0 || promoDeals.length > 0;
+  const hasAny = comboDeals.length > 0 || promoDeals.length > 0;
+  const [activeCombo, setActiveCombo] = useState<ComboDeal | null>(null);
 
   return (
     <main className={cn("min-h-screen pt-24", pageShell)}>
@@ -51,14 +55,18 @@ export function DealsPageContent({
           </div>
         ) : (
           <div className="mt-12 space-y-12">
-            {menuDeals.length > 0 ? (
+            {comboDeals.length > 0 ? (
               <section className="space-y-6">
                 <h2 className={cn("font-display text-2xl font-bold", primaryText)}>
                   Combo deals
                 </h2>
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                  {menuDeals.map((item) => (
-                    <MenuDealCard item={item} key={item.id} />
+                  {comboDeals.map((deal) => (
+                    <ComboDealCard
+                      deal={deal}
+                      key={deal.id}
+                      onOrder={() => setActiveCombo(deal)}
+                    />
                   ))}
                 </div>
               </section>
@@ -80,7 +88,7 @@ export function DealsPageContent({
             {regular.length > 0 ? (
               <section className="space-y-6">
                 <h2 className={cn("font-display text-2xl font-bold", primaryText)}>
-                  {featured.length > 0 || menuDeals.length > 0
+                  {featured.length > 0 || comboDeals.length > 0
                     ? "More promotions"
                     : "Promotions"}
                 </h2>
@@ -94,20 +102,37 @@ export function DealsPageContent({
           </div>
         )}
       </section>
+
+      {activeCombo ? (
+        <ComboConfiguratorModal
+          deal={activeCombo}
+          menuItems={menuItems}
+          onClose={() => setActiveCombo(null)}
+          open={Boolean(activeCombo)}
+        />
+      ) : null}
     </main>
   );
 }
 
-function MenuDealCard({ item }: { item: MenuItem }): React.ReactElement {
-  const imageSrc = resolveMediaUrl(item.imageUrl) ?? item.imageUrl;
-  const href = `/menu/${item.slug || item.id}`;
+function ComboDealCard({
+  deal,
+  onOrder,
+}: {
+  deal: ComboDeal;
+  onOrder: () => void;
+}): React.ReactElement {
+  const imageSrc =
+    resolveMediaUrl(deal.imageUrl) ??
+    deal.imageUrl ??
+    "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80";
+  const price = Number(deal.bundlePrice);
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[color:var(--brand-accent,#d81b60)]/30 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] dark:border-white/[0.08] dark:bg-zinc-900/40">
       <div className="relative h-48 overflow-hidden bg-zinc-100 dark:bg-zinc-800">
         <SmartImage
-          alt={item.imageAlt || item.name}
-          blurHash={item.imageBlurHash}
+          alt={deal.imageAlt || deal.name}
           className="object-cover transition-transform duration-700 group-hover:scale-105"
           fill
           frameClassName="absolute inset-0"
@@ -115,17 +140,22 @@ function MenuDealCard({ item }: { item: MenuItem }): React.ReactElement {
           src={imageSrc}
         />
         <span className="absolute left-4 top-4 rounded-full bg-[color:var(--brand-accent,#d81b60)] px-3 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md">
-          {formatCurrency(item.price)}
+          {formatCurrency(price)}
         </span>
       </div>
 
       <div className="flex flex-1 flex-col p-6">
-        <h3 className={cn("font-display text-xl font-bold", primaryText)}>{item.name}</h3>
+        <h3 className={cn("font-display text-xl font-bold", primaryText)}>{deal.name}</h3>
         <p className={cn("mt-3 flex-1 text-sm leading-relaxed", secondaryText)}>
-          {item.description}
+          {deal.description}
         </p>
-        <Button asChild className="mt-5 w-full rounded-full uppercase tracking-widest sm:w-auto" variant="pill">
-          <Link href={href}>Order now</Link>
+        <Button
+          className="mt-5 w-full rounded-full uppercase tracking-widest sm:w-auto"
+          onClick={onOrder}
+          type="button"
+          variant="pill"
+        >
+          Build combo
         </Button>
       </div>
     </article>

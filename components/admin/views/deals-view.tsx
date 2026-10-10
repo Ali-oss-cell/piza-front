@@ -222,10 +222,9 @@ export function DealsView({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className={cn("font-display text-2xl font-bold", primaryText)}>Promo deals</h2>
+          <h2 className={cn("font-display text-2xl font-bold", primaryText)}>Promo codes</h2>
           <p className={cn("mt-1 text-sm", secondaryText)}>
-            Discount codes and %/$ off promotions. Combo meals like Single Deal live under Menu →
-            Deals.
+            Discount codes and %/$ off promotions. Meal bundles live under Combo deals.
           </p>
         </div>
         <Button onClick={openCreateModal}>
@@ -238,7 +237,7 @@ export function DealsView({
         {sortedDeals.length === 0 ? (
           <div className="rounded-xl border border-dashed border-zinc-300/70 p-8 text-center dark:border-white/10">
             <p className={cn("text-sm", secondaryText)}>
-              No promo deals yet. Add a discount or promo code here — combo meal deals are in Menu.
+              No promo codes yet. Add a discount or promo code here — meal bundles are under Combo deals.
             </p>
           </div>
         ) : (

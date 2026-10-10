@@ -48,6 +48,12 @@ export function fetchDeals(brandSlug?: string): Promise<Deal[]> {
   return apiRequest<Deal[]>("/deals", { brandSlug });
 }
 
+export function fetchComboDeals(
+  brandSlug?: string,
+): Promise<import("@/types/combo-deals").ComboDeal[]> {
+  return apiRequest("/combo-deals", { brandSlug });
+}
+
 export interface ResolvedStore {
   id: string;
   slug: string;

@@ -23,6 +23,11 @@ import type {
   UpdateMenuItemPayload,
   UpdateToppingCategoryPayload,
 } from "@/types/admin";
+import type {
+  ComboDeal,
+  CreateComboDealPayload,
+  UpdateComboDealPayload,
+} from "@/types/combo-deals";
 import type { CreateDealPayload, Deal, UpdateDealPayload } from "@/types/deals";
 import type {
   AdminCrustOption,
@@ -609,6 +614,55 @@ export function pushDealToStores(
     method: "POST",
     token,
     body: JSON.stringify({ targetBrandSlugs }),
+  });
+}
+
+export function fetchAdminComboDeals(
+  token: string,
+  brandSlug?: string,
+): Promise<ComboDeal[]> {
+  return apiRequest<ComboDeal[]>("/combo-deals/manage/all", {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function createComboDeal(
+  token: string,
+  payload: CreateComboDealPayload,
+  brandSlug?: string,
+): Promise<ComboDeal> {
+  return apiRequest<ComboDeal>("/combo-deals", {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateComboDeal(
+  token: string,
+  id: string,
+  payload: UpdateComboDealPayload,
+  brandSlug?: string,
+): Promise<ComboDeal> {
+  return apiRequest<ComboDeal>(`/combo-deals/${id}`, {
+    method: "PUT",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteComboDeal(
+  token: string,
+  id: string,
+  brandSlug?: string,
+): Promise<void> {
+  return apiRequest<void>(`/combo-deals/${id}`, {
+    method: "DELETE",
+    token,
+    brandSlug: withBrand(brandSlug),
   });
 }
 

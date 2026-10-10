@@ -40,10 +40,23 @@ export interface MenuItem {
   allowedToppingIds?: string[];
 }
 
+export interface CartComboSelection {
+  slotId: string;
+  menuItemId: string;
+  name?: string;
+  size?: string;
+  crust?: string;
+  toppingIds?: string[];
+  removedIngredients?: string[];
+}
+
 export interface CartItem {
   id: string;
   itemId: string;
   menuItemId?: string;
+  type?: "ITEM" | "COMBO";
+  comboDealId?: string;
+  selections?: CartComboSelection[];
   name: string;
   description: string;
   price: number;

@@ -5,7 +5,7 @@ import {
   getContentPageBrandSlug,
   getContentPageStoreName,
 } from "@/lib/content-page-server";
-import { fetchDeals, fetchMenuItems } from "@/lib/menu-api";
+import { fetchComboDeals, fetchDeals, fetchMenuItems } from "@/lib/menu-api";
 import { mapApiMenuItem } from "@/lib/menu-mappers";
 
 export const dynamic = "force-dynamic";
@@ -27,18 +27,18 @@ export default async function DealsPage(): Promise<React.ReactElement> {
   ]);
 
   let promoDeals: Awaited<ReturnType<typeof fetchDeals>> = [];
-  let menuDeals: ReturnType<typeof mapApiMenuItem>[] = [];
+  let comboDeals: Awaited<ReturnType<typeof fetchComboDeals>> = [];
+  let menuItems: ReturnType<typeof mapApiMenuItem>[] = [];
 
   try {
-    const [promos, menuItems] = await Promise.all([
+    const [promos, combos, apiMenu] = await Promise.all([
       fetchDeals(brandSlug).catch(() => []),
+      fetchComboDeals(brandSlug).catch(() => []),
       fetchMenuItems(brandSlug).catch(() => []),
     ]);
     promoDeals = promos;
-    menuDeals = menuItems
-      .filter((item) => item.isActive && item.categorySlug === "deals")
-      .map(mapApiMenuItem)
-      .sort((a, b) => a.number - b.number || a.name.localeCompare(b.name));
+    comboDeals = combos;
+    menuItems = apiMenu.filter((item) => item.isActive).map(mapApiMenuItem);
   } catch {
     // Render empty deals when API is briefly unreachable.
   }
@@ -46,7 +46,11 @@ export default async function DealsPage(): Promise<React.ReactElement> {
   return (
     <>
       <SeoMetaClient fallbackTitle={`Deals | ${storeName}`} pageKey="deals" />
-      <DealsPageContent menuDeals={menuDeals} promoDeals={promoDeals} />
+      <DealsPageContent
+        comboDeals={comboDeals}
+        menuItems={menuItems}
+        promoDeals={promoDeals}
+      />
     </>
   );
 }

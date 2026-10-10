@@ -14,6 +14,16 @@ import { AddToCartToast } from "@/components/features/add-to-cart-toast";
 import { readCartFromStorage, writeCartToStorage } from "@/lib/cart-storage";
 import type { AddToCartPayload, CartItem, DeliveryMode } from "@/types/menu";
 
+export interface AddComboToCartPayload {
+  comboDealId: string;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl?: string;
+  imageAlt?: string;
+  selections: NonNullable<CartItem["selections"]>;
+}
+
 interface CartContextValue {
   items: CartItem[];
   deliveryMode: DeliveryMode;
@@ -24,6 +34,7 @@ interface CartContextValue {
   setCartOpen: (open: boolean) => void;
   setDeliveryMode: (mode: DeliveryMode) => void;
   addToCart: (payload: AddToCartPayload) => void;
+  addComboToCart: (payload: AddComboToCartPayload) => void;
   incrementItem: (id: string) => void;
   decrementItem: (id: string) => void;
   removeItem: (id: string) => void;
@@ -146,6 +157,7 @@ export function CartProvider({
           {
             id: `cart-${cartLineId}`,
             itemId: cartLineId,
+            type: "ITEM",
             menuItemId: payload.item.apiId,
             name: payload.item.name,
             description: buildCartDescription(payload),
@@ -164,6 +176,30 @@ export function CartProvider({
       showAddToast();
     },
     [showAddToast]
+  );
+
+  const addComboToCart = useCallback(
+    (payload: AddComboToCartPayload) => {
+      const cartLineId = `combo-${payload.comboDealId}-${Date.now()}`;
+      setItems((currentItems) => [
+        ...currentItems,
+        {
+          id: `cart-${cartLineId}`,
+          itemId: cartLineId,
+          type: "COMBO",
+          comboDealId: payload.comboDealId,
+          selections: payload.selections,
+          name: payload.name,
+          description: payload.description,
+          price: payload.price,
+          quantity: 1,
+          imageUrl: payload.imageUrl ?? "",
+          imageAlt: payload.imageAlt ?? payload.name,
+        },
+      ]);
+      showAddToast();
+    },
+    [showAddToast],
   );
 
   const incrementItem = useCallback((id: string) => {
@@ -204,6 +240,7 @@ export function CartProvider({
       setCartOpen,
       setDeliveryMode,
       addToCart,
+      addComboToCart,
       incrementItem,
       decrementItem,
       removeItem,
@@ -217,6 +254,7 @@ export function CartProvider({
       isCartReady,
       isCartOpen,
       addToCart,
+      addComboToCart,
       incrementItem,
       decrementItem,
       removeItem,
