@@ -329,17 +329,16 @@ export function ComboDealsView({
               <div className="flex flex-wrap gap-2">
                 <Button
                   onClick={() => void toggleActive(deal)}
-                  size="sm"
                   variant="outline"
                 >
                   {deal.isActive ? "Deactivate" : "Activate"}
                 </Button>
-                <Button onClick={() => openEdit(deal)} size="sm" variant="outline">
+                <Button onClick={() => openEdit(deal)} size="icon" variant="outline">
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   onClick={() => void handleDelete(deal)}
-                  size="sm"
+                  size="icon"
                   variant="outline"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -466,7 +465,6 @@ export function ComboDealsView({
                         slots: [...f.slots, emptySlot()],
                       }))
                     }
-                    size="sm"
                     type="button"
                     variant="outline"
                   >
