@@ -26,6 +26,7 @@ import {
   toApiDeliveryMode,
   validatePromoCode,
   type AppliedPromo,
+  type CreateOrderPayload,
 } from "@/lib/orders-api";
 import { roundMoney } from "@/lib/pricing";
 import {
@@ -241,7 +242,7 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
       const order = await createOrder(
         {
           deliveryMode: toApiDeliveryMode(deliveryMode),
-          items: items.flatMap((item) => {
+          items: items.flatMap((item): CreateOrderPayload["items"] => {
             if (item.type === "COMBO" || item.comboDealId) {
               return Array.from({ length: item.quantity }, () => ({
                 type: "COMBO" as const,
