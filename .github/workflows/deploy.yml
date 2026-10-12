@@ -38,11 +38,19 @@ jobs:
             export COMPOSE_BAKE=false
 
             # Free RAM/CPU during Next build (POS offline briefly).
-            docker compose -f docker-compose.prod.yml stop pos || true
+            # Use docker stop/kill with a short timeout — compose stop has hung
+            # on this Droplet ("Container piza-pos Stopping") and blocked deploy.
+            echo "Stopping POS to free RAM..."
+            docker stop -t 5 piza-pos 2>/dev/null || true
+            docker kill piza-pos 2>/dev/null || true
+            docker compose -f docker-compose.prod.yml ps pos || true
 
+            echo "Building web..."
             docker compose -f docker-compose.prod.yml build web
+            echo "Starting web..."
             docker compose -f docker-compose.prod.yml up -d web
 
+            echo "Restarting POS..."
             docker compose -f docker-compose.prod.yml start pos || \
               docker compose -f docker-compose.prod.yml up -d pos
 
