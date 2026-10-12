@@ -3,6 +3,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { HeroImageUploader } from "@/components/admin/hero-image-uploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -106,7 +107,11 @@ function formFromDeal(deal: ComboDeal): ComboFormState {
       label: slot.label,
       quantity: String(slot.quantity),
       sourceType: slot.sourceType,
-      categorySlug: slot.categorySlug ?? "",
+      // Keep category for the filter field when editing a fixed item slot.
+      categorySlug:
+        slot.categorySlug ??
+        slot.menuItem?.categorySlug ??
+        "",
       menuItemId: slot.menuItemId ?? "",
       allowedSizes: Array.isArray(slot.allowedSizes)
         ? slot.allowedSizes.map(String)
@@ -117,24 +122,32 @@ function formFromDeal(deal: ComboDeal): ComboFormState {
 }
 
 function buildPayload(form: ComboFormState): CreateComboDealPayload {
-  const slots: ComboDealSlotPayload[] = form.slots.map((slot, index) => ({
-    label: slot.label.trim() || `Slot ${index + 1}`,
-    sortOrder: index,
-    quantity: Math.max(1, Number(slot.quantity) || 1),
-    sourceType: slot.sourceType,
-    categorySlug:
-      slot.sourceType === "CATEGORY" ? slot.categorySlug.trim() : undefined,
-    menuItemId: slot.sourceType === "ITEM" ? slot.menuItemId : undefined,
-    allowedSizes: slot.allowedSizes.length ? slot.allowedSizes : undefined,
-    allowModifiers: slot.allowModifiers,
-  }));
+  const slots: ComboDealSlotPayload[] = form.slots.map((slot, index) => {
+    // Category mode + a picked item → save as a fixed item (admin browsed by category).
+    const sourceType: ComboSlotSourceType =
+      slot.sourceType === "CATEGORY" && slot.menuItemId.trim()
+        ? "ITEM"
+        : slot.sourceType;
+
+    return {
+      label: slot.label.trim() || `Slot ${index + 1}`,
+      sortOrder: index,
+      quantity: Math.max(1, Number(slot.quantity) || 1),
+      sourceType,
+      categorySlug:
+        sourceType === "CATEGORY" ? slot.categorySlug.trim() : undefined,
+      menuItemId: sourceType === "ITEM" ? slot.menuItemId : undefined,
+      allowedSizes: slot.allowedSizes.length ? slot.allowedSizes : undefined,
+      allowModifiers: slot.allowModifiers,
+    };
+  });
 
   return {
     slug: form.slug.trim() || slugifyMenuName(form.name),
     name: form.name.trim(),
     description: form.description.trim(),
     imageUrl: form.imageUrl.trim() || undefined,
-    imageAlt: form.imageAlt.trim() || undefined,
+    imageAlt: form.imageAlt.trim() || form.name.trim() || undefined,
     bundlePrice: Number(form.bundlePrice),
     sortOrder: Number(form.sortOrder) || 0,
     isActive: form.isActive,
@@ -371,13 +384,19 @@ export function ComboDealsView({
                   Name
                 </label>
                 <Input
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    const nextSlug = slugifyMenuName(name);
                     setForm((f) => ({
                       ...f,
-                      name: e.target.value,
-                      slug: f.slug || slugifyMenuName(e.target.value),
-                    }))
-                  }
+                      name,
+                      slug:
+                        !f.slug || f.slug === slugifyMenuName(f.name)
+                          ? nextSlug
+                          : f.slug,
+                    }));
+                  }}
+                  placeholder="e.g. Single Deal"
                   value={form.name}
                 />
               </div>
@@ -388,10 +407,17 @@ export function ComboDealsView({
                   </label>
                   <Input
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, slug: e.target.value }))
+                      setForm((f) => ({
+                        ...f,
+                        slug: slugifyMenuName(e.target.value),
+                      }))
                     }
+                    placeholder="auto from name"
                     value={form.slug}
                   />
+                  <p className={cn("mt-1 text-xs", secondaryText)}>
+                    Updates automatically from the name unless you edit it.
+                  </p>
                 </div>
                 <div>
                   <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
@@ -419,30 +445,37 @@ export function ComboDealsView({
                   value={form.description}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
-                    Image URL
-                  </label>
-                  <Input
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, imageUrl: e.target.value }))
-                    }
-                    value={form.imageUrl}
-                  />
-                </div>
-                <div>
-                  <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
-                    Sort order
-                  </label>
-                  <Input
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, sortOrder: e.target.value }))
-                    }
-                    type="number"
-                    value={form.sortOrder}
-                  />
-                </div>
+              <div>
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                  Image
+                </label>
+                <HeroImageUploader
+                  aspectClassName="aspect-[4/3] max-w-xs"
+                  hint="JPEG, PNG, WebP or GIF · max 5 MB"
+                  label="combo image"
+                  onChange={(imageUrl) =>
+                    setForm((f) => ({
+                      ...f,
+                      imageUrl,
+                      imageAlt: f.imageAlt || f.name.trim(),
+                    }))
+                  }
+                  token={token}
+                  value={form.imageUrl}
+                />
+              </div>
+              <div>
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                  Sort order
+                </label>
+                <Input
+                  className="max-w-[140px]"
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, sortOrder: e.target.value }))
+                  }
+                  type="number"
+                  value={form.sortOrder}
+                />
               </div>
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -517,32 +550,67 @@ export function ComboDealsView({
                         />
                         <select
                           className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-600"
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const sourceType = e.target
+                              .value as ComboSlotSourceType;
                             updateSlot(slot.key, {
-                              sourceType: e.target.value as ComboSlotSourceType,
-                            })
-                          }
+                              sourceType,
+                              menuItemId:
+                                sourceType === "CATEGORY" ? "" : slot.menuItemId,
+                              categorySlug:
+                                slot.categorySlug ||
+                                menuCategories[0]?.slug ||
+                                "",
+                            });
+                          }}
                           value={slot.sourceType}
                         >
                           <option value="CATEGORY">From category</option>
                           <option value="ITEM">Specific item</option>
                         </select>
                         {slot.sourceType === "CATEGORY" ? (
-                          <select
-                            className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-600"
-                            onChange={(e) =>
-                              updateSlot(slot.key, {
-                                categorySlug: e.target.value,
-                              })
-                            }
-                            value={slot.categorySlug}
-                          >
-                            {menuCategories.map((cat) => (
-                              <option key={cat.id} value={cat.slug}>
-                                {cat.label}
+                          <>
+                            <select
+                              className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-600"
+                              onChange={(e) =>
+                                updateSlot(slot.key, {
+                                  categorySlug: e.target.value,
+                                  // Reset item when category changes.
+                                  menuItemId: "",
+                                })
+                              }
+                              value={slot.categorySlug}
+                            >
+                              {menuCategories.map((cat) => (
+                                <option key={cat.id} value={cat.slug}>
+                                  {cat.label}
+                                </option>
+                              ))}
+                            </select>
+                            <select
+                              className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-600 sm:col-span-2"
+                              onChange={(e) =>
+                                updateSlot(slot.key, {
+                                  menuItemId: e.target.value,
+                                })
+                              }
+                              value={slot.menuItemId}
+                            >
+                              <option value="">
+                                Any item in this category
                               </option>
-                            ))}
-                          </select>
+                              {activeItems
+                                .filter(
+                                  (item) =>
+                                    item.categorySlug === slot.categorySlug,
+                                )
+                                .map((item) => (
+                                  <option key={item.id} value={item.id}>
+                                    {item.name}
+                                  </option>
+                                ))}
+                            </select>
+                          </>
                         ) : (
                           <select
                             className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-600"

@@ -12,6 +12,11 @@ interface HeroImageUploaderProps {
   value: string;
   onChange: (heroImageUrl: string) => void;
   className?: string;
+  /** Button / empty-state label. Defaults to hero wording. */
+  label?: string;
+  hint?: string;
+  /** Tailwind aspect class for the preview box. */
+  aspectClassName?: string;
 }
 
 export function HeroImageUploader({
@@ -19,6 +24,9 @@ export function HeroImageUploader({
   value,
   onChange,
   className,
+  label = "hero image",
+  hint = "Wide banner for the storefront homepage · JPEG, PNG, WebP or GIF · max 5 MB",
+  aspectClassName = "aspect-[16/7]",
 }: HeroImageUploaderProps): React.ReactElement {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -50,14 +58,15 @@ export function HeroImageUploader({
     <div className={cn("space-y-3", className)}>
       <div
         className={cn(
-          "relative flex aspect-[16/7] w-full items-center justify-center overflow-hidden rounded-2xl border border-zinc-200/70 bg-zinc-100 dark:border-white/10 dark:bg-zinc-900",
+          "relative flex w-full items-center justify-center overflow-hidden rounded-2xl border border-zinc-200/70 bg-zinc-100 dark:border-white/10 dark:bg-zinc-900",
+          aspectClassName,
         )}
       >
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img alt="Homepage hero" className="h-full w-full object-cover" src={preview} />
+          <img alt={label} className="h-full w-full object-cover" src={preview} />
         ) : (
-          <span className={cn("text-sm", secondaryText)}>No hero image yet</span>
+          <span className={cn("text-sm", secondaryText)}>No {label} yet</span>
         )}
       </div>
 
@@ -73,7 +82,11 @@ export function HeroImageUploader({
           ) : (
             <ImagePlus className="h-4 w-4 text-[#d81b60]" />
           )}
-          {isUploading ? "Uploading…" : value ? "Replace hero image" : "Upload hero image"}
+          {isUploading
+            ? "Uploading…"
+            : value
+              ? `Replace ${label}`
+              : `Upload ${label}`}
         </button>
         {value ? (
           <button
@@ -85,9 +98,7 @@ export function HeroImageUploader({
           </button>
         ) : null}
       </div>
-      <p className={cn("text-xs", secondaryText)}>
-        Wide banner for the storefront homepage · JPEG, PNG, WebP or GIF · max 5&nbsp;MB
-      </p>
+      <p className={cn("text-xs", secondaryText)}>{hint}</p>
 
       <input
         accept="image/jpeg,image/png,image/webp,image/gif"
