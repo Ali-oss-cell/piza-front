@@ -54,5 +54,20 @@ export const navLink =
 export const dashboardGlass =
   "rounded-2xl border border-zinc-200/50 bg-white/60 backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/40";
 
+/**
+ * Solid admin modal panel — opaque white, clear border, real depth.
+ * Prefer this over dashboardGlass for Dialog content (glass looks muddy on gray overlays).
+ */
+export const adminDialogSurface =
+  "rounded-2xl border border-zinc-200 bg-white shadow-[0_24px_64px_rgba(15,23,42,0.18)] dark:border-zinc-700 dark:bg-zinc-950 dark:shadow-[0_24px_64px_rgba(0,0,0,0.7)]";
+
+export const adminDialogOverlay =
+  "fixed inset-0 z-40 bg-zinc-900/40 backdrop-blur-[1px] dark:bg-black/65";
+
+/** Positioning + surface for centered admin Dialog.Content */
+export const adminDialogContent =
+  "fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(96vw,40rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto p-6 " +
+  adminDialogSurface;
+
 export const fieldControl =
-  "h-11 w-full rounded-xl border border-zinc-200/70 bg-white/80 px-4 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus-visible:border-[color:var(--brand-accent,#d81b60)] focus-visible:ring-2 focus-visible:ring-[color:var(--brand-accent,#d81b60)]/25 dark:border-white/[0.08] dark:bg-zinc-950/60 dark:text-zinc-50 dark:placeholder:text-zinc-500";
+  "h-11 w-full rounded-xl border border-zinc-300 bg-white px-4 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus-visible:border-[color:var(--brand-accent,#d81b60)] focus-visible:ring-2 focus-visible:ring-[color:var(--brand-accent,#d81b60)]/25 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-500";

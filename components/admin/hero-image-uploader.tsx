@@ -58,7 +58,7 @@ export function HeroImageUploader({
     <div className={cn("space-y-3", className)}>
       <div
         className={cn(
-          "relative flex w-full items-center justify-center overflow-hidden rounded-2xl border border-zinc-200/70 bg-zinc-100 dark:border-white/10 dark:bg-zinc-900",
+          "relative flex w-full items-center justify-center overflow-hidden rounded-2xl border border-zinc-300 bg-white shadow-inner dark:border-zinc-600 dark:bg-zinc-900",
           aspectClassName,
         )}
       >
@@ -72,7 +72,7 @@ export function HeroImageUploader({
 
       <div className="flex flex-wrap items-center gap-3">
         <button
-          className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium transition hover:border-[#d81b60]/40 dark:border-white/10 dark:bg-zinc-900"
+          className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-medium shadow-sm transition hover:border-[#d81b60]/50 dark:border-zinc-600 dark:bg-zinc-900"
           disabled={isUploading}
           onClick={() => inputRef.current?.click()}
           type="button"

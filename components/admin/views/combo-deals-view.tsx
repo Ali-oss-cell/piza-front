@@ -1,9 +1,10 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { HeroImageUploader } from "@/components/admin/hero-image-uploader";
+import { SearchableSelect } from "@/components/admin/searchable-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,7 +13,13 @@ import {
   updateComboDeal,
 } from "@/lib/admin-api";
 import { slugifyMenuName } from "@/lib/menu-categories";
-import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import {
+  adminDialogContent,
+  adminDialogOverlay,
+  dashboardGlass,
+  primaryText,
+  secondaryText,
+} from "@/lib/theme-classes";
 import type { AdminMenuCategoryRecord, AdminMenuItem } from "@/types/admin";
 import type {
   ComboDeal,
@@ -201,11 +208,58 @@ export function ComboDealsView({
   const [form, setForm] = useState<ComboFormState>(() => emptyForm(comboDeals));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [listQuery, setListQuery] = useState("");
+  const [menuSearch, setMenuSearch] = useState("");
 
-  const sorted = [...comboDeals].sort(
-    (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
+  const sorted = useMemo(
+    () =>
+      [...comboDeals].sort(
+        (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
+      ),
+    [comboDeals],
   );
-  const activeItems = menuItems.filter((item) => item.isActive);
+  const filteredDeals = useMemo(() => {
+    const q = listQuery.trim().toLowerCase();
+    if (!q) return sorted;
+    return sorted.filter(
+      (deal) =>
+        deal.name.toLowerCase().includes(q) ||
+        deal.slug.toLowerCase().includes(q) ||
+        deal.description.toLowerCase().includes(q),
+    );
+  }, [listQuery, sorted]);
+  const activeItems = useMemo(
+    () => menuItems.filter((item) => item.isActive),
+    [menuItems],
+  );
+  const searchableItems = useMemo(() => {
+    const q = menuSearch.trim().toLowerCase();
+    if (!q) return activeItems;
+    return activeItems.filter(
+      (item) =>
+        item.name.toLowerCase().includes(q) ||
+        item.categorySlug.toLowerCase().includes(q) ||
+        item.slug?.toLowerCase().includes(q),
+    );
+  }, [activeItems, menuSearch]);
+  const categoryOptions = useMemo(
+    () =>
+      menuCategories.map((cat) => ({
+        value: cat.slug,
+        label: cat.label,
+        hint: cat.slug,
+      })),
+    [menuCategories],
+  );
+  const allItemOptions = useMemo(
+    () =>
+      searchableItems.map((item) => ({
+        value: item.id,
+        label: item.name,
+        hint: item.categorySlug,
+      })),
+    [searchableItems],
+  );
 
   function openCreate(): void {
     setEditing(null);
@@ -329,9 +383,22 @@ export function ComboDealsView({
         </Button>
       </div>
 
+      {sorted.length > 0 ? (
+        <div className="relative max-w-md">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+          <Input
+            className="pl-10"
+            onChange={(e) => setListQuery(e.target.value)}
+            placeholder="Search deals…"
+            type="search"
+            value={listQuery}
+          />
+        </div>
+      ) : null}
+
       <div className="space-y-3">
         {sorted.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-zinc-300/70 p-10 text-center dark:border-white/10">
+          <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center shadow-sm dark:border-zinc-700 dark:bg-zinc-950">
             <p className={cn("text-base font-medium", primaryText)}>No deals yet</p>
             <p className={cn("mx-auto mt-2 max-w-md text-sm", secondaryText)}>
               Create Single Deal, Double Deal, and other specials here. They appear
@@ -342,8 +409,14 @@ export function ComboDealsView({
               Add first deal
             </Button>
           </div>
+        ) : filteredDeals.length === 0 ? (
+          <div className="rounded-2xl border border-zinc-200 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-950">
+            <p className={cn("text-sm", secondaryText)}>
+              No deals match “{listQuery.trim()}”.
+            </p>
+          </div>
         ) : (
-          sorted.map((deal) => (
+          filteredDeals.map((deal) => (
             <div
               className={cn(
                 "flex flex-wrap items-center justify-between gap-4 rounded-2xl border px-4 py-4",
@@ -412,15 +485,16 @@ export function ComboDealsView({
         )}
       </div>
 
-      <Dialog.Root onOpenChange={setOpen} open={open}>
+      <Dialog.Root
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) setMenuSearch("");
+        }}
+        open={open}
+      >
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50" />
-          <Dialog.Content
-            className={cn(
-              "fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(640px,94vw)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl p-6 shadow-xl",
-              dashboardGlass,
-            )}
-          >
+          <Dialog.Overlay className={adminDialogOverlay} />
+          <Dialog.Content className={cn(adminDialogContent, "w-[min(640px,94vw)]")}>
             <Dialog.Title className={cn("font-display text-xl font-bold", primaryText)}>
               {editing ? "Edit deal" : "New deal"}
             </Dialog.Title>
@@ -528,7 +602,7 @@ export function ComboDealsView({
                 />
               </div>
 
-              <div className="rounded-xl border border-zinc-200/80 p-4 dark:border-white/10">
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/60">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className={cn("text-sm font-medium", primaryText)}>
@@ -642,8 +716,8 @@ export function ComboDealsView({
                 </div>
               </div>
 
-              <div className="border-t border-zinc-200 pt-3 dark:border-white/10">
-                <div className="mb-2 flex items-center justify-between">
+              <div className="border-t border-zinc-200 pt-3 dark:border-zinc-700">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <p className={cn("font-medium", primaryText)}>Slots</p>
                   <Button
                     onClick={() =>
@@ -660,10 +734,29 @@ export function ComboDealsView({
                   </Button>
                 </div>
 
+                <div className="relative mb-3">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                  <Input
+                    className="pl-10"
+                    onChange={(e) => setMenuSearch(e.target.value)}
+                    placeholder="Search menu items for slots…"
+                    type="search"
+                    value={menuSearch}
+                  />
+                </div>
+
                 <div className="space-y-3">
-                  {form.slots.map((slot, index) => (
+                  {form.slots.map((slot, index) => {
+                    const categoryItemOptions = searchableItems
+                      .filter((item) => item.categorySlug === slot.categorySlug)
+                      .map((item) => ({
+                        value: item.id,
+                        label: item.name,
+                      }));
+
+                    return (
                     <div
-                      className="rounded-lg border border-zinc-200/70 p-3 dark:border-white/10"
+                      className="rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900"
                       key={slot.key}
                     >
                       <div className="mb-2 flex items-center justify-between">
@@ -703,7 +796,7 @@ export function ComboDealsView({
                           value={slot.quantity}
                         />
                         <select
-                          className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-600"
+                          className="h-11 rounded-xl border border-zinc-300 bg-white px-3 text-sm dark:border-zinc-600 dark:bg-zinc-900"
                           onChange={(e) => {
                             const sourceType = e.target
                               .value as ComboSlotSourceType;
@@ -724,64 +817,42 @@ export function ComboDealsView({
                         </select>
                         {slot.sourceType === "CATEGORY" ? (
                           <>
-                            <select
-                              className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-600"
-                              onChange={(e) =>
+                            <SearchableSelect
+                              onChange={(categorySlug) =>
                                 updateSlot(slot.key, {
-                                  categorySlug: e.target.value,
-                                  // Reset item when category changes.
+                                  categorySlug,
                                   menuItemId: "",
                                 })
                               }
+                              options={categoryOptions}
+                              placeholder="Select category…"
+                              searchPlaceholder="Search categories…"
                               value={slot.categorySlug}
-                            >
-                              {menuCategories.map((cat) => (
-                                <option key={cat.id} value={cat.slug}>
-                                  {cat.label}
-                                </option>
-                              ))}
-                            </select>
-                            <select
-                              className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-600 sm:col-span-2"
-                              onChange={(e) =>
-                                updateSlot(slot.key, {
-                                  menuItemId: e.target.value,
-                                })
-                              }
-                              value={slot.menuItemId}
-                            >
-                              <option value="">
-                                Any item in this category
-                              </option>
-                              {activeItems
-                                .filter(
-                                  (item) =>
-                                    item.categorySlug === slot.categorySlug,
-                                )
-                                .map((item) => (
-                                  <option key={item.id} value={item.id}>
-                                    {item.name}
-                                  </option>
-                                ))}
-                            </select>
+                            />
+                            <div className="sm:col-span-2">
+                              <SearchableSelect
+                                emptyLabel="No items in this category match the search."
+                                onChange={(menuItemId) =>
+                                  updateSlot(slot.key, { menuItemId })
+                                }
+                                options={categoryItemOptions}
+                                placeholder="Any item in this category"
+                                searchPlaceholder="Search items in category…"
+                                value={slot.menuItemId}
+                              />
+                            </div>
                           </>
                         ) : (
-                          <select
-                            className="rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-600"
-                            onChange={(e) =>
-                              updateSlot(slot.key, {
-                                menuItemId: e.target.value,
-                              })
+                          <SearchableSelect
+                            emptyLabel="No menu items match the search."
+                            onChange={(menuItemId) =>
+                              updateSlot(slot.key, { menuItemId })
                             }
+                            options={allItemOptions}
+                            placeholder="Select item…"
+                            searchPlaceholder="Search menu items…"
                             value={slot.menuItemId}
-                          >
-                            <option value="">Select item…</option>
-                            {activeItems.map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name} ({item.categorySlug})
-                              </option>
-                            ))}
-                          </select>
+                          />
                         )}
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -813,7 +884,8 @@ export function ComboDealsView({
                         </label>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

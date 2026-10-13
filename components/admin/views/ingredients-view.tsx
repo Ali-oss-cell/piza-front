@@ -14,7 +14,13 @@ import {
   updateIngredientCategory,
 } from "@/lib/admin-api";
 import { slugifyMenuName } from "@/lib/menu-categories";
-import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import {
+  dashboardGlass,
+  primaryText,
+  secondaryText,
+  adminDialogOverlay,
+  adminDialogSurface,
+} from "@/lib/theme-classes";
 import type {
   AdminIngredient,
   AdminIngredientCategory,
@@ -433,8 +439,8 @@ export function IngredientsView({
 
       <Dialog.Root onOpenChange={setIsIngredientModalOpen} open={isIngredientModalOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
-          <Dialog.Content className={cn("fixed left-1/2 top-1/2 z-50 w-[min(96vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6 shadow-2xl", dashboardGlass)}>
+          <Dialog.Overlay className={cn(adminDialogOverlay, "z-50")} />
+          <Dialog.Content className={cn("fixed left-1/2 top-1/2 z-50 w-[min(96vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6 shadow-2xl", adminDialogSurface)}>
             <Dialog.Title className={cn("font-display text-xl font-bold", primaryText)}>
               {ingredientModalMode === "create" ? "Add Ingredient" : "Edit Ingredient"}
             </Dialog.Title>
@@ -524,8 +530,8 @@ export function IngredientsView({
 
       <Dialog.Root onOpenChange={setIsCategoryModalOpen} open={isCategoryModalOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
-          <Dialog.Content className={cn("fixed left-1/2 top-1/2 z-50 w-[min(96vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6 shadow-2xl", dashboardGlass)}>
+          <Dialog.Overlay className={cn(adminDialogOverlay, "z-50")} />
+          <Dialog.Content className={cn("fixed left-1/2 top-1/2 z-50 w-[min(96vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6 shadow-2xl", adminDialogSurface)}>
             <Dialog.Title className={cn("font-display text-xl font-bold", primaryText)}>
               {categoryModalMode === "create" ? "Add Category" : "Edit Category"}
             </Dialog.Title>

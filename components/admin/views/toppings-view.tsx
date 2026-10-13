@@ -11,7 +11,13 @@ import {
   updateExtraTopping,
 } from "@/lib/admin-api";
 import { slugifyMenuName } from "@/lib/menu-categories";
-import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import {
+  dashboardGlass,
+  primaryText,
+  secondaryText,
+  adminDialogOverlay,
+  adminDialogSurface,
+} from "@/lib/theme-classes";
 import type {
   AdminExtraTopping,
   AdminToppingCategory,
@@ -283,11 +289,11 @@ export function ToppingsView({
 
       <Dialog.Root onOpenChange={setIsModalOpen} open={isModalOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
+          <Dialog.Overlay className={cn(adminDialogOverlay, "z-50")} />
           <Dialog.Content
             className={cn(
               "fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(96vw,32rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl p-6 shadow-2xl",
-              dashboardGlass
+              adminDialogSurface
             )}
           >
             <Dialog.Title className={cn("font-display text-xl font-bold", primaryText)}>

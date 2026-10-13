@@ -10,7 +10,13 @@ import {
   inviteHqMember,
   updateHqMembership,
 } from "@/lib/admin-api";
-import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import {
+  dashboardGlass,
+  primaryText,
+  secondaryText,
+  adminDialogOverlay,
+  adminDialogSurface,
+} from "@/lib/theme-classes";
 import type { Brand } from "@/types/brand";
 import type { TeamMembership } from "@/types/hq";
 import { cn } from "@/lib/utils";
@@ -204,11 +210,11 @@ export function PeopleView({ token, brands }: PeopleViewProps): React.ReactEleme
 
       <Dialog.Root onOpenChange={setIsModalOpen} open={isModalOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+          <Dialog.Overlay className={cn(adminDialogOverlay, "z-50")} />
           <Dialog.Content
             className={cn(
               "fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(96vw,32rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border p-6",
-              dashboardGlass,
+              adminDialogSurface,
             )}
           >
             <Dialog.Title className={cn("font-display text-xl font-bold", primaryText)}>
