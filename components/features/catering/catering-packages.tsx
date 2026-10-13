@@ -30,7 +30,10 @@ export function CateringPackages({
       onRequestQuote();
       return;
     }
-    addToCart({ item: packageToMenuItem(pkg), price: pkg.totalPrice, quantity: 1 });
+    addToCart(
+      { item: packageToMenuItem(pkg), price: pkg.totalPrice, quantity: 1 },
+      { returnToMenu: false },
+    );
     router.push("/cart");
   };
 

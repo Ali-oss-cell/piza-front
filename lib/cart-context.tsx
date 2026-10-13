@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -24,6 +25,11 @@ export interface AddComboToCartPayload {
   selections: NonNullable<CartItem["selections"]>;
 }
 
+export interface AddToCartOptions {
+  /** Defaults to true. Set false for flows that navigate elsewhere (e.g. catering → cart). */
+  returnToMenu?: boolean;
+}
+
 interface CartContextValue {
   items: CartItem[];
   deliveryMode: DeliveryMode;
@@ -33,8 +39,8 @@ interface CartContextValue {
   isCartOpen: boolean;
   setCartOpen: (open: boolean) => void;
   setDeliveryMode: (mode: DeliveryMode) => void;
-  addToCart: (payload: AddToCartPayload) => void;
-  addComboToCart: (payload: AddComboToCartPayload) => void;
+  addToCart: (payload: AddToCartPayload, options?: AddToCartOptions) => void;
+  addComboToCart: (payload: AddComboToCartPayload, options?: AddToCartOptions) => void;
   incrementItem: (id: string) => void;
   decrementItem: (id: string) => void;
   removeItem: (id: string) => void;
@@ -79,6 +85,8 @@ export function CartProvider({
   children: ReactNode;
   deliveryFee?: number;
 }): React.ReactElement {
+  const router = useRouter();
+  const pathname = usePathname();
   const [items, setItems] = useState<CartItem[]>([]);
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("delivery");
   const [isCartReady, setIsCartReady] = useState(false);
@@ -86,6 +94,18 @@ export function CartProvider({
   const [toastVisible, setToastVisible] = useState(false);
   const [toastExiting, setToastExiting] = useState(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const returnToMenuAfterAdd = useCallback(
+    (options?: AddToCartOptions) => {
+      if (options?.returnToMenu === false) {
+        return;
+      }
+      if (pathname !== "/menu") {
+        router.push("/menu");
+      }
+    },
+    [pathname, router],
+  );
 
   const clearToastTimeout = (): void => {
     if (toastTimeoutRef.current) {
@@ -137,7 +157,7 @@ export function CartProvider({
   }, [items, isCartReady]);
 
   const addToCart = useCallback(
-    (payload: AddToCartPayload) => {
+    (payload: AddToCartPayload, options?: AddToCartOptions) => {
       const cartLineId = buildCartLineId(payload);
       const quantityToAdd = payload.quantity ?? 1;
 
@@ -174,12 +194,13 @@ export function CartProvider({
       });
 
       showAddToast();
+      returnToMenuAfterAdd(options);
     },
-    [showAddToast]
+    [returnToMenuAfterAdd, showAddToast]
   );
 
   const addComboToCart = useCallback(
-    (payload: AddComboToCartPayload) => {
+    (payload: AddComboToCartPayload, options?: AddToCartOptions) => {
       const cartLineId = `combo-${payload.comboDealId}-${Date.now()}`;
       setItems((currentItems) => [
         ...currentItems,
@@ -198,8 +219,9 @@ export function CartProvider({
         },
       ]);
       showAddToast();
+      returnToMenuAfterAdd(options);
     },
-    [showAddToast],
+    [returnToMenuAfterAdd, showAddToast],
   );
 
   const incrementItem = useCallback((id: string) => {

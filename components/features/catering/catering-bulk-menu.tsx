@@ -65,7 +65,10 @@ export function CateringBulkMenu({
       return;
     }
 
-    addToCart({ item: bulkToMenuItem(item, qty), price: total, quantity: 1 });
+    addToCart(
+      { item: bulkToMenuItem(item, qty), price: total, quantity: 1 },
+      { returnToMenu: false },
+    );
     router.push("/cart");
   };
 
