@@ -41,6 +41,8 @@ interface SlotForm {
   allowModifiers: boolean;
 }
 
+type ScheduleMode = "always" | "range";
+
 interface ComboFormState {
   slug: string;
   name: string;
@@ -50,6 +52,7 @@ interface ComboFormState {
   bundlePrice: string;
   sortOrder: string;
   isActive: boolean;
+  scheduleMode: ScheduleMode;
   validFrom: string;
   validUntil: string;
   slots: SlotForm[];
@@ -84,6 +87,7 @@ function emptyForm(deals: ComboDeal[]): ComboFormState {
     bundlePrice: "16.90",
     sortOrder: String(deals.length),
     isActive: true,
+    scheduleMode: "always",
     validFrom: "",
     validUntil: "",
     slots: [emptySlot()],
@@ -91,6 +95,7 @@ function emptyForm(deals: ComboDeal[]): ComboFormState {
 }
 
 function formFromDeal(deal: ComboDeal): ComboFormState {
+  const hasDates = Boolean(deal.validFrom || deal.validUntil);
   return {
     slug: deal.slug,
     name: deal.name,
@@ -100,6 +105,7 @@ function formFromDeal(deal: ComboDeal): ComboFormState {
     bundlePrice: String(deal.bundlePrice),
     sortOrder: String(deal.sortOrder),
     isActive: deal.isActive,
+    scheduleMode: hasDates ? "range" : "always",
     validFrom: deal.validFrom ? deal.validFrom.slice(0, 16) : "",
     validUntil: deal.validUntil ? deal.validUntil.slice(0, 16) : "",
     slots: deal.slots.map((slot) => ({
@@ -142,6 +148,7 @@ function buildPayload(form: ComboFormState): CreateComboDealPayload {
     };
   });
 
+  const openEnded = form.scheduleMode === "always";
   return {
     slug: form.slug.trim() || slugifyMenuName(form.name),
     name: form.name.trim(),
@@ -151,10 +158,19 @@ function buildPayload(form: ComboFormState): CreateComboDealPayload {
     bundlePrice: Number(form.bundlePrice),
     sortOrder: Number(form.sortOrder) || 0,
     isActive: form.isActive,
-    validFrom: form.validFrom || undefined,
-    validUntil: form.validUntil || undefined,
+    // null clears dates on update (= always open).
+    validFrom: openEnded ? null : form.validFrom ? new Date(form.validFrom).toISOString() : null,
+    validUntil: openEnded ? null : form.validUntil ? new Date(form.validUntil).toISOString() : null,
     slots,
   };
+}
+
+function scheduleLabel(deal: ComboDeal): string {
+  if (!deal.isActive) return "Off";
+  if (!deal.validFrom && !deal.validUntil) return "Open";
+  const from = deal.validFrom ? new Date(deal.validFrom).toLocaleDateString() : "…";
+  const until = deal.validUntil ? new Date(deal.validUntil).toLocaleDateString() : "…";
+  return `${from} → ${until}`;
 }
 
 function formatMoney(value: string | number): string {
@@ -229,7 +245,14 @@ export function ComboDealsView({
           comboDeals.map((d) => (d.id === editing.id ? updated : d)),
         );
       } else {
-        const created = await createComboDeal(token, payload);
+        // Create DTO rejects null dates — omit when open-ended.
+        const { validFrom, validUntil, ...rest } = payload;
+        const createBody: CreateComboDealPayload = {
+          ...rest,
+          ...(typeof validFrom === "string" ? { validFrom } : {}),
+          ...(typeof validUntil === "string" ? { validUntil } : {}),
+        };
+        const created = await createComboDeal(token, createBody);
         onComboDealsChange([...comboDeals, created]);
       }
       setOpen(false);
@@ -293,32 +316,37 @@ export function ComboDealsView({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className={cn("font-display text-2xl font-bold", primaryText)}>
-            Combo deals
+            Deals
           </h2>
           <p className={cn("mt-1 text-sm", secondaryText)}>
-            Fixed-price bundles with pick-your-item slots for POS and the website.
-            Promo codes stay under Promo codes.
+            Fixed-price meal bundles for the website and POS. Turn each deal on or
+            off, or set a start and end date. Discount codes stay under Promo codes.
           </p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
-          Add combo
+          Add deal
         </Button>
       </div>
 
       <div className="space-y-3">
         {sorted.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-zinc-300/70 p-8 text-center dark:border-white/10">
-            <p className={cn("text-sm", secondaryText)}>
-              No combo deals yet. Create Single Deal, Double Deal, and other specials
-              here.
+          <div className="rounded-2xl border border-dashed border-zinc-300/70 p-10 text-center dark:border-white/10">
+            <p className={cn("text-base font-medium", primaryText)}>No deals yet</p>
+            <p className={cn("mx-auto mt-2 max-w-md text-sm", secondaryText)}>
+              Create Single Deal, Double Deal, and other specials here. They appear
+              on the website Deals page and the POS Combos tab for this store.
             </p>
+            <Button className="mt-5" onClick={openCreate}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add first deal
+            </Button>
           </div>
         ) : (
           sorted.map((deal) => (
             <div
               className={cn(
-                "flex flex-wrap items-start justify-between gap-3 rounded-xl border px-4 py-3",
+                "flex flex-wrap items-center justify-between gap-4 rounded-2xl border px-4 py-4",
                 dashboardGlass,
               )}
               key={deal.id}
@@ -326,26 +354,48 @@ export function ComboDealsView({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className={cn("font-semibold", primaryText)}>{deal.name}</p>
-                  <span className="text-sm font-medium text-[#d81b60]">
+                  <span className="text-sm font-semibold text-[#d81b60]">
                     {formatMoney(deal.bundlePrice)}
                   </span>
-                  {!deal.isActive ? (
-                    <span className="rounded bg-zinc-200 px-1.5 py-0.5 text-xs dark:bg-zinc-700">
-                      Inactive
-                    </span>
-                  ) : null}
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-0.5 text-xs font-medium",
+                      deal.isActive
+                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
+                        : "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200",
+                    )}
+                  >
+                    {scheduleLabel(deal)}
+                  </span>
                 </div>
                 <p className={cn("mt-1 text-xs", secondaryText)}>
                   {deal.slots.map(slotSummary).join(" · ") || "No slots"}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  onClick={() => void toggleActive(deal)}
-                  variant="outline"
-                >
-                  {deal.isActive ? "Deactivate" : "Activate"}
-                </Button>
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <span className={secondaryText}>
+                    {deal.isActive ? "On" : "Off"}
+                  </span>
+                  <button
+                    aria-checked={deal.isActive}
+                    aria-label={deal.isActive ? "Turn deal off" : "Turn deal on"}
+                    className={cn(
+                      "relative h-7 w-12 rounded-full transition-colors",
+                      deal.isActive ? "bg-[#d81b60]" : "bg-zinc-300 dark:bg-zinc-600",
+                    )}
+                    onClick={() => void toggleActive(deal)}
+                    role="switch"
+                    type="button"
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform",
+                        deal.isActive ? "left-5" : "left-0.5",
+                      )}
+                    />
+                  </button>
+                </label>
                 <Button onClick={() => openEdit(deal)} size="icon" variant="outline">
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
@@ -372,10 +422,10 @@ export function ComboDealsView({
             )}
           >
             <Dialog.Title className={cn("font-display text-xl font-bold", primaryText)}>
-              {editing ? "Edit combo deal" : "New combo deal"}
+              {editing ? "Edit deal" : "New deal"}
             </Dialog.Title>
             <Dialog.Description className={cn("mt-1 text-sm", secondaryText)}>
-              Set the bundle price, then add slots customers pick from.
+              Set the bundle price, schedule, and slots customers pick from.
             </Dialog.Description>
 
             <div className="mt-4 space-y-3">
@@ -477,16 +527,120 @@ export function ComboDealsView({
                   value={form.sortOrder}
                 />
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  checked={form.isActive}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, isActive: e.target.checked }))
-                  }
-                  type="checkbox"
-                />
-                Active
-              </label>
+
+              <div className="rounded-xl border border-zinc-200/80 p-4 dark:border-white/10">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className={cn("text-sm font-medium", primaryText)}>
+                      Storefront &amp; POS
+                    </p>
+                    <p className={cn("text-xs", secondaryText)}>
+                      Turn the deal off without deleting it.
+                    </p>
+                  </div>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+                    <span className={secondaryText}>
+                      {form.isActive ? "On" : "Off"}
+                    </span>
+                    <button
+                      aria-checked={form.isActive}
+                      className={cn(
+                        "relative h-7 w-12 rounded-full transition-colors",
+                        form.isActive ? "bg-[#d81b60]" : "bg-zinc-300 dark:bg-zinc-600",
+                      )}
+                      onClick={() =>
+                        setForm((f) => ({ ...f, isActive: !f.isActive }))
+                      }
+                      role="switch"
+                      type="button"
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform",
+                          form.isActive ? "left-5" : "left-0.5",
+                        )}
+                      />
+                    </button>
+                  </label>
+                </div>
+
+                <div className="mt-4 border-t border-zinc-200/70 pt-4 dark:border-white/10">
+                  <p className={cn("mb-2 text-sm font-medium", primaryText)}>
+                    Schedule
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      className={cn(
+                        "rounded-full px-3 py-1.5 text-xs font-semibold",
+                        form.scheduleMode === "always"
+                          ? "bg-[#d81b60] text-white"
+                          : "bg-zinc-100 dark:bg-zinc-800",
+                      )}
+                      onClick={() =>
+                        setForm((f) => ({
+                          ...f,
+                          scheduleMode: "always",
+                          validFrom: "",
+                          validUntil: "",
+                        }))
+                      }
+                      type="button"
+                    >
+                      Open (no end date)
+                    </button>
+                    <button
+                      className={cn(
+                        "rounded-full px-3 py-1.5 text-xs font-semibold",
+                        form.scheduleMode === "range"
+                          ? "bg-[#d81b60] text-white"
+                          : "bg-zinc-100 dark:bg-zinc-800",
+                      )}
+                      onClick={() =>
+                        setForm((f) => ({ ...f, scheduleMode: "range" }))
+                      }
+                      type="button"
+                    >
+                      Start &amp; end dates
+                    </button>
+                  </div>
+                  {form.scheduleMode === "range" ? (
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <label
+                          className={cn("mb-1 block text-xs font-medium", secondaryText)}
+                        >
+                          Starts
+                        </label>
+                        <Input
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, validFrom: e.target.value }))
+                          }
+                          type="datetime-local"
+                          value={form.validFrom}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className={cn("mb-1 block text-xs font-medium", secondaryText)}
+                        >
+                          Ends
+                        </label>
+                        <Input
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, validUntil: e.target.value }))
+                          }
+                          type="datetime-local"
+                          value={form.validUntil}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <p className={cn("mt-2 text-xs", secondaryText)}>
+                      Runs whenever the deal is turned On.
+                    </p>
+                  )}
+                </div>
+              </div>
 
               <div className="border-t border-zinc-200 pt-3 dark:border-white/10">
                 <div className="mb-2 flex items-center justify-between">

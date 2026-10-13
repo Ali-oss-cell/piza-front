@@ -43,7 +43,7 @@ const STORE_NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashbo
   { id: "ingredients", label: "Ingredients", icon: Leaf },
   { id: "categories", label: "Topping Categories", icon: FolderPlus },
   { id: "crusts", label: "Crusts", icon: CircleDot },
-  { id: "combo-deals", label: "Combo deals", icon: Layers },
+  { id: "combo-deals", label: "Deals", icon: Layers },
   { id: "deals", label: "Promo codes", icon: Tag },
   { id: "payments", label: "Payments", icon: CreditCard },
   { id: "team", label: "Team", icon: UsersRound },

@@ -57,8 +57,9 @@ export interface CreateComboDealPayload {
   bundlePrice: number;
   sortOrder?: number;
   isActive?: boolean;
-  validFrom?: string;
-  validUntil?: string;
+  /** ISO string, or null to clear (always open). */
+  validFrom?: string | null;
+  validUntil?: string | null;
   slots: ComboDealSlotPayload[];
 }
 

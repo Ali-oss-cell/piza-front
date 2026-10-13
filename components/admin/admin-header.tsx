@@ -32,7 +32,7 @@ const VIEW_LABELS: Record<AdminView, string> = {
   categories: "Topping Categories",
   crusts: "Crust Management",
   deals: "Promo codes",
-  "combo-deals": "Combo deals",
+  "combo-deals": "Deals",
   payments: "Payments",
   settings: "System Settings",
   team: "Team",
