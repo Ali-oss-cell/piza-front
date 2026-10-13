@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-context";
@@ -54,7 +55,8 @@ export function ComboConfiguratorModal({
   open,
   onClose,
 }: ComboConfiguratorModalProps): React.ReactElement | null {
-  const { addComboToCart, setCartOpen } = useCart();
+  const router = useRouter();
+  const { addComboToCart } = useCart();
   const steps = useMemo(() => expandSteps(deal), [deal]);
   const [stepIndex, setStepIndex] = useState(0);
   const [selections, setSelections] = useState<CartComboSelection[]>([]);
@@ -128,7 +130,8 @@ export function ComboConfiguratorModal({
       });
       reset();
       onClose();
-      setCartOpen(true);
+      // Keep shopping — go back to the menu after the combo is built.
+      router.push("/menu");
       return;
     }
 
