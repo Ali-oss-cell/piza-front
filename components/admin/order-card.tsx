@@ -5,7 +5,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { formatScheduledAt } from "@/lib/opening-hours";
 import { getNextOrderStatus, getStatusBadgeClass, getStatusLabel } from "@/lib/order-status";
-import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import {
+  dashboardGlass,
+  dashboardGlassHover,
+  primaryText,
+  secondaryText,
+} from "@/lib/theme-classes";
 import type { AdminOrder } from "@/types/admin";
 import { cn } from "@/lib/utils";
 
@@ -64,7 +69,7 @@ export function OrderCard({ order, onAdvance }: OrderCardProps): React.ReactElem
   };
 
   return (
-    <article className={cn("p-5", dashboardGlass)}>
+    <article className={cn("p-5", dashboardGlass, dashboardGlassHover)}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className={cn("font-semibold", primaryText)}>{customerName}</p>

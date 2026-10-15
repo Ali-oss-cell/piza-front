@@ -6,7 +6,12 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BrandSwitcher } from "@/components/admin/brand-picker";
 import { Button } from "@/components/ui/button";
-import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import {
+  adminDialogSurface,
+  dashboardChrome,
+  primaryText,
+  secondaryText,
+} from "@/lib/theme-classes";
 import { useAuth } from "@/providers/auth-provider";
 import type { AdminView } from "@/types/admin";
 import { cn } from "@/lib/utils";
@@ -114,7 +119,7 @@ export function AdminHeader({
     "rounded-sm transition-colors hover:text-[#d81b60] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d81b60]/40";
 
   return (
-    <header className={cn("sticky top-0 z-30 border-b border-zinc-200/50 px-4 py-4 dark:border-white/10", dashboardGlass)}>
+    <header className={cn("sticky top-0 z-30 border-b px-4 py-4", dashboardChrome)}>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Button className="lg:hidden" onClick={onOpenMobileNav} size="icon" variant="ghost">
@@ -172,7 +177,7 @@ export function AdminHeader({
           <ThemeToggle />
           <div className="relative" ref={menuRef}>
             <button
-              className="inline-flex items-center gap-2 rounded-full border border-zinc-200/60 bg-white/70 px-3 py-2 text-sm transition-colors hover:border-[#d81b60]/40 dark:border-white/10 dark:bg-zinc-900/50"
+              className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm transition-colors hover:border-[#d81b60]/40 dark:border-zinc-700 dark:bg-zinc-900"
               onClick={() => setMenuOpen((current) => !current)}
               type="button"
             >
@@ -182,7 +187,7 @@ export function AdminHeader({
               </span>
             </button>
             {menuOpen ? (
-              <div className={cn("absolute right-0 mt-2 w-48 rounded-xl p-2 shadow-xl", dashboardGlass)}>
+              <div className={cn("absolute right-0 mt-2 w-48 rounded-xl p-2", adminDialogSurface)}>
                 <p className={cn("px-3 py-2 text-sm font-medium", primaryText)}>{user?.email}</p>
                 <p className={cn("px-3 pb-2 text-xs uppercase tracking-wide text-[#d81b60]")}>
                   {user?.role}

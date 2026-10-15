@@ -49,6 +49,9 @@ import {
   fetchToppingCategories,
 } from "@/lib/admin-api";
 import { pageShell } from "@/lib/theme-classes";
+
+const dashboardPageBg =
+  "bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_48%,#eef2f7_100%)] dark:bg-[linear-gradient(180deg,#09090b_0%,#0c0c10_50%,#09090b_100%)]";
 import { useAdminBrand } from "@/providers/admin-brand-provider";
 import { useAuth } from "@/providers/auth-provider";
 import type {
@@ -243,7 +246,7 @@ export function AdminDashboardContent(): React.ReactElement {
 
   if (!isAuthReady || !isAuthenticated || !canAccessAdminDashboard(user)) {
     return (
-      <div className={cn("flex min-h-screen items-center justify-center", pageShell)}>
+      <div className={cn("flex min-h-screen items-center justify-center", pageShell, dashboardPageBg)}>
         <Loader2 className="h-8 w-8 animate-spin text-[#d81b60]" />
       </div>
     );
@@ -259,7 +262,7 @@ export function AdminDashboardContent(): React.ReactElement {
 
   if (platformAdmin && !selectedBrand && !showStoreGallery) {
     return (
-      <div className={cn("min-h-screen", pageShell)}>
+      <div className={cn("min-h-screen", pageShell, dashboardPageBg)}>
         <AdminSidebar
           activeView={activeView}
           collapsed={collapsed}
@@ -333,7 +336,7 @@ export function AdminDashboardContent(): React.ReactElement {
   }
 
   return (
-    <div className={cn("min-h-screen", pageShell)}>
+    <div className={cn("min-h-screen", pageShell, dashboardPageBg)}>
       <AdminSidebar
         activeView={activeView}
         collapsed={collapsed}

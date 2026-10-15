@@ -15,7 +15,12 @@ import {
 } from "lucide-react";
 import type { InventoryTab } from "@/types/inventory";
 import { INVENTORY_TAB_LABELS } from "@/types/inventory";
-import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import {
+  adminDialogSurface,
+  dashboardChrome,
+  primaryText,
+  secondaryText,
+} from "@/lib/theme-classes";
 import { cn } from "@/lib/utils";
 
 const NAV: { id: InventoryTab; icon: typeof Package }[] = [
@@ -87,7 +92,8 @@ export function InventorySidebar({
     <>
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden border-r border-zinc-200/70 bg-white/90 backdrop-blur-md transition-all dark:border-white/10 dark:bg-zinc-950/90 lg:flex lg:flex-col",
+          "fixed inset-y-0 left-0 z-40 hidden border-r transition-all lg:flex lg:flex-col",
+          dashboardChrome,
           collapsed ? "w-20" : "w-64",
         )}
       >
@@ -109,8 +115,8 @@ export function InventorySidebar({
           />
           <aside
             className={cn(
-              "absolute inset-y-0 left-0 flex w-72 flex-col border-r border-zinc-200/70 bg-white dark:border-white/10 dark:bg-zinc-950",
-              dashboardGlass,
+              "absolute inset-y-0 left-0 flex w-72 flex-col",
+              adminDialogSurface,
             )}
           >
             <div className="border-b border-zinc-200/60 px-4 py-5 dark:border-white/10">

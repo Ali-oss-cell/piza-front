@@ -28,7 +28,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { AdminView } from "@/types/admin";
-import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import {
+  adminDialogSurface,
+  dashboardChrome,
+  primaryText,
+  secondaryText,
+} from "@/lib/theme-classes";
 import { cn } from "@/lib/utils";
 
 const PLATFORM_ONLY_STORE_VIEWS = new Set<AdminView>(["payments", "advanced-settings"]);
@@ -150,7 +155,8 @@ export function AdminSidebar({
     <>
       <aside
         className={cn(
-          "hidden border-r border-zinc-200/50 bg-white/70 backdrop-blur-md transition-all duration-300 dark:border-white/10 dark:bg-zinc-950/80 lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:flex-col",
+          "hidden border-r transition-all duration-300 lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:flex-col",
+          dashboardChrome,
           collapsed ? "lg:w-20" : "lg:w-72",
         )}
       >
@@ -160,7 +166,7 @@ export function AdminSidebar({
       {mobileOpen ? (
         <motion.div
           animate={{ opacity: 1 }}
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-50 bg-zinc-900/40 backdrop-blur-[1px] lg:hidden"
           initial={{ opacity: 0 }}
           onClick={onCloseMobile}
         />
@@ -168,7 +174,7 @@ export function AdminSidebar({
 
       <motion.aside
         animate={{ x: mobileOpen ? 0 : "-100%" }}
-        className={cn("fixed inset-y-0 left-0 z-[60] w-72 lg:hidden", dashboardGlass)}
+        className={cn("fixed inset-y-0 left-0 z-[60] w-72 lg:hidden", adminDialogSurface)}
         initial={false}
         transition={{ duration: 0.25, ease: "easeOut" }}
       >

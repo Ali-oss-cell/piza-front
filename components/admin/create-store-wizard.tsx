@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createStore } from "@/lib/admin-api";
 import { ApiError } from "@/lib/api-client";
-import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import { adminDialogSurface, primaryText, secondaryText } from "@/lib/theme-classes";
 import type { CreatedStore, CreateStorePayload } from "@/types/brand";
 import { cn } from "@/lib/utils";
 
@@ -185,10 +185,7 @@ export function CreateStoreWizard({
   return (
     <div className="flex min-h-screen items-center justify-center p-6">
       <div
-        className={cn(
-          "w-full max-w-2xl rounded-3xl border border-zinc-200/60 p-8 shadow-xl dark:border-white/10",
-          dashboardGlass
-        )}
+        className={cn("w-full max-w-2xl rounded-3xl p-8", adminDialogSurface)}
       >
         <p className={cn("text-sm uppercase tracking-wide", secondaryText)}>Platform admin</p>
         <h1 className={cn("mt-2 font-display text-3xl font-bold", primaryText)}>Create store</h1>

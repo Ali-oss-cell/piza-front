@@ -9,7 +9,12 @@ import { createMenuItem, updateMenuItem } from "@/lib/admin-api";
 import { formatMenuCategory, hasSizePricing } from "@/lib/menu-categories";
 import { MenuItemBadges } from "@/components/features/menu-item-badges";
 import { SIZE_OPTION_FIELDS, sizeOptionsFromApi, sizeOptionsFromLegacyPricing } from "@/lib/size-options";
-import { dashboardGlass, primaryText, secondaryText } from "@/lib/theme-classes";
+import {
+  dashboardGlass,
+  dashboardGlassHover,
+  primaryText,
+  secondaryText,
+} from "@/lib/theme-classes";
 import type {
   AdminMenuCategoryRecord,
   AdminMenuItem,
@@ -111,7 +116,7 @@ export function MenuView({
                 : null;
 
             return (
-              <article className={cn("p-5", dashboardGlass)} key={item.id}>
+              <article className={cn("p-5", dashboardGlass, dashboardGlassHover)} key={item.id}>
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
                   <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl">
                     <Image alt={item.imageAlt} className="object-cover" fill src={item.imageUrl} />

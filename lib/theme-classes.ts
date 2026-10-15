@@ -51,8 +51,20 @@ export const panelFooter = "bg-white dark:bg-zinc-950";
 export const navLink =
   "text-zinc-600 transition-colors duration-150 ease-out hover:text-[color:var(--brand-accent,#d81b60)] dark:text-zinc-400 dark:hover:text-[color:var(--brand-accent,#d81b60)]";
 
+/**
+ * Admin cards / panels — brighter surface, clearer border, soft layered depth.
+ * Used across Dashboard list cards, KPI tiles, settings panels, etc.
+ */
 export const dashboardGlass =
-  "rounded-2xl border border-zinc-200/50 bg-white/60 backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/40";
+  "rounded-2xl border border-zinc-200/90 bg-white/95 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur-xl transition-[box-shadow,border-color,transform] duration-200 ease-out dark:border-white/[0.12] dark:bg-zinc-900/85 dark:shadow-[0_1px_2px_rgba(0,0,0,0.25),0_12px_32px_rgba(0,0,0,0.35)]";
+
+/** Optional hover lift for interactive dashboard cards */
+export const dashboardGlassHover =
+  "hover:-translate-y-0.5 hover:border-[#d81b60]/25 hover:shadow-[0_4px_12px_rgba(15,23,42,0.06),0_16px_36px_rgba(216,27,96,0.08)] dark:hover:border-[#d81b60]/35 dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3),0_16px_36px_rgba(216,27,96,0.12)]";
+
+/** Sticky admin chrome (header / side nav) */
+export const dashboardChrome =
+  "border-zinc-200/80 bg-white/92 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/90 dark:shadow-[0_1px_0_rgba(255,255,255,0.06)]";
 
 /**
  * Solid admin modal panel — opaque white, clear border, real depth.

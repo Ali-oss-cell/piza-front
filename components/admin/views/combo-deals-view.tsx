@@ -17,6 +17,7 @@ import {
   adminDialogContent,
   adminDialogOverlay,
   dashboardGlass,
+  dashboardGlassHover,
   primaryText,
   secondaryText,
 } from "@/lib/theme-classes";
@@ -419,8 +420,9 @@ export function ComboDealsView({
           filteredDeals.map((deal) => (
             <div
               className={cn(
-                "flex flex-wrap items-center justify-between gap-4 rounded-2xl border px-4 py-4",
+                "flex flex-wrap items-center justify-between gap-4 px-4 py-4",
                 dashboardGlass,
+                dashboardGlassHover,
               )}
               key={deal.id}
             >
