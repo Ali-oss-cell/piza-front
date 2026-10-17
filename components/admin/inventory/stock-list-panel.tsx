@@ -10,6 +10,7 @@ import {
   fetchCrustRecipes,
   fetchInventoryRecipes,
   fetchInventorySummary,
+  fetchSuppliers,
   fetchToppingRecipes,
   sendLowStockAlerts,
   updateStockItem,
@@ -25,6 +26,7 @@ import type {
   InventorySummary,
   StockItem,
   StockUnit,
+  Supplier,
   UpdateStockItemPayload,
 } from "@/types/inventory";
 import { STOCK_UNIT_LABELS } from "@/types/inventory";
@@ -40,6 +42,9 @@ interface ItemFormState {
   qtyOnHand: string;
   lowStockAt: string;
   costPerUnit: string;
+  supplierId: string;
+  packSize: string;
+  guideQty: string;
   notes: string;
   isActive: boolean;
 }
@@ -87,6 +92,9 @@ function emptyItemForm(): ItemFormState {
     qtyOnHand: "0",
     lowStockAt: "",
     costPerUnit: "",
+    supplierId: "",
+    packSize: "",
+    guideQty: "",
     notes: "",
     isActive: true,
   };
@@ -101,6 +109,9 @@ function formFromItem(item: StockItem): ItemFormState {
     qtyOnHand: item.qtyOnHand,
     lowStockAt: item.lowStockAt ?? "",
     costPerUnit: item.costPerUnit ?? "",
+    supplierId: item.supplierId ?? "",
+    packSize: item.packSize ?? "",
+    guideQty: item.guideQty ?? "",
     notes: item.notes ?? "",
     isActive: item.isActive,
   };
@@ -313,6 +324,24 @@ export function StockListPanel({
     }
   }, [token, brandSlug, lowStockOnly, existingNameKeys, existingSkuKeys]);
 
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchSuppliers(token, brandSlug)
+      .then((list) => {
+        if (!cancelled) {
+          setSuppliers(list);
+        }
+      })
+      .catch(() => {
+        // Vendor list is optional here; the field simply stays empty.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, brandSlug]);
+
   useEffect(() => {
     void loadImportCandidates();
   }, [loadImportCandidates]);
@@ -517,6 +546,7 @@ export function StockListPanel({
 
     const lowStockRaw = editForm.lowStockAt.trim();
     const costRaw = editForm.costPerUnit.trim();
+    const guideRaw = editForm.guideQty.trim();
     const payload: UpdateStockItemPayload = {
       name: editForm.name.trim(),
       sku: editForm.sku.trim() || null,
@@ -524,6 +554,9 @@ export function StockListPanel({
       unit: editForm.unit,
       lowStockAt: lowStockRaw === "" ? null : Number(lowStockRaw),
       costPerUnit: costRaw === "" ? null : Number(costRaw),
+      supplierId: editForm.supplierId || null,
+      packSize: editForm.packSize.trim() || null,
+      guideQty: guideRaw === "" ? null : Number(guideRaw),
       notes: editForm.notes.trim() || null,
       isActive: editForm.isActive,
     };
@@ -1179,6 +1212,74 @@ export function StockListPanel({
                                     setEditForm((current) => ({
                                       ...current,
                                       costPerUnit: event.target.value,
+                                    }))
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <label
+                                  className={cn(
+                                    "mb-1 block text-xs font-medium",
+                                    secondaryText,
+                                  )}
+                                >
+                                  Default vendor
+                                </label>
+                                <select
+                                  className={inventorySelectClassName}
+                                  value={editForm.supplierId}
+                                  onChange={(event) =>
+                                    setEditForm((current) => ({
+                                      ...current,
+                                      supplierId: event.target.value,
+                                    }))
+                                  }
+                                >
+                                  <option value="">No vendor</option>
+                                  {suppliers.map((supplier) => (
+                                    <option key={supplier.id} value={supplier.id}>
+                                      {supplier.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label
+                                  className={cn(
+                                    "mb-1 block text-xs font-medium",
+                                    secondaryText,
+                                  )}
+                                >
+                                  Pack size
+                                </label>
+                                <Input
+                                  placeholder="e.g. 10 kg tub"
+                                  value={editForm.packSize}
+                                  onChange={(event) =>
+                                    setEditForm((current) => ({
+                                      ...current,
+                                      packSize: event.target.value,
+                                    }))
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <label
+                                  className={cn(
+                                    "mb-1 block text-xs font-medium",
+                                    secondaryText,
+                                  )}
+                                >
+                                  Weekly guide (~500 pizzas)
+                                </label>
+                                <Input
+                                  inputMode="decimal"
+                                  placeholder="blank = no guide"
+                                  value={editForm.guideQty}
+                                  onChange={(event) =>
+                                    setEditForm((current) => ({
+                                      ...current,
+                                      guideQty: event.target.value,
                                     }))
                                   }
                                 />

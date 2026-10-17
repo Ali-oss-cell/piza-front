@@ -38,6 +38,10 @@ import type {
 } from "@/types/store";
 import type { Brand, CreatedStore, CreateStorePayload } from "@/types/brand";
 import type {
+  EmailSettings,
+  UpdateEmailSettingsPayload,
+} from "@/types/email-settings";
+import type {
   PaymentSettings,
   StoreDomain,
   UpdatePaymentSettingsPayload,
@@ -511,6 +515,42 @@ export function updatePaymentSettings(
     token,
     brandSlug: withBrand(brandSlug),
     body: JSON.stringify(payload),
+  });
+}
+
+export function fetchEmailSettings(
+  token: string,
+  brandSlug?: string,
+): Promise<EmailSettings> {
+  return apiRequest<EmailSettings>("/email-settings", {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function updateEmailSettings(
+  token: string,
+  payload: UpdateEmailSettingsPayload,
+  brandSlug?: string,
+): Promise<EmailSettings> {
+  return apiRequest<EmailSettings>("/email-settings", {
+    method: "PUT",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function sendTestEmail(
+  token: string,
+  to: string,
+  brandSlug?: string,
+): Promise<EmailSettings & { sentTo: string }> {
+  return apiRequest<EmailSettings & { sentTo: string }>("/email-settings/test", {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify({ to }),
   });
 }
 
@@ -1582,3 +1622,131 @@ export async function downloadPurchaseOrderPdf(
   URL.revokeObjectURL(url);
 }
 
+
+export function fetchWeeklyOrders(
+  token: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").WeeklyOrderSummary[]> {
+  return apiRequest("/inventory/weekly-orders", {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function fetchWeeklyOrder(
+  token: string,
+  id: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").WeeklyOrder> {
+  return apiRequest(`/inventory/weekly-orders/${id}`, {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function createWeeklyOrder(
+  token: string,
+  payload: import("@/types/inventory").CreateWeeklyOrderPayload,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").WeeklyOrder> {
+  return apiRequest("/inventory/weekly-orders", {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateWeeklyOrder(
+  token: string,
+  id: string,
+  payload: import("@/types/inventory").UpdateWeeklyOrderPayload,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").WeeklyOrder> {
+  return apiRequest(`/inventory/weekly-orders/${id}`, {
+    method: "PATCH",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteWeeklyOrder(
+  token: string,
+  id: string,
+  brandSlug?: string,
+): Promise<{ deleted: true }> {
+  return apiRequest(`/inventory/weekly-orders/${id}`, {
+    method: "DELETE",
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function previewWeeklyOrder(
+  token: string,
+  id: string,
+  brandSlug?: string,
+): Promise<import("@/types/inventory").WeeklyOrderVendorPreview> {
+  return apiRequest(`/inventory/weekly-orders/${id}/preview`, {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export function sendWeeklyOrder(
+  token: string,
+  id: string,
+  supplierIds?: string[],
+  brandSlug?: string,
+): Promise<
+  import("@/types/inventory").WeeklyOrder & {
+    results: import("@/types/inventory").WeeklyOrderDispatch[];
+  }
+> {
+  return apiRequest(`/inventory/weekly-orders/${id}/send`, {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+    body: JSON.stringify(supplierIds?.length ? { supplierIds } : {}),
+  });
+}
+
+export function seedWeeklySheetCatalog(
+  token: string,
+  brandSlug?: string,
+): Promise<{ created: number; updated: number; total: number }> {
+  return apiRequest("/inventory/weekly-orders/seed-catalog", {
+    method: "POST",
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
+export async function downloadWeeklyOrderPdf(
+  token: string,
+  id: string,
+  options: { blank?: boolean; supplierId?: string; filename?: string } = {},
+  brandSlug?: string,
+): Promise<void> {
+  const params = new URLSearchParams();
+  if (options.blank) {
+    params.set("blank", "true");
+  }
+  if (options.supplierId) {
+    params.set("supplierId", options.supplierId);
+  }
+  const query = params.toString();
+  const blob = await apiRequestBlob(
+    `/inventory/weekly-orders/${id}/pdf${query ? `?${query}` : ""}`,
+    { token, brandSlug: withBrand(brandSlug) },
+  );
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = options.filename ?? `weekly-stock-order-${id}.pdf`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}

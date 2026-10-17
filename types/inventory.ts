@@ -6,7 +6,9 @@ export type StockUnit =
   | "ML"
   | "CARTON"
   | "PACK"
-  | "BAG";
+  | "BAG"
+  | "BOX"
+  | "ROLL";
 
 export type StockMovementType =
   | "RECEIVE"
@@ -27,7 +29,8 @@ export type InventoryTab =
   | "statistics"
   | "recipes"
   | "suppliers"
-  | "purchase-orders";
+  | "purchase-orders"
+  | "weekly-order";
 
 export const INVENTORY_TAB_LABELS: Record<InventoryTab, string> = {
   "stock-list": "Stock list",
@@ -41,6 +44,7 @@ export const INVENTORY_TAB_LABELS: Record<InventoryTab, string> = {
   recipes: "Recipes",
   suppliers: "Suppliers",
   "purchase-orders": "Purchase orders",
+  "weekly-order": "Weekly order",
 };
 
 export type RecipeSizeKey = "" | "small" | "large" | "family";
@@ -82,6 +86,10 @@ export interface StockItem {
   lowStockAt: string | null;
   costPerUnit: string | null;
   notes: string | null;
+  supplierId: string | null;
+  packSize: string | null;
+  guideQty: string | null;
+  sheetOrder: number;
   isActive: boolean;
   isLowStock: boolean;
   createdAt: string;
@@ -121,6 +129,10 @@ export interface CreateStockItemPayload {
   lowStockAt?: number | null;
   costPerUnit?: number | null;
   notes?: string | null;
+  supplierId?: string | null;
+  packSize?: string | null;
+  guideQty?: number | null;
+  sheetOrder?: number;
   isActive?: boolean;
 }
 
@@ -132,6 +144,10 @@ export interface UpdateStockItemPayload {
   lowStockAt?: number | null;
   costPerUnit?: number | null;
   notes?: string | null;
+  supplierId?: string | null;
+  packSize?: string | null;
+  guideQty?: number | null;
+  sheetOrder?: number;
   isActive?: boolean;
 }
 
@@ -319,6 +335,8 @@ export const STOCK_UNIT_LABELS: Record<StockUnit, string> = {
   CARTON: "carton",
   PACK: "pack",
   BAG: "bag",
+  BOX: "box",
+  ROLL: "roll",
 };
 
 export const STOCK_MOVEMENT_LABELS: Record<StockMovementType, string> = {
@@ -329,3 +347,91 @@ export const STOCK_MOVEMENT_LABELS: Record<StockMovementType, string> = {
   SALE: "Sale",
   REFUND: "Refund",
 };
+
+export type WeeklyOrderStatus = "DRAFT" | "SENT";
+
+export interface WeeklyOrderSummary {
+  id: string;
+  number: number;
+  weekCommencing: string;
+  orderedBy: string | null;
+  pizzasExpected: number | null;
+  supplierDay: string | null;
+  status: WeeklyOrderStatus;
+  sentAt: string | null;
+  lineCount: number;
+  orderedLineCount: number;
+  createdAt: string;
+}
+
+export interface WeeklyOrderLine {
+  id: string;
+  stockItemId: string | null;
+  supplierId: string | null;
+  supplierName: string | null;
+  supplierEmail: string | null;
+  category: string;
+  name: string;
+  unit: StockUnit;
+  packSize: string | null;
+  guideQty: string | null;
+  sheetOrder: number;
+  stockOnHand: string | null;
+  orderQty: string | null;
+  received: boolean;
+}
+
+export interface WeeklyOrderDispatch {
+  id: string;
+  supplierId: string | null;
+  supplierName: string;
+  emailedTo: string;
+  itemCount: number;
+  status: string;
+  error: string | null;
+  sentAt: string;
+}
+
+export interface WeeklyOrder extends WeeklyOrderSummary {
+  brandId: string;
+  notes: string | null;
+  guideBasePizzas: number;
+  updatedAt: string;
+  lines: WeeklyOrderLine[];
+  dispatches: WeeklyOrderDispatch[];
+}
+
+export interface WeeklyOrderVendorPreview {
+  items: number;
+  unassigned: { id: string; name: string }[];
+  vendors: {
+    supplierId: string;
+    supplierName: string;
+    email: string | null;
+    lines: WeeklyOrderLine[];
+  }[];
+}
+
+export interface CreateWeeklyOrderPayload {
+  weekCommencing: string;
+  orderedBy?: string | null;
+  pizzasExpected?: number | null;
+  supplierDay?: string | null;
+  notes?: string | null;
+  copyFromOrderId?: string;
+}
+
+export interface UpdateWeeklyOrderPayload {
+  weekCommencing?: string;
+  orderedBy?: string | null;
+  pizzasExpected?: number | null;
+  supplierDay?: string | null;
+  notes?: string | null;
+  lines?: {
+    id: string;
+    stockOnHand?: number | null;
+    orderQty?: number | null;
+    received?: boolean;
+    supplierId?: string | null;
+  }[];
+}

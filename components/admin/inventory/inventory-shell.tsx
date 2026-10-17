@@ -12,6 +12,7 @@ import { RecipesPanel } from "@/components/admin/inventory/recipes-panel";
 import { StatisticsPanel } from "@/components/admin/inventory/statistics-panel";
 import { StockListPanel } from "@/components/admin/inventory/stock-list-panel";
 import { SuppliersPanel } from "@/components/admin/inventory/suppliers-panel";
+import { WeeklyOrderPanel } from "@/components/admin/inventory/weekly-order-panel";
 import { BrandLogoMark } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -385,6 +386,13 @@ export function InventoryShell({
                   brandSlug={brandSlug!}
                   onStockRefresh={() => void load()}
                   stockItems={items}
+                  token={token}
+                />
+              ) : null}
+              {activeTab === "weekly-order" ? (
+                <WeeklyOrderPanel
+                  brandSlug={brandSlug!}
+                  onStockRefresh={() => void load()}
                   token={token}
                 />
               ) : null}

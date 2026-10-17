@@ -5,6 +5,7 @@ import {
   BarChart3,
   BookOpen,
   ClipboardList,
+  ClipboardPen,
   History,
   Package,
   PackageMinus,
@@ -35,6 +36,7 @@ const NAV: { id: InventoryTab; icon: typeof Package }[] = [
   { id: "recipes", icon: BookOpen },
   { id: "suppliers", icon: Truck },
   { id: "purchase-orders", icon: ShoppingCart },
+  { id: "weekly-order", icon: ClipboardPen },
 ];
 
 interface InventorySidebarProps {

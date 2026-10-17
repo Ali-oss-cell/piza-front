@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Globe,
   CreditCard,
+  Mail,
   Loader2,
   Plus,
   ExternalLink,
@@ -22,6 +23,9 @@ import {
   updateHqDomain,
   syncHqTraefikDomains,
   updatePaymentSettings,
+  fetchEmailSettings,
+  updateEmailSettings,
+  sendTestEmail,
   pairLinklyPinpad,
   unpairLinklyPinpad,
 } from "@/lib/admin-api";
@@ -35,6 +39,7 @@ import {
 import type { HqDomain } from "@/types/hq";
 import type { Brand } from "@/types/brand";
 import type { PaymentSettings, UpdatePaymentSettingsPayload } from "@/types/payments";
+import type { EmailSettings } from "@/types/email-settings";
 import { cn } from "@/lib/utils";
 
 /* ─────────────────────────────────────────────────────────── types ── */
@@ -204,6 +209,15 @@ export function AdvancedSettingsView({
         onPaymentSettingsChange={onPaymentSettingsChange}
         onToggle={() => toggle("stripe-online")}
         paymentSettings={paymentSettings}
+        token={token}
+      />
+
+      {/* ───────────────────────────── EMAIL (SMTP) ──────────────── */}
+      <EmailSection
+        brandSlug={brandSlug}
+        flash={flash}
+        isOpen={isOpen("email")}
+        onToggle={() => toggle("email")}
         token={token}
       />
 
@@ -953,6 +967,350 @@ function StripeOnlineSection({
             Save Stripe Online
           </Button>
         </div>
+      ) : null}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════ SECTION: EMAIL (SMTP) ═══ */
+
+function EmailSection({
+  token,
+  brandSlug,
+  isOpen,
+  onToggle,
+  flash,
+}: {
+  token: string;
+  brandSlug: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  flash: (type: "ok" | "err", text: string) => void;
+}) {
+  const [settings, setSettings] = useState<EmailSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [enabled, setEnabled] = useState(false);
+  const [host, setHost] = useState("");
+  const [port, setPort] = useState("587");
+  const [secure, setSecure] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [fromName, setFromName] = useState("");
+  const [fromEmail, setFromEmail] = useState("");
+  const [replyTo, setReplyTo] = useState("");
+  const [testTo, setTestTo] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+
+  const applySettings = (next: EmailSettings) => {
+    setSettings(next);
+    setEnabled(next.enabled);
+    setHost(next.host ?? "");
+    setPort(String(next.port));
+    setSecure(next.secure);
+    setUsername(next.username ?? "");
+    setPassword("");
+    setFromName(next.fromName ?? "");
+    setFromEmail(next.fromEmail ?? "");
+    setReplyTo(next.replyTo ?? "");
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchEmailSettings(token, brandSlug)
+      .then((next) => {
+        if (!cancelled) applySettings(next);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          flash("err", e instanceof Error ? e.message : "Unable to load email settings.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, brandSlug]);
+
+  const save = async () => {
+    const portNumber = Number(port);
+    if (!Number.isInteger(portNumber) || portNumber < 1 || portNumber > 65535) {
+      flash("err", "Port must be a number between 1 and 65535.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const updated = await updateEmailSettings(
+        token,
+        {
+          enabled,
+          host: host.trim() || null,
+          port: portNumber,
+          secure,
+          username: username.trim() || null,
+          ...(password ? { password } : {}),
+          fromName: fromName.trim() || null,
+          fromEmail: fromEmail.trim() || null,
+          replyTo: replyTo.trim() || null,
+        },
+        brandSlug,
+      );
+      applySettings(updated);
+      flash("ok", "Email settings saved.");
+    } catch (e) {
+      flash("err", e instanceof Error ? e.message : "Save failed.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const clearPassword = async () => {
+    setSaving(true);
+    try {
+      const updated = await updateEmailSettings(token, { clearPassword: true }, brandSlug);
+      applySettings(updated);
+      flash("ok", "Saved SMTP password removed.");
+    } catch (e) {
+      flash("err", e instanceof Error ? e.message : "Unable to clear password.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const sendTest = async () => {
+    if (!testTo.trim()) {
+      flash("err", "Enter an email address to send the test to.");
+      return;
+    }
+    setTesting(true);
+    try {
+      const result = await sendTestEmail(token, testTo.trim(), brandSlug);
+      applySettings(result);
+      flash("ok", `Test email sent to ${result.sentTo}.`);
+    } catch (e) {
+      flash("err", e instanceof Error ? e.message : "Test failed.");
+      try {
+        applySettings(await fetchEmailSettings(token, brandSlug));
+      } catch {
+        /* ignore refresh failure */
+      }
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const active = Boolean(settings?.enabled && settings.host);
+
+  return (
+    <div className={cn("rounded-2xl border p-5", dashboardGlass)}>
+      <SectionHeader
+        open={isOpen}
+        icon={Mail}
+        title="Email (SMTP)"
+        subtitle="Outgoing email for this store — purchase orders, weekly stock orders, low-stock alerts."
+        badge={
+          <StatusBadge
+            ok={active}
+            label={
+              active
+                ? "Store SMTP"
+                : settings?.envFallbackAvailable
+                  ? "Server default"
+                  : "Not configured"
+            }
+          />
+        }
+        onToggle={onToggle}
+      />
+      {isOpen ? (
+        loading ? (
+          <div className="mt-5 flex items-center gap-2 text-sm text-zinc-500">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+          </div>
+        ) : (
+          <div className="mt-5 space-y-4">
+            <div className="rounded-xl bg-zinc-50 px-4 py-3 text-xs text-zinc-500 dark:bg-zinc-900/50">
+              Enter this store&apos;s own SMTP account. Mail for this store is sent from it, so
+              no server <code>.env</code> change or redeploy is needed. If left disabled, the
+              server default (if any) is used. The password is encrypted and never shown again.
+            </div>
+
+            <label className="flex items-start gap-3">
+              <input
+                checked={enabled}
+                className="mt-1 h-4 w-4"
+                onChange={(e) => setEnabled(e.target.checked)}
+                type="checkbox"
+              />
+              <span>
+                <span className={cn("block text-sm font-medium", primaryText)}>
+                  Use this store&apos;s SMTP
+                </span>
+                <span className={cn("block text-xs", secondaryText)}>
+                  Requires host and a From email address.
+                </span>
+              </span>
+            </label>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="sm:col-span-2">
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                  SMTP host
+                </label>
+                <Input
+                  onChange={(e) => setHost(e.target.value)}
+                  placeholder="smtp.example.com"
+                  value={host}
+                />
+              </div>
+              <div>
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>Port</label>
+                <Input
+                  inputMode="numeric"
+                  onChange={(e) => setPort(e.target.value)}
+                  placeholder="587"
+                  value={port}
+                />
+              </div>
+            </div>
+
+            <label className="flex items-start gap-3">
+              <input
+                checked={secure}
+                className="mt-1 h-4 w-4"
+                onChange={(e) => setSecure(e.target.checked)}
+                type="checkbox"
+              />
+              <span>
+                <span className={cn("block text-sm font-medium", primaryText)}>
+                  Use SSL/TLS (secure)
+                </span>
+                <span className={cn("block text-xs", secondaryText)}>
+                  Tick for port 465. Leave off for port 587 (STARTTLS) — port 465 is treated as
+                  secure automatically.
+                </span>
+              </span>
+            </label>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                  Username
+                </label>
+                <Input
+                  autoComplete="off"
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="orders@yourstore.com.au"
+                  value={username}
+                />
+              </div>
+              <div>
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                  Password{" "}
+                  <span className={cn("font-normal", secondaryText)}>
+                    {settings?.hasPassword ? "(stored — leave blank to keep)" : "(not set)"}
+                  </span>
+                </label>
+                <Input
+                  autoComplete="new-password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={settings?.hasPassword ? "•••••••• (replace)" : "SMTP password"}
+                  type="password"
+                  value={password}
+                />
+                {settings?.hasPassword ? (
+                  <button
+                    className="mt-1 text-xs font-medium text-[#d81b60] hover:underline"
+                    disabled={saving}
+                    onClick={() => void clearPassword()}
+                    type="button"
+                  >
+                    Remove saved password
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                  From name
+                </label>
+                <Input
+                  onChange={(e) => setFromName(e.target.value)}
+                  placeholder="Benny Boy's Pizza"
+                  value={fromName}
+                />
+              </div>
+              <div>
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                  From email
+                </label>
+                <Input
+                  onChange={(e) => setFromEmail(e.target.value)}
+                  placeholder="orders@yourstore.com.au"
+                  type="email"
+                  value={fromEmail}
+                />
+              </div>
+              <div>
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                  Reply-to <span className={cn("font-normal", secondaryText)}>(optional)</span>
+                </label>
+                <Input
+                  onChange={(e) => setReplyTo(e.target.value)}
+                  placeholder="manager@yourstore.com.au"
+                  type="email"
+                  value={replyTo}
+                />
+              </div>
+            </div>
+
+            <Button disabled={saving} onClick={() => void save()} type="button">
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Save email settings
+            </Button>
+
+            <div className="rounded-xl border border-dashed border-zinc-300 p-4 dark:border-white/15">
+              <p className={cn("text-sm font-medium", primaryText)}>Send a test email</p>
+              <p className={cn("mt-0.5 text-xs", secondaryText)}>
+                Uses the <strong>saved</strong> settings above, so save first.
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <Input
+                  onChange={(e) => setTestTo(e.target.value)}
+                  placeholder="you@example.com"
+                  type="email"
+                  value={testTo}
+                />
+                <Button
+                  disabled={testing}
+                  onClick={() => void sendTest()}
+                  type="button"
+                  variant="outline"
+                >
+                  {testing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Send test
+                </Button>
+              </div>
+              {settings?.lastTestAt ? (
+                <p
+                  className={cn(
+                    "mt-2 text-xs",
+                    settings.lastTestOk ? "text-emerald-600" : "text-[#d81b60]",
+                  )}
+                >
+                  Last test {new Date(settings.lastTestAt).toLocaleString()}:{" "}
+                  {settings.lastTestOk ? "success" : (settings.lastTestError ?? "failed")}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        )
       ) : null}
     </div>
   );
