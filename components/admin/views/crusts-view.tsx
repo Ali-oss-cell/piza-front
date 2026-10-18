@@ -28,7 +28,33 @@ interface CrustFormState {
   slug: string;
   priceDelta: string;
   sortOrder: string;
+  /** "category-slug=amount, other-slug=amount" — optional per-category surcharge. */
+  categoryDeltas: string;
   isActive: boolean;
+}
+
+function formatCategoryDeltas(value: Record<string, number> | null | undefined): string {
+  return Object.entries(value ?? {})
+    .map(([slug, amount]) => `${slug}=${amount}`)
+    .join(", ");
+}
+
+/** Returns the parsed map, null when empty, or an error string. */
+function parseCategoryDeltas(text: string): Record<string, number> | null | string {
+  const out: Record<string, number> = {};
+  for (const part of text.split(",")) {
+    const trimmed = part.trim();
+    if (!trimmed) {
+      continue;
+    }
+    const [slug, amount] = trimmed.split("=").map((piece) => piece.trim());
+    const num = Number(amount);
+    if (!slug || amount === undefined || amount === "" || !Number.isFinite(num) || num < 0) {
+      return `"${trimmed}" is not valid — use category-slug=amount, e.g. basic-pizzas=3`;
+    }
+    out[slug.toLowerCase()] = num;
+  }
+  return Object.keys(out).length > 0 ? out : null;
 }
 
 function emptyForm(crusts: AdminCrustOption[]): CrustFormState {
@@ -37,6 +63,7 @@ function emptyForm(crusts: AdminCrustOption[]): CrustFormState {
     slug: "",
     priceDelta: "0",
     sortOrder: String(crusts.length),
+    categoryDeltas: "",
     isActive: true,
   };
 }
@@ -47,6 +74,7 @@ function formFromCrust(crust: AdminCrustOption): CrustFormState {
     slug: crust.slug,
     priceDelta: String(crust.priceDelta),
     sortOrder: String(crust.sortOrder),
+    categoryDeltas: formatCategoryDeltas(crust.categoryPriceDeltas),
     isActive: crust.isActive,
   };
 }
@@ -81,6 +109,12 @@ export function CrustsView({ token, crusts, onCrustsChange }: CrustsViewProps): 
   };
 
   const handleSubmit = async (): Promise<void> => {
+    const categoryDeltas = parseCategoryDeltas(form.categoryDeltas);
+    if (typeof categoryDeltas === "string") {
+      setError(categoryDeltas);
+      return;
+    }
+
     setIsSaving(true);
     setError(null);
 
@@ -88,6 +122,7 @@ export function CrustsView({ token, crusts, onCrustsChange }: CrustsViewProps): 
       slug: form.slug.trim() || slugifyMenuName(form.label),
       label: form.label.trim(),
       priceDelta: Number(form.priceDelta),
+      categoryPriceDeltas: categoryDeltas,
       sortOrder: Number(form.sortOrder) || 0,
       isActive: form.isActive,
     };
@@ -157,7 +192,13 @@ export function CrustsView({ token, crusts, onCrustsChange }: CrustsViewProps): 
             <div>
               <p className={cn("font-medium", primaryText)}>{crust.label}</p>
               <p className={cn("text-xs", secondaryText)}>
-                {crust.slug} · +${Number(crust.priceDelta).toFixed(2)} · order {crust.sortOrder}
+                {crust.slug} · +${Number(crust.priceDelta).toFixed(2)}
+                {crust.categoryPriceDeltas && Object.keys(crust.categoryPriceDeltas).length > 0
+                  ? ` (${Object.entries(crust.categoryPriceDeltas)
+                      .map(([slug, amount]) => `${slug} +$${Number(amount).toFixed(2)}`)
+                      .join(", ")})`
+                  : ""}
+                {" "}· order {crust.sortOrder}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -222,6 +263,19 @@ export function CrustsView({ token, crusts, onCrustsChange }: CrustsViewProps): 
                   <label className={cn("mb-1 block text-sm font-medium", primaryText)}>Sort order</label>
                   <Input min="0" onChange={(event) => setForm((c) => ({ ...c, sortOrder: event.target.value }))} type="number" value={form.sortOrder} />
                 </div>
+              </div>
+              <div>
+                <label className={cn("mb-1 block text-sm font-medium", primaryText)}>
+                  Price by category (optional)
+                </label>
+                <Input
+                  onChange={(event) => setForm((c) => ({ ...c, categoryDeltas: event.target.value }))}
+                  placeholder="basic-pizzas=3, supreme-pizzas=4"
+                  value={form.categoryDeltas}
+                />
+                <p className={cn("mt-1 text-xs", secondaryText)}>
+                  Overrides &quot;Price (+)&quot; for those menu categories (category slug = amount). Others use Price (+).
+                </p>
               </div>
               <label className="flex items-center gap-2 text-sm">
                 <input checked={form.isActive} onChange={(event) => setForm((c) => ({ ...c, isActive: event.target.checked }))} type="checkbox" />

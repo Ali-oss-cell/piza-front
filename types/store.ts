@@ -29,6 +29,8 @@ export interface AdminCrustOption {
   slug: string;
   label: string;
   priceDelta: string | number;
+  /** Optional surcharge override per menu category slug, e.g. { "basic-pizzas": 3 }. */
+  categoryPriceDeltas?: Record<string, number> | null;
   sortOrder: number;
   isActive: boolean;
 }
@@ -37,6 +39,7 @@ export interface CreateCrustOptionPayload {
   slug: string;
   label: string;
   priceDelta: number;
+  categoryPriceDeltas?: Record<string, number> | null;
   sortOrder?: number;
   isActive?: boolean;
 }

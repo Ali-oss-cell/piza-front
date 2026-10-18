@@ -83,7 +83,7 @@ export default async function ProductPage({
     const toppingCategories = showExtras
       ? filterToppingsForItem(toppingGroups, apiItem.allowedToppingIds ?? [])
       : [];
-    const crustOptions = showSizeOptions ? mapApiCrusts(apiCrusts) : [];
+    const crustOptions = showSizeOptions ? mapApiCrusts(apiCrusts, item.category) : [];
 
     return (
       <>

@@ -75,7 +75,7 @@ export function ItemDetailSheet({
     void Promise.all([fetchCrusts(brandSlug), fetchToppings(brandSlug)])
       .then(([apiCrusts, toppingGroups]) => {
         if (cancelled) return;
-        const crusts = hasSizeOptions ? mapApiCrusts(apiCrusts) : [];
+        const crusts = hasSizeOptions ? mapApiCrusts(apiCrusts, item.category) : [];
         const toppings = isPizzaItem
           ? filterToppingsForItem(toppingGroups, item.allowedToppingIds ?? [])
           : [];
