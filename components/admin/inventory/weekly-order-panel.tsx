@@ -68,6 +68,7 @@ type HeaderDraft = {
   orderedBy: string;
   pizzasExpected: string;
   supplierDay: string;
+  expectedDeliveryDate: string;
   notes: string;
 };
 
@@ -144,6 +145,7 @@ function headerToDraft(order: WeeklyOrder): HeaderDraft {
     pizzasExpected:
       order.pizzasExpected === null ? "" : String(order.pizzasExpected),
     supplierDay: order.supplierDay ?? "",
+    expectedDeliveryDate: order.expectedDeliveryDate ?? "",
     notes: order.notes ?? "",
   };
 }
@@ -212,6 +214,7 @@ export function WeeklyOrderPanel({
   const [newOrderedBy, setNewOrderedBy] = useState("");
   const [newPizzas, setNewPizzas] = useState("500");
   const [newSupplierDay, setNewSupplierDay] = useState("");
+  const [newExpectedDelivery, setNewExpectedDelivery] = useState("");
   const [copyLast, setCopyLast] = useState(true);
 
   // Editor
@@ -321,6 +324,7 @@ export function WeeklyOrderPanel({
           orderedBy: newOrderedBy.trim() || null,
           pizzasExpected: pizzasRaw === "" ? null : Number(pizzasRaw),
           supplierDay: newSupplierDay.trim() || null,
+          expectedDeliveryDate: newExpectedDelivery.trim() || null,
           copyFromOrderId: copyLast && orders[0] ? orders[0].id : undefined,
         },
         brandSlug,
@@ -411,6 +415,7 @@ export function WeeklyOrderPanel({
       base.orderedBy !== header.orderedBy.trim() ||
       base.pizzasExpected !== header.pizzasExpected.trim() ||
       base.supplierDay !== header.supplierDay.trim() ||
+      base.expectedDeliveryDate !== header.expectedDeliveryDate ||
       base.notes !== header.notes.trim()
     );
   }, [order, header]);
@@ -472,6 +477,9 @@ export function WeeklyOrderPanel({
     }
     if (base.supplierDay !== header.supplierDay.trim()) {
       payload.supplierDay = header.supplierDay.trim() || null;
+    }
+    if (base.expectedDeliveryDate !== header.expectedDeliveryDate) {
+      payload.expectedDeliveryDate = header.expectedDeliveryDate || null;
     }
     if (base.notes !== header.notes.trim()) {
       payload.notes = header.notes.trim() || null;
@@ -751,13 +759,25 @@ export function WeeklyOrderPanel({
               value={header.pizzasExpected}
             />
           </Field>
-          <Field label="Supplier day">
+          <Field label="Usual supplier day">
             <Input
               onChange={(e) =>
                 setHeader({ ...header, supplierDay: e.target.value })
               }
               placeholder="e.g. Thursday"
               value={header.supplierDay}
+            />
+          </Field>
+          <Field label="Expected delivery date">
+            <Input
+              onChange={(e) =>
+                setHeader({
+                  ...header,
+                  expectedDeliveryDate: e.target.value,
+                })
+              }
+              type="date"
+              value={header.expectedDeliveryDate}
             />
           </Field>
           <Field className="sm:col-span-2 lg:col-span-4" label="Notes">
@@ -1199,11 +1219,18 @@ export function WeeklyOrderPanel({
               value={newPizzas}
             />
           </Field>
-          <Field label="Supplier day">
+          <Field label="Usual supplier day">
             <Input
               onChange={(e) => setNewSupplierDay(e.target.value)}
               placeholder="e.g. Thursday"
               value={newSupplierDay}
+            />
+          </Field>
+          <Field label="Expected delivery date">
+            <Input
+              onChange={(e) => setNewExpectedDelivery(e.target.value)}
+              type="date"
+              value={newExpectedDelivery}
             />
           </Field>
           {orders.length > 0 ? (

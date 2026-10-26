@@ -357,6 +357,7 @@ export interface WeeklyOrderSummary {
   orderedBy: string | null;
   pizzasExpected: number | null;
   supplierDay: string | null;
+  expectedDeliveryDate: string | null;
   status: WeeklyOrderStatus;
   sentAt: string | null;
   lineCount: number;
@@ -417,6 +418,7 @@ export interface CreateWeeklyOrderPayload {
   orderedBy?: string | null;
   pizzasExpected?: number | null;
   supplierDay?: string | null;
+  expectedDeliveryDate?: string | null;
   notes?: string | null;
   copyFromOrderId?: string;
 }
@@ -426,6 +428,7 @@ export interface UpdateWeeklyOrderPayload {
   orderedBy?: string | null;
   pizzasExpected?: number | null;
   supplierDay?: string | null;
+  expectedDeliveryDate?: string | null;
   notes?: string | null;
   lines?: {
     id: string;
