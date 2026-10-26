@@ -22,6 +22,8 @@ interface CartDrawerProps {
   items: CartItem[];
   deliveryMode: DeliveryMode;
   deliveryFeeAmount: number;
+  deliveryEnabled?: boolean;
+  onlineOrderingEnabled?: boolean;
   onDeliveryModeChange: (mode: DeliveryMode) => void;
   onIncrement: (id: string) => void;
   onDecrement: (id: string) => void;
@@ -43,6 +45,8 @@ export function CartDrawer({
   items,
   deliveryMode,
   deliveryFeeAmount,
+  deliveryEnabled = false,
+  onlineOrderingEnabled = true,
   onDeliveryModeChange,
   onIncrement,
   onDecrement,
@@ -62,27 +66,43 @@ export function CartDrawer({
           </span>
         </div>
         <div className="mb-8 px-8">
-          <div
-            className={cn(
-              "flex rounded-lg border border-zinc-200/60 p-1 dark:border-white/10",
-              panelBg
-            )}
-          >
-            <button
-              className={deliveryModeButtonClass(deliveryMode === "delivery")}
-              onClick={() => onDeliveryModeChange("delivery")}
-              type="button"
+          {deliveryEnabled ? (
+            <div
+              className={cn(
+                "flex rounded-lg border border-zinc-200/60 p-1 dark:border-white/10",
+                panelBg
+              )}
             >
-              Delivery
-            </button>
-            <button
-              className={deliveryModeButtonClass(deliveryMode === "pickup")}
-              onClick={() => onDeliveryModeChange("pickup")}
-              type="button"
+              <button
+                className={deliveryModeButtonClass(deliveryMode === "delivery")}
+                onClick={() => onDeliveryModeChange("delivery")}
+                type="button"
+              >
+                Delivery
+              </button>
+              <button
+                className={deliveryModeButtonClass(deliveryMode === "pickup")}
+                onClick={() => onDeliveryModeChange("pickup")}
+                type="button"
+              >
+                Pickup
+              </button>
+            </div>
+          ) : (
+            <p
+              className={cn(
+                "rounded-lg border border-zinc-200/60 px-3 py-2 text-sm dark:border-white/10",
+                secondaryText,
+              )}
             >
-              Pickup
-            </button>
-          </div>
+              Pickup only — ready at the counter.
+            </p>
+          )}
+          {!onlineOrderingEnabled ? (
+            <p className="mt-3 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+              Online ordering is paused right now. Please call the store or visit in person.
+            </p>
+          ) : null}
         </div>
         <div className="no-scrollbar flex-1 space-y-6 overflow-y-auto px-8">
           {items.map((item) => (
@@ -103,10 +123,12 @@ export function CartDrawer({
               <span>Subtotal</span>
               <span className={primaryText}>${subtotal.toFixed(2)}</span>
             </div>
-            <div className={cn("flex justify-between", secondaryText)}>
-              <span>Delivery Fee</span>
-              <span className={primaryText}>${deliveryFee.toFixed(2)}</span>
-            </div>
+            {deliveryMode === "delivery" ? (
+              <div className={cn("flex justify-between", secondaryText)}>
+                <span>Delivery Fee</span>
+                <span className={primaryText}>${deliveryFee.toFixed(2)}</span>
+              </div>
+            ) : null}
             <div
               className={cn(
                 "flex justify-between border-t border-zinc-200/60 pt-3 font-display text-headline-md dark:border-white/10",
@@ -118,11 +140,17 @@ export function CartDrawer({
               <span className={brandPink}>${total.toFixed(2)}</span>
             </div>
           </div>
-          <Button asChild className="w-full py-5 uppercase tracking-widest">
-            <Link href="/checkout" onClick={() => onOpenChange(false)}>
-              Proceed to Checkout
-            </Link>
-          </Button>
+          {onlineOrderingEnabled ? (
+            <Button asChild className="w-full py-5 uppercase tracking-widest">
+              <Link href="/checkout" onClick={() => onOpenChange(false)}>
+                Proceed to Checkout
+              </Link>
+            </Button>
+          ) : (
+            <Button className="w-full py-5 uppercase tracking-widest" disabled type="button">
+              Online ordering paused
+            </Button>
+          )}
         </div>
       </SheetContent>
     </Sheet>

@@ -140,6 +140,8 @@ export function AppShell({
     initialBranding?.darkModeEnabled !== false,
   );
   const [storefrontLayout, setStorefrontLayout] = useState<StorefrontLayoutId>("classic");
+  const [deliveryEnabled, setDeliveryEnabled] = useState(false);
+  const [onlineOrderingEnabled, setOnlineOrderingEnabled] = useState(true);
 
   useEffect(() => {
     const onScroll = (): void => setIsScrolled(window.scrollY > 50);
@@ -187,6 +189,8 @@ export function AppShell({
         );
         setDarkModeEnabled(settings.darkModeEnabled !== false);
         setStorefrontLayout(parseStorefrontLayout(settings.storefrontLayout));
+        setDeliveryEnabled(settings.deliveryEnabled === true);
+        setOnlineOrderingEnabled(settings.onlineOrderingEnabled !== false);
       })
       .catch(() => {
         if (cancelled) {
@@ -197,6 +201,8 @@ export function AppShell({
           brandSlug === DEFAULT_BRAND_SLUG ? BENNY_BOYS_NAME : brandSlug,
         );
         setTagline(BENNY_BOYS_TAGLINE);
+        setDeliveryEnabled(false);
+        setOnlineOrderingEnabled(true);
         setAddress(BENNY_BOYS_ADDRESS);
         setLogoUrl(fallbacks.logoUrl);
         setLogoDarkUrl(fallbacks.logoDarkUrl);
@@ -266,9 +272,11 @@ export function AppShell({
       />
       <MenuSheet onOpenChange={setMenuOpen} open={isMenuOpen} />
       <CartDrawer
+        deliveryEnabled={deliveryEnabled}
         deliveryFeeAmount={deliveryFee}
         deliveryMode={deliveryMode}
         items={items}
+        onlineOrderingEnabled={onlineOrderingEnabled}
         onDecrement={decrementItem}
         onDeliveryModeChange={setDeliveryMode}
         onIncrement={incrementItem}

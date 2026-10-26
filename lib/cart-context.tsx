@@ -34,6 +34,7 @@ interface CartContextValue {
   items: CartItem[];
   deliveryMode: DeliveryMode;
   deliveryFee: number;
+  deliveryEnabled: boolean;
   cartCount: number;
   isCartReady: boolean;
   isCartOpen: boolean;
@@ -81,14 +82,17 @@ function buildCartDescription(payload: AddToCartPayload): string {
 export function CartProvider({
   children,
   deliveryFee = 5,
+  deliveryEnabled = false,
 }: {
   children: ReactNode;
   deliveryFee?: number;
+  /** When false, cart stays on pickup and delivery is not offered. */
+  deliveryEnabled?: boolean;
 }): React.ReactElement {
   const router = useRouter();
   const pathname = usePathname();
   const [items, setItems] = useState<CartItem[]>([]);
-  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("delivery");
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("pickup");
   const [isCartReady, setIsCartReady] = useState(false);
   const [isCartOpen, setCartOpen] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
@@ -155,6 +159,23 @@ export function CartProvider({
 
     writeCartToStorage(items);
   }, [items, isCartReady]);
+
+  useEffect(() => {
+    if (!deliveryEnabled && deliveryMode === "delivery") {
+      setDeliveryMode("pickup");
+    }
+  }, [deliveryEnabled, deliveryMode]);
+
+  const chooseDeliveryMode = useCallback(
+    (mode: DeliveryMode) => {
+      if (mode === "delivery" && !deliveryEnabled) {
+        setDeliveryMode("pickup");
+        return;
+      }
+      setDeliveryMode(mode);
+    },
+    [deliveryEnabled],
+  );
 
   const addToCart = useCallback(
     (payload: AddToCartPayload, options?: AddToCartOptions) => {
@@ -256,11 +277,12 @@ export function CartProvider({
       items,
       deliveryMode,
       deliveryFee,
+      deliveryEnabled,
       cartCount,
       isCartReady,
       isCartOpen,
       setCartOpen,
-      setDeliveryMode,
+      setDeliveryMode: chooseDeliveryMode,
       addToCart,
       addComboToCart,
       incrementItem,
@@ -272,9 +294,11 @@ export function CartProvider({
       items,
       deliveryMode,
       deliveryFee,
+      deliveryEnabled,
       cartCount,
       isCartReady,
       isCartOpen,
+      chooseDeliveryMode,
       addToCart,
       addComboToCart,
       incrementItem,

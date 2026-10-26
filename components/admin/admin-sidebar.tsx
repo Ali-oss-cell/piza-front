@@ -41,6 +41,7 @@ const PLATFORM_ONLY_STORE_VIEWS = new Set<AdminView>(["payments", "advanced-sett
 const STORE_NAV_ITEMS: { id: AdminView; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "orders", label: "Live Orders", icon: ShoppingBag },
+  { id: "reports", label: "Reports", icon: BarChart3 },
   { id: "inquiries", label: "Inquiries", icon: FileText },
   { id: "menu", label: "Menu Management", icon: UtensilsCrossed },
   { id: "menu-categories", label: "Menu Categories", icon: Layers },

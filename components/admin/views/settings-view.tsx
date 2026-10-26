@@ -49,6 +49,8 @@ interface SettingsFormState {
   googleSiteVerification: string;
   deliveryFee: string;
   minOrderAmount: string;
+  onlineOrderingEnabled: boolean;
+  deliveryEnabled: boolean;
   contactEmail: string;
   contactPhone: string;
   address: string;
@@ -71,6 +73,8 @@ function formFromSettings(settings: StoreSettings): SettingsFormState {
     googleSiteVerification: settings.googleSiteVerification ?? "",
     deliveryFee: String(settings.deliveryFee),
     minOrderAmount: String(settings.minOrderAmount),
+    onlineOrderingEnabled: settings.onlineOrderingEnabled !== false,
+    deliveryEnabled: settings.deliveryEnabled === true,
     contactEmail: settings.contactEmail ?? "",
     contactPhone: settings.contactPhone ?? "",
     address: settings.address ?? "",
@@ -224,6 +228,8 @@ export function SettingsView({
       googleSiteVerification: form.googleSiteVerification.trim() || null,
       deliveryFee: Number(form.deliveryFee),
       minOrderAmount: Number(form.minOrderAmount),
+      onlineOrderingEnabled: form.onlineOrderingEnabled,
+      deliveryEnabled: form.deliveryEnabled,
       contactEmail: form.contactEmail.trim(),
       contactPhone: form.contactPhone.trim(),
       address: form.address.trim(),
@@ -503,10 +509,49 @@ export function SettingsView({
           </div>
         </div>
 
+        <div className="space-y-3 rounded-xl border border-zinc-200/70 p-4 dark:border-white/10">
+          <h3 className={cn("font-display text-base font-bold", primaryText)}>
+            Online ordering
+          </h3>
+          <p className={cn("text-xs", secondaryText)}>
+            Controls the website checkout. Turn online off to pause new orders without
+            changing hours. Delivery can stay off for pickup-only launch.
+          </p>
+          <label className={cn("flex items-center gap-3 text-sm", primaryText)}>
+            <input
+              checked={form.onlineOrderingEnabled}
+              className="h-4 w-4 accent-[#d81b60]"
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  onlineOrderingEnabled: event.target.checked,
+                }))
+              }
+              type="checkbox"
+            />
+            Online ordering active
+          </label>
+          <label className={cn("flex items-center gap-3 text-sm", primaryText)}>
+            <input
+              checked={form.deliveryEnabled}
+              className="h-4 w-4 accent-[#d81b60]"
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  deliveryEnabled: event.target.checked,
+                }))
+              }
+              type="checkbox"
+            />
+            Offer delivery (when off, website is pickup-only)
+          </label>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={cn("mb-1 block text-sm font-medium", primaryText)}>Delivery fee ($)</label>
             <Input
+              disabled={!form.deliveryEnabled}
               min="0"
               onChange={(event) => setForm((current) => ({ ...current, deliveryFee: event.target.value }))}
               step="0.01"

@@ -22,6 +22,7 @@ import { SettingsView } from "@/components/admin/views/settings-view";
 import { PaymentsView } from "@/components/admin/views/payments-view";
 import { HqOverviewView } from "@/components/admin/views/hq-overview-view";
 import { HqReportsView } from "@/components/admin/views/hq-reports-view";
+import { StoreReportsView } from "@/components/admin/views/store-reports-view";
 import { TeamView } from "@/components/admin/views/team-view";
 import { LocationsView } from "@/components/admin/views/locations-view";
 import { DomainsView } from "@/components/admin/views/domains-view";
@@ -380,6 +381,9 @@ export function AdminDashboardContent(): React.ReactElement {
                 {activeView === "overview" ? <OverviewView orders={orders} /> : null}
                 {activeView === "orders" ? (
                   <OrdersView onOrdersChange={setOrders} orders={orders} token={token!} />
+                ) : null}
+                {activeView === "reports" && brandSlug ? (
+                  <StoreReportsView brandSlug={brandSlug} token={token!} />
                 ) : null}
                 {activeView === "inquiries" ? (
                   <InquiriesView brandSlug={brandSlug} token={token!} />

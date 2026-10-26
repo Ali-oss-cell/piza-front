@@ -495,6 +495,37 @@ export function updateStoreSettings(
   });
 }
 
+export type StoreOpsReport = {
+  range: { from: string; to: string };
+  sales: {
+    paidOrders: number;
+    revenue: number;
+    byChannel: Array<{ channel: string; orders: number; revenue: number }>;
+  };
+  online: {
+    paidOnline: number;
+    accepted: number;
+    refused: number;
+    refuseRate: number;
+    refusalsByStaff: Array<{ userId: string; name: string; count: number }>;
+  };
+};
+
+export function fetchStoreOpsReport(
+  token: string,
+  brandSlug: string,
+  params?: { from?: string; to?: string },
+): Promise<StoreOpsReport> {
+  const query = new URLSearchParams();
+  if (params?.from) query.set("from", params.from);
+  if (params?.to) query.set("to", params.to);
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return apiRequest<StoreOpsReport>(`/settings/ops-report${suffix}`, {
+    token,
+    brandSlug: withBrand(brandSlug),
+  });
+}
+
 export function fetchPaymentSettings(
   token: string,
   brandSlug?: string

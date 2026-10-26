@@ -17,7 +17,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/lib/cart-context";
-import { buildTimeSlots, formatScheduledAt } from "@/lib/opening-hours";
+import {
+  buildTimeSlots,
+  formatScheduledAt,
+  isOpenNow,
+} from "@/lib/opening-hours";
 import { AddressPicker } from "@/components/features/checkout/address-picker";
 import { StripePaymentForm } from "@/components/features/checkout/stripe-payment-form";
 import { isValidAuPostcode } from "@/lib/geocoding";
@@ -108,6 +112,9 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
     () => buildTimeSlots(settings.openingHours),
     [settings.openingHours],
   );
+  const storeOpenNow = isOpenNow(settings.openingHours);
+  const onlineOrderingEnabled = settings.onlineOrderingEnabled !== false;
+  const deliveryEnabled = settings.deliveryEnabled === true;
 
   const subtotal = roundMoney(
     items.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -198,8 +205,27 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
   async function handleSubmit(): Promise<void> {
     setError(null);
 
+    if (!onlineOrderingEnabled) {
+      setError("Online ordering is paused right now. Please call the store.");
+      return;
+    }
+
+    if (!deliveryEnabled && deliveryMode === "delivery") {
+      setError("Delivery is not available. Please choose pickup.");
+      return;
+    }
+
+    if (timeSlots.length === 0) {
+      setError("No pickup times are available right now. Please try again later.");
+      return;
+    }
+
     if (!form.scheduledAt) {
-      setError("Please choose a pickup or delivery time.");
+      setError(
+        deliveryMode === "delivery"
+          ? "Please choose a delivery time."
+          : "Please choose a pickup time.",
+      );
       return;
     }
 
@@ -378,6 +404,12 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
     );
   }
 
+  const canPlaceOrder =
+    onlineOrderingEnabled &&
+    timeSlots.length > 0 &&
+    !belowMinimum &&
+    !submitting;
+
   return (
     <main className="mx-auto max-w-6xl px-4 pb-16 pt-28">
       <div className="mb-8">
@@ -389,6 +421,26 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
           {items.length} item{items.length === 1 ? "" : "s"}
         </p>
       </div>
+
+      {!onlineOrderingEnabled ? (
+        <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
+          Online ordering is paused right now. Please call the store or visit in
+          person.
+        </div>
+      ) : null}
+
+      {onlineOrderingEnabled && !storeOpenNow && timeSlots.length > 0 ? (
+        <div className="mb-6 rounded-2xl border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-sky-950 dark:text-sky-100">
+          We&apos;re closed right now — you can still order for a later pickup
+          time below.
+        </div>
+      ) : null}
+
+      {onlineOrderingEnabled && timeSlots.length === 0 ? (
+        <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
+          No pickup times are available right now. Please try again later.
+        </div>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-5">
@@ -492,7 +544,7 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
             </div>
           </section>
 
-          {deliveryMode === "delivery" ? (
+          {deliveryMode === "delivery" && deliveryEnabled ? (
             <section className={cn("p-6", cardShell)}>
               <div className="mb-5 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--brand-accent,#d81b60)]/10 text-[color:var(--brand-accent,#d81b60)]">
@@ -518,12 +570,36 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
             </section>
           ) : null}
 
+          {deliveryMode !== "delivery" ? (
+            <section className={cn("p-6", cardShell)}>
+              <div className="mb-2 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:var(--brand-accent,#d81b60)]/10 text-[color:var(--brand-accent,#d81b60)]">
+                  <MapPin className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className={cn("font-semibold", primaryText)}>
+                    Pick up from
+                  </h2>
+                  <p className={cn("text-sm", secondaryText)}>
+                    {settings.address?.trim() ||
+                      settings.storeName ||
+                      "Store counter"}
+                  </p>
+                </div>
+              </div>
+            </section>
+          ) : null}
+
           <section className={cn("p-6", cardShell)}>
             <div className="space-y-2">
               <Label htmlFor="notes">Order notes (optional)</Label>
               <Textarea
                 id="notes"
-                placeholder="Gate code, allergies, delivery instructions…"
+                placeholder={
+                  deliveryMode === "delivery"
+                    ? "Gate code, allergies, delivery instructions…"
+                    : "Allergies, special requests…"
+                }
                 rows={3}
                 value={form.notes}
                 onChange={(event) =>
@@ -634,10 +710,12 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
               <span>Subtotal</span>
               <span className={primaryText}>${subtotal.toFixed(2)}</span>
             </div>
-            <div className={cn("flex justify-between", secondaryText)}>
-              <span>Delivery fee</span>
-              <span className={primaryText}>${deliveryFeeAmount.toFixed(2)}</span>
-            </div>
+            {deliveryMode === "delivery" ? (
+              <div className={cn("flex justify-between", secondaryText)}>
+                <span>Delivery fee</span>
+                <span className={primaryText}>${deliveryFeeAmount.toFixed(2)}</span>
+              </div>
+            ) : null}
             {promo ? (
               <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                 <span>Discount ({promo.code})</span>
@@ -667,10 +745,14 @@ export function CheckoutPage({ settings }: CheckoutPageProps): React.ReactElemen
 
           <Button
             className="mt-6 w-full py-5 uppercase tracking-widest"
-            disabled={submitting || belowMinimum}
+            disabled={!canPlaceOrder}
             onClick={() => void handleSubmit()}
           >
-            {submitting ? "Placing order…" : "Continue to payment"}
+            {submitting
+              ? "Placing order…"
+              : !onlineOrderingEnabled
+                ? "Online ordering paused"
+                : "Continue to payment"}
           </Button>
 
           <p className={cn("mt-4 text-center text-xs", secondaryText)}>

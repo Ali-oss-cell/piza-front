@@ -92,6 +92,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>): Promise<React.ReactElement> {
   let deliveryFee = DEFAULT_DELIVERY_FEE;
+  let deliveryEnabled = false;
   const defaultLogoUrl = BENNY_BOYS_LOGO_LIGHT;
   const defaultLogoDarkUrl = BENNY_BOYS_LOGO_DARK;
 
@@ -142,6 +143,7 @@ export default async function RootLayout({
 
     const settings = await fetchStoreSettings(brandSlug, locationId);
     deliveryFee = Number(settings.deliveryFee) || DEFAULT_DELIVERY_FEE;
+    deliveryEnabled = settings.deliveryEnabled === true;
     initialBranding = {
       brandSlug,
       brandName: settings.storeName || initialBranding.brandName,
@@ -207,7 +209,10 @@ export default async function RootLayout({
         />
         <ThemeProvider>
           <AuthProvider>
-            <CartProvider deliveryFee={deliveryFee}>
+            <CartProvider
+              deliveryEnabled={deliveryEnabled}
+              deliveryFee={deliveryFee}
+            >
               <ChunkLoadRecovery />
               <SiteBrandInit brandSlug={brandSlug} locationId={locationId} />
               <AppShell initialBranding={initialBranding}>{children}</AppShell>

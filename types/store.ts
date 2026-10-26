@@ -17,6 +17,8 @@ export interface StoreSettings {
   googleSiteVerification?: string | null;
   deliveryFee: string | number;
   minOrderAmount: string | number;
+  onlineOrderingEnabled?: boolean;
+  deliveryEnabled?: boolean;
   contactEmail?: string | null;
   contactPhone?: string | null;
   address?: string | null;
@@ -61,6 +63,8 @@ export interface UpdateStoreSettingsPayload {
   storefrontLayout?: "classic" | "menu_first" | "magazine" | "portfolio";
   deliveryFee?: number;
   minOrderAmount?: number;
+  onlineOrderingEnabled?: boolean;
+  deliveryEnabled?: boolean;
   contactEmail?: string;
   contactPhone?: string;
   address?: string;
