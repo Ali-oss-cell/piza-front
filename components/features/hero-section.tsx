@@ -118,20 +118,32 @@ export function HeroSection({
           className="hidden h-full w-full scale-105 object-cover object-center opacity-95 dark:block"
           src={darkHero}
         />
-        {/* Scrim so the headline stays readable on any photo. color-mix accepts any
-            CSS colour (the old hex+alpha suffix broke for #000 / rgb()). Phones get
-            an even wash because the text sits over the middle of the image. */}
+        {/* Scrim so the headline stays readable on any photo. Dual light/dark
+            layers avoid waiting on next-themes (no isDark JS). */}
         <div
-          className="absolute inset-0 transition-colors duration-150 ease-out"
+          className="absolute inset-0 transition-colors duration-150 ease-out dark:hidden"
           style={{
-            backgroundImage: `linear-gradient(to right, color-mix(in srgb, ${isDark ? bgDark : bgLight} 92%, transparent) 0%, color-mix(in srgb, ${isDark ? bgDark : bgLight} 70%, transparent) 38%, color-mix(in srgb, ${isDark ? bgDark : bgLight} 15%, transparent) 70%, transparent 100%), linear-gradient(to top, ${isDark ? bgDark : bgLight} 0%, transparent 22%)`,
+            backgroundImage: `linear-gradient(to right, color-mix(in srgb, ${bgLight} 92%, transparent) 0%, color-mix(in srgb, ${bgLight} 70%, transparent) 38%, color-mix(in srgb, ${bgLight} 15%, transparent) 70%, transparent 100%), linear-gradient(to top, ${bgLight} 0%, transparent 22%)`,
+          }}
+        />
+        <div
+          className="absolute inset-0 hidden transition-colors duration-150 ease-out dark:block"
+          style={{
+            backgroundImage: `linear-gradient(to right, color-mix(in srgb, ${bgDark} 92%, transparent) 0%, color-mix(in srgb, ${bgDark} 70%, transparent) 38%, color-mix(in srgb, ${bgDark} 15%, transparent) 70%, transparent 100%), linear-gradient(to top, ${bgDark} 0%, transparent 22%)`,
           }}
         />
         <div
           aria-hidden
-          className="absolute inset-0 lg:hidden"
+          className="absolute inset-0 lg:hidden dark:hidden"
           style={{
-            backgroundColor: `color-mix(in srgb, ${isDark ? bgDark : bgLight} 45%, transparent)`,
+            backgroundColor: `color-mix(in srgb, ${bgLight} 45%, transparent)`,
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 hidden lg:hidden dark:block"
+          style={{
+            backgroundColor: `color-mix(in srgb, ${bgDark} 45%, transparent)`,
           }}
         />
       </motion.div>
