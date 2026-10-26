@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { useTheme } from "next-themes";
 import { StoreInfoChips } from "@/components/features/storefront/store-info-chips";
 import { Button } from "@/components/ui/button";
 import { getMenuDisplayDescription } from "@/lib/menu-display-copy";
@@ -64,7 +63,6 @@ export function HeroSection({
   variant = "home",
 }: HeroSectionProps): React.ReactElement {
   const reduceMotion = useReducedMotion();
-  const { resolvedTheme } = useTheme();
   const brandPrimary = primaryColor?.trim() || PLATFORM_ACCENT;
   const bgLight = backgroundLightColor?.trim() || "#ffffff";
   const bgDark = backgroundDarkColor?.trim() || "#000000";
@@ -72,8 +70,8 @@ export function HeroSection({
   const lightHero = resolveMediaUrl(heroImageUrl) ?? DEFAULT_HERO;
   const darkHero =
     resolveMediaUrl(heroImageDarkUrl) ?? resolveMediaUrl(heroImageUrl) ?? DEFAULT_HERO;
-  const isDark = resolvedTheme === "dark";
-  const heroSrc = isDark ? darkHero : lightHero;
+  /* Two imgs + CSS dark: classes so the right photo shows on first paint
+     (resolvedTheme is undefined until next-themes mounts → light flash). */
 
   const heroStyle = {
     "--brand-primary": brandPrimary,
@@ -111,8 +109,14 @@ export function HeroSection({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           alt=""
-          className="h-full w-full scale-105 object-cover object-center opacity-95"
-          src={heroSrc}
+          className="h-full w-full scale-105 object-cover object-center opacity-95 dark:hidden"
+          src={lightHero}
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          alt=""
+          className="hidden h-full w-full scale-105 object-cover object-center opacity-95 dark:block"
+          src={darkHero}
         />
         {/* Scrim so the headline stays readable on any photo. color-mix accepts any
             CSS colour (the old hex+alpha suffix broke for #000 / rgb()). Phones get

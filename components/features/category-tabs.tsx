@@ -96,7 +96,14 @@ export function CategoryTabs({
       return;
     }
     const active = el.querySelector<HTMLElement>(`[data-category="${activeCategory}"]`);
-    active?.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
+    if (!active) {
+      return;
+    }
+    /* Scroll only the horizontal strip — never the page (scrollIntoView was
+       jumping the home page down to the menu on first paint). */
+    const left =
+      active.offsetLeft - el.clientWidth / 2 + active.clientWidth / 2;
+    el.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
   }, [activeCategory]);
 
   const scrollByPage = (direction: -1 | 1) => {
